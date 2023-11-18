@@ -3,6 +3,8 @@
 # Author: Pratik M Tambe <enthusiasticgeek@gmail.com>
 # Date: November 18, 2023
 # Foucault Knife Edge Detection Test on Mirror 
+# Target: National Capital Astronomers (NCA), Washington DC, USA
+# Program: Amateur Telescope Making (ATM) Workshop
 # ======================================================
 import cv2
 import numpy as np
@@ -13,7 +15,8 @@ import signal
 import sys
 import csv
 
-# Smaller photos like 400x300 is ideal for faster processing and better results
+# Refrain from using larger images
+# Smaller photos like 640x480 is ideal for faster processing and better results
 
 # Helper functions
 def signal_handler(sig, frame):
@@ -122,10 +125,10 @@ def main():
         parser.add_argument('--minRadius', type=int, default=10, help='Minimum circle radius')
         parser.add_argument('--maxRadius', type=int, default=0, help='Maximum circle radius')
         parser.add_argument('--canTolerance', type=int, default=2, help='Candidates y-axis tolerance')
-        parser.add_argument('--drawContours', type=int, default=1, help='Draw contours')
+        parser.add_argument('--drawContours', type=int, default=0, help='Draw contours')
         parser.add_argument('--drawNestedContours', type=int, default=0, help='Draw Nested contours')
         parser.add_argument('--drawCircles', type=int, default=1, help='Draw mirror circle(s)')
-        parser.add_argument('--brightnessTolerance', type=int, default=40, help='Brightness tolerance value for two contour regions to be considered as similar brightness')
+        parser.add_argument('--brightnessTolerance', type=int, default=30, help='Brightness tolerance value for two contour regions to be considered as similar brightness')
         parser.add_argument('--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for infinite window period.')
         args = parser.parse_args()
 
@@ -175,8 +178,6 @@ def main():
                 if args.drawContours == 1:
                     cv2.drawContours(result, contours, -1, (0, 255, 0), 2)
 
-                #get_brightness(result,contours,args.brightnessTolerance)
-
                 # Apply Hough Circle Transform with user-defined parameters
                 circles = cv2.HoughCircles(
                     blurred,
@@ -195,7 +196,7 @@ def main():
                     if args.drawCircles == 1:
                             cv2.circle(result, (x, y), r, (0, 0, 255), 2)
                             # Draw red vertical line inside the circle
-                            #cv2.line(result, (x, y - r), (x, y + r), (0, 0, 255), 2)
+                            # cv2.line(result, (x, y - r), (x, y + r), (0, 0, 255), 2)
                             # Get intensity at the center of the circle
 
                             # Iterate through each contour to find the one containing the desired y-coordinate
@@ -214,9 +215,10 @@ def main():
                             print(lst)
                             find_matching_intensities_and_draw_lines(lst,x,args.brightnessTolerance,gray,10)
 
-                cv2.imshow('Image with Segmentation Boundaries and Circle', result)
+                if args.drawContours == 1:
+                   cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
                 #cv2.imshow('Threshold', thresh)
-                cv2.imshow('Gray', gray)
+                cv2.imshow('Image with markers on Shadowgram', gray)
                 cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
                 cv2.destroyAllWindows()
         except FileNotFoundError as e:
@@ -225,7 +227,6 @@ def main():
             print(f"An error occurred: {e}")
     except KeyboardInterrupt:
         print("\nOperation interrupted by user.")
-
 
 if __name__ == '__main__':
     main()
