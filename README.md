@@ -4,6 +4,18 @@
 
 This program was inspired from the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
 
+## Dependencies
+
+**Python 3.8+ installation**
+
+**Tested on Ubuntu 18.04/20.04 LTS**
+
+pip3 install opencv-python
+
+***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
+
+## Usage and Limitations
+
 **Usage:** 
 
 ./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--canTolerance CANTOLERANCE]
