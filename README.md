@@ -4,12 +4,16 @@
 
 This program was inspired from the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
 
-**Usage:** Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--canTolerance CANTOLERANCE]
+**Usage:** 
+
+Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--canTolerance CANTOLERANCE]
                                                  [--drawContours DRAWCONTOURS] [--drawNestedContours DRAWNESTEDCONTOURS] [--drawCircles DRAWCIRCLES] [--brightnessTolerance BRIGHTNESSTOLERANCE]
                                                  [--displayWindowPeriod DISPLAYWINDOWPERIOD]
                                                  filename
 
-**Usage example:** ./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
+**Usage example:** 
+
+./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
 
 Final Analyzed Output
 
