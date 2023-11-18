@@ -6,7 +6,7 @@ This program was inspired from the following thread. https://www.cloudynights.co
 
 **Usage:** 
 
-Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--canTolerance CANTOLERANCE]
+./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--canTolerance CANTOLERANCE]
                                                  [--drawContours DRAWCONTOURS] [--drawNestedContours DRAWNESTEDCONTOURS] [--drawCircles DRAWCIRCLES] [--brightnessTolerance BRIGHTNESSTOLERANCE]
                                                  [--displayWindowPeriod DISPLAYWINDOWPERIOD]
                                                  filename
