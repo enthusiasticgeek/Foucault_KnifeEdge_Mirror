@@ -32,7 +32,7 @@ def resize_image(image, max_width=640):
         return cv2.resize(image, (max_width, new_height))
     return image
 
-def print_intensity_along_line(lst, image, start_point, end_point):
+def print_intensity_along_line_with_threshold(lst, image, start_point, end_point, distance_threshold):
     # Ensure start_point is the leftmost point
     if start_point[0] > end_point[0]:
         start_point, end_point = end_point, start_point
@@ -42,10 +42,13 @@ def print_intensity_along_line(lst, image, start_point, end_point):
         
         # Ensure y_coord is within image bounds
         if 0 <= x_coord < image.shape[1] and 0 <= y_coord < image.shape[0]:
-            intensity = image[y_coord, x_coord]
-            print(f"Intensity at ({x_coord}, {y_coord}): {intensity}")
-            lst.append((x_coord,y_coord,intensity))
+            distance_from_center = np.sqrt((x_coord - image.shape[1] // 2) ** 2 + (y_coord - image.shape[0] // 2) ** 2)
+            if distance_from_center > distance_threshold:
+                intensity = image[y_coord, x_coord]
+                print(f"Intensity at ({x_coord}, {y_coord}): {intensity}")
+                lst.append((x_coord, y_coord, intensity))
     return lst
+
 
 def get_average_intensity(image, x, y):
     # Calculate the 5x5 pixel neighborhood
@@ -124,12 +127,12 @@ def main():
         parser.add_argument('--param2', type=int, default=60, help='Second method-specific parameter')
         parser.add_argument('--minRadius', type=int, default=10, help='Minimum circle radius')
         parser.add_argument('--maxRadius', type=int, default=0, help='Maximum circle radius')
-        parser.add_argument('--canTolerance', type=int, default=2, help='Candidates y-axis tolerance')
         parser.add_argument('--drawContours', type=int, default=0, help='Draw contours')
         parser.add_argument('--drawNestedContours', type=int, default=0, help='Draw Nested contours')
         parser.add_argument('--drawCircles', type=int, default=1, help='Draw mirror circle(s)')
-        parser.add_argument('--brightnessTolerance', type=int, default=30, help='Brightness tolerance value for two contour regions to be considered as similar brightness')
+        parser.add_argument('--brightnessTolerance', type=int, default=20, help='Brightness tolerance value for intensity calculation. Default value is 20')
         parser.add_argument('--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for infinite window period.')
+        parser.add_argument('--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40')
         args = parser.parse_args()
 
         try:
@@ -210,7 +213,8 @@ def main():
                                 if y1 < y < y1 + h1:
                                    # Draw a line constrained within the bounds of this contour
                                    cv2.line(result, (x1, y), (x1 + w1, y), (255, 0, 0), 2)  # Blue line along x-axis
-                                   print_intensity_along_line(lst, gray, (x1,y), (x1+w1,y))
+                                   #print_intensity_along_line(lst, gray, (x1,y), (x1+w1,y))
+                                   print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
                                 print("=======================")
                             print(lst)
                             find_matching_intensities_and_draw_lines(lst,x,args.brightnessTolerance,gray,10)

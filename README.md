@@ -18,9 +18,9 @@ pip3 install opencv-python
 
 **Usage:** 
 
-./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--canTolerance CANTOLERANCE]
-                                                 [--drawContours DRAWCONTOURS] [--drawNestedContours DRAWNESTEDCONTOURS] [--drawCircles DRAWCIRCLES] [--brightnessTolerance BRIGHTNESSTOLERANCE]
-                                                 [--displayWindowPeriod DISPLAYWINDOWPERIOD]
+./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--drawContours DRAWCONTOURS]
+                                                 [--drawNestedContours DRAWNESTEDCONTOURS] [--drawCircles DRAWCIRCLES] [--brightnessTolerance BRIGHTNESSTOLERANCE]
+                                                 [--displayWindowPeriod DISPLAYWINDOWPERIOD] [--skipPixelsNearCenter SKIPPIXELSNEARCENTER]
                                                  filename
 
 **Usage example:** 
