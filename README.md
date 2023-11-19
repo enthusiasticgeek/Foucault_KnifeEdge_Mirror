@@ -47,6 +47,8 @@ Image with debug feature turned on (--drawContours 1)
 
 **Note:** One may try to vary the --brightnessTolerance value between 10 and 100 for the best results depending on the quality of the image. 
 
+**Note:** Set --displayWindowPeriod 0 if one doesn't want to automatically exit the program after 10 seconds.
+
 **Credits:**
 
 1. Guy Brandenburg, President, National Capital Astronomers (NCA) Amateur Telescope Making (ATM) workshop <http://www.capitalastronomers.org/>.
