@@ -49,6 +49,8 @@ Image with debug feature turned on (--drawContours 1)
 
 **Note:** Set --displayWindowPeriod 0 if one doesn't want to automatically exit the program after 10 seconds.
 
+**Note:** One may try to vary the --skipPixelsNearCenter value if not interested in calculating the intensity in the immediate neighbourhood of the center of the mirror. The default value of 40 suffices for most cases.
+
 **Credits:**
 
 1. Guy Brandenburg, President, National Capital Astronomers (NCA) Amateur Telescope Making (ATM) workshop <http://www.capitalastronomers.org/>.
