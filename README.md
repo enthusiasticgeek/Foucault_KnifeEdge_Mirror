@@ -45,7 +45,7 @@ Image with debug feature turned on (--drawContours 1)
 
 **Note:** A CSV output file is created with x-cordinate, y-coordinate, average intensity, distance from x. Column 1 is all points to the left of center of mirror and Column 2 is to the right of the center of mirror.
 
-**Note:** One may try to vary the --brightnessTolerance value between 10 and 100 for the best results depending on the quality of the image. 
+**Note:** One may try to vary the --brightnessTolerance value between 10 and 100 for the best results depending on the quality of the image. The default value of 20 suffices for most cases. 
 
 **Note:** Set --displayWindowPeriod 0 if one doesn't want to automatically exit the program after 10 seconds.
 
