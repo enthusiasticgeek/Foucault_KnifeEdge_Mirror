@@ -6,6 +6,10 @@
 # Target: National Capital Astronomers (NCA), Washington DC, USA
 # Program: Amateur Telescope Making (ATM) Workshop
 # ======================================================
+import matplotlib
+matplotlib.use('tkagg')
+import matplotlib.pyplot as plt
+
 import cv2
 import numpy as np
 import argparse
@@ -58,16 +62,6 @@ def get_average_intensity(image, x, y):
     return average_intensity
 
 
-def write_matching_intensities_to_csvi(matches):
-    with open('matching_intensities.csv', mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Less Than X1 (x, y, intensity, distance from X1)', 'Greater Than X1 (x, y, intensity, distance from X1)'])
-
-        for match in matches:
-            lt_point = match[0]
-            gt_point = match[1]
-            writer.writerow([lt_point, gt_point])
-
 def write_matching_intensities_to_csv(matches):
     with open('matching_intensities.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -77,6 +71,36 @@ def write_matching_intensities_to_csv(matches):
             lt_point = ', '.join(map(str, match[0]))  # Convert tuple to string and remove brackets
             gt_point = ', '.join(map(str, match[1]))  # Convert tuple to string and remove brackets
             writer.writerow([lt_point, gt_point])
+
+    # Read the CSV to plot the points
+    colors = ['r', 'g', 'b', 'c', 'm', 'y']  # List of colors for different segments
+    with open('matching_intensities.csv', mode='r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip the header row
+
+        for i, row in enumerate(reader):
+            lt_point = list(map(int, row[0].split(', ')))  # Convert string back to tuple
+            gt_point = list(map(int, row[1].split(', ')))  # Convert string back to tuple
+
+            # Plot the points with intensities on Y-axis
+            plt.scatter(i, lt_point[2], color=colors[i % len(colors)], label=f'Point {i}')
+            plt.scatter(i, gt_point[2], color=colors[i % len(colors)])
+
+            # Annotate 'lt' points above and 'gt' points below the plotted points
+            plt.annotate(f'({lt_point[0]}, {lt_point[1]} [{lt_point[2]}])', (i, lt_point[2]), textcoords="offset points", xytext=(0,8), ha='center', va='bottom')
+            plt.annotate(f'({gt_point[0]}, {gt_point[1]} [{gt_point[2]}])', (i, gt_point[2]), textcoords="offset points", xytext=(0,-8), ha='center', va='top')
+
+    # Set plot labels and title
+    plt.xlabel('Segment Index')
+    plt.ylabel('Intensity')
+    plt.title('Matching Intensities')
+
+    # Show the plot legend
+    plt.legend()
+
+    # Show the plot
+    plt.show()
+
 
 def draw_symmetrical_line(image, x, y, line_length):
     cv2.line(image, (x, y - line_length), (x, y + line_length), (255, 255, 255), thickness=1)
