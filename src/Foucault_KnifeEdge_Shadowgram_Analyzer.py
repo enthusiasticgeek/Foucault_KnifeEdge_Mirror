@@ -90,6 +90,14 @@ def write_matching_intensities_to_csv(matches):
             plt.annotate(f'({lt_point[0]}, {lt_point[1]} [{lt_point[2]}])', (i, lt_point[2]), textcoords="offset points", xytext=(0,8), ha='center', va='bottom')
             plt.annotate(f'({gt_point[0]}, {gt_point[1]} [{gt_point[2]}])', (i, gt_point[2]), textcoords="offset points", xytext=(0,-8), ha='center', va='top')
 
+            # Calculate and plot the absolute difference between 'lt' and 'gt' intensities as separate points
+            abs_diff = abs(lt_point[2] - gt_point[2])
+            plt.scatter(i, abs_diff, color='black', marker='x', label=f'Abs Diff {i}')
+
+            # Annotate the absolute difference values beside the 'x' points
+            plt.text(i + 0.2, abs_diff, f'{abs_diff}', fontsize=8, color='black', ha='left', va='center')
+
+
     # Set plot labels and title
     plt.xlabel('Segment Index')
     plt.ylabel('Intensity')
