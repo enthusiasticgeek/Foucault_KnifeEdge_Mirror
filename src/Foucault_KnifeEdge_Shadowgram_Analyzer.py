@@ -7,7 +7,8 @@
 # Program: Amateur Telescope Making (ATM) Workshop
 # ======================================================
 import matplotlib
-matplotlib.use('tkagg')
+# On some Linux systems may need to uncomment this.
+#matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import cv2
@@ -109,11 +110,17 @@ def write_matching_intensities_to_csv(matches):
     # Show the plot
     plt.show()
 
+def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, color=(255, 255, 255), thickness=1):
+    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+    text_x, text_y = position
+    text_y = max(text_y, text_size[1])  # Ensure the text doesn't go out of the image
+    cv2.putText(image, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
+    return image
 
-def draw_symmetrical_line(image, x, y, line_length):
-    cv2.line(image, (x, y - line_length), (x, y + line_length), (255, 255, 255), thickness=1)
+def draw_symmetrical_line(image, x, y, line_length, color):
+    cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, tolerance, image, line_length):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -143,8 +150,22 @@ def find_matching_intensities_and_draw_lines(lst, x1, tolerance, image, line_len
                     matches.append((lt_point, gt_point))
 
                     # Draw symmetrical lines centered at the x-coordinate
-                    draw_symmetrical_line(image, lt_point[0], lt_point[1], line_length)
-                    draw_symmetrical_line(image, gt_point[0], gt_point[1], line_length)
+                    draw_symmetrical_line(image, lt_point[0], lt_point[1], line_length, (255,255,255))
+                    draw_symmetrical_line(image, gt_point[0], gt_point[1], line_length, (255,255,255))
+
+    # Draw the center of the mirror
+    draw_text(image, f"({x1},{y1}):R{r1}", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+
+    # Find the closest match and draw it!
+    for i in matches:
+        print(f"{i[0]},{i[1]}")
+        if abs(int(i[0][2])-int(i[1][2])) < 1:
+           draw_text(image, f"({i[0][0]},{i[0][1]}):I{i[0][2]}", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_symmetrical_line(image, i[0][0],i[0][1], line_length+10, color=(255,255,255))
+           draw_text(image, f"({i[1][0]},{i[1][1]}):I{i[1][2]}", (i[1][0]-20,i[1][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_symmetrical_line(image, i[1][0], i[1][1], line_length+10, color=(255,255,255))
+
+
     # Collect data in CSV
     write_matching_intensities_to_csv(matches)
 
@@ -249,7 +270,7 @@ def main():
                                    print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
                                 print("=======================")
                             print(lst)
-                            find_matching_intensities_and_draw_lines(lst,x,args.brightnessTolerance,gray,10)
+                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2)
 
                 if args.drawContours == 1:
                    cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
