@@ -18,9 +18,8 @@ pip3 install opencv-python
 
 **Usage:** 
 
-./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [--minDist MINDIST] [--param1 PARAM1] [--param2 PARAM2] [--minRadius MINRADIUS] [--maxRadius MAXRADIUS] [--drawContours DRAWCONTOURS]
-                                                 [--drawNestedContours DRAWNESTEDCONTOURS] [--drawCircles DRAWCIRCLES] [--brightnessTolerance BRIGHTNESSTOLERANCE]
-                                                 [--displayWindowPeriod DISPLAYWINDOWPERIOD] [--skipPixelsNearCenter SKIPPIXELSNEARCENTER]
+./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS] [-dr DRAWCIRCLES]
+                                                 [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
                                                  filename
 
 **Usage example:** 
@@ -30,6 +29,10 @@ pip3 install opencv-python
 Final Analyzed Output
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_gray_image.png "example output")
+
+Plot
+
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_plot.png "example output")
 
 Image with debug feature turned on (--drawContours 1)
 
