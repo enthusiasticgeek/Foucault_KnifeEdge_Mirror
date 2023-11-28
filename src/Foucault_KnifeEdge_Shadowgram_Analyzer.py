@@ -63,8 +63,8 @@ def get_average_intensity(image, x, y):
     return average_intensity
 
 
-def write_matching_intensities_to_csv(matches):
-    with open('matching_intensities.csv', mode='w', newline='') as file:
+def write_matching_intensities_to_csv(matches, save_plot, plot_output):
+    with open(plot_output+'.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Less Than X1 (x, y, intensity, distance from X1)', 'Greater Than X1 (x, y, intensity, distance from X1)'])
 
@@ -73,9 +73,10 @@ def write_matching_intensities_to_csv(matches):
             gt_point = ', '.join(map(str, match[1]))  # Convert tuple to string and remove brackets
             writer.writerow([lt_point, gt_point])
 
+    plt.figure(figsize=(12,8)) # 12 inches x 8 inches
     # Read the CSV to plot the points
     colors = ['r', 'g', 'b', 'c', 'm', 'y']  # List of colors for different segments
-    with open('matching_intensities.csv', mode='r') as file:
+    with open(plot_output+'.csv', mode='r') as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row
 
@@ -98,15 +99,15 @@ def write_matching_intensities_to_csv(matches):
             # Annotate the absolute difference values beside the 'x' points
             plt.text(i + 0.2, abs_diff, f'{abs_diff}', fontsize=8, color='black', ha='left', va='center')
 
-
     # Set plot labels and title
-    plt.xlabel('Segment Index')
+    plt.xlabel('Segment Index [Rows in CSV file]')
     plt.ylabel('Intensity')
     plt.title('Matching Intensities')
-
     # Show the plot legend
     plt.legend()
-
+    if save_plot == 1:
+       # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
+       plt.savefig(plot_output + ".plot.png")
     # Show the plot
     plt.show()
 
@@ -120,7 +121,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -154,20 +155,23 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
                     draw_symmetrical_line(image, gt_point[0], gt_point[1], line_length, (255,255,255))
 
     # Draw the center of the mirror
-    draw_text(image, f"({x1},{y1}):R{r1}", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+    draw_text(image, f"({x1},{y1})", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+    draw_text(image, f"Radius: {r1}", (x1-20,y1+r1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
     # Find the closest match and draw it!
     for i in matches:
         print(f"{i[0]},{i[1]}")
         if abs(int(i[0][2])-int(i[1][2])) < 1:
-           draw_text(image, f"({i[0][0]},{i[0][1]}):I{i[0][2]}", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"({i[0][0]},{i[0][1]})", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"Intensity: {i[0][2]}", (i[0][0]-30,i[0][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[0][0],i[0][1], line_length+10, color=(255,255,255))
-           draw_text(image, f"({i[1][0]},{i[1][1]}):I{i[1][2]}", (i[1][0]-20,i[1][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"({i[1][0]},{i[1][1]})", (i[1][0]-20,i[1][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"Intensity: {i[1][2]}", (i[1][0]-30,i[1][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[1][0], i[1][1], line_length+10, color=(255,255,255))
 
 
     # Collect data in CSV
-    write_matching_intensities_to_csv(matches)
+    write_matching_intensities_to_csv(matches, save_plot, plot_output)
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register the signal handler
@@ -186,6 +190,8 @@ def main():
         parser.add_argument('-bt', '--brightnessTolerance', type=int, default=20, help='Brightness tolerance value for intensity calculation. Default value is 20')
         parser.add_argument('-dwp', '--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for infinite window period.')
         parser.add_argument('-spnc', '--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40')
+        parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk with the timestamp (value changed to 1). Default value is 1')
+        parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
         args = parser.parse_args()
 
         try:
@@ -270,10 +276,12 @@ def main():
                                    print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
                                 print("=======================")
                             print(lst)
-                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2)
+                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename)
 
                 if args.drawContours == 1:
                    cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
+                if args.saveImage == 1:
+                   cv2.imwrite(args.filename + '.analysis.jpg', gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
                 #cv2.imshow('Threshold', thresh)
                 cv2.imshow('Image with markers on Shadowgram', gray)
                 cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
