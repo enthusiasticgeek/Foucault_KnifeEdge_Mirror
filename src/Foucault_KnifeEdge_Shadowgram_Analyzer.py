@@ -8,7 +8,7 @@
 # ======================================================
 import matplotlib
 # On some Linux systems may need to uncomment this.
-matplotlib.use('tkagg')
+# matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import cv2
