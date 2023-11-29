@@ -22,6 +22,7 @@ pip3 install opencv-python
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
                                                  [-cmt CLOSESTMATCHTHRESHOLD]
                                                  filename
+
 **Usage example:** 
 
 ./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
