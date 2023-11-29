@@ -8,7 +8,7 @@
 # ======================================================
 import matplotlib
 # On some Linux systems may need to uncomment this.
-#matplotlib.use('tkagg')
+matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import cv2
@@ -121,7 +121,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -161,7 +161,7 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
     # Find the closest match and draw it!
     for i in matches:
         print(f"{i[0]},{i[1]}")
-        if abs(int(i[0][2])-int(i[1][2])) < 1:
+        if abs(int(i[0][2])-int(i[1][2])) < closest_match_threshold:
            draw_text(image, f"({i[0][0]},{i[0][1]})", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"Intensity: {i[0][2]}", (i[0][0]-30,i[0][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[0][0],i[0][1], line_length+10, color=(255,255,255))
@@ -184,6 +184,7 @@ def main():
         parser.add_argument('-p2', '--param2', type=int, default=60, help='Second method-specific parameter')
         parser.add_argument('-minR', '--minRadius', type=int, default=10, help='Minimum circle radius')
         parser.add_argument('-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius')
+        parser.add_argument('-cc', '--considerContours', type=int, default=0, help='Draw intensity only accounting for contours of the shadowgram. This makes analysis more detailed. Default value is 0')
         parser.add_argument('-dc', '--drawContours', type=int, default=0, help='Draw contours')
         parser.add_argument('-dnc', '--drawNestedContours', type=int, default=0, help='Draw Nested contours')
         parser.add_argument('-dr', '--drawCircles', type=int, default=1, help='Draw mirror circle(s)')
@@ -192,6 +193,7 @@ def main():
         parser.add_argument('-spnc', '--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40')
         parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
+        parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=3, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
         args = parser.parse_args()
 
         try:
@@ -263,20 +265,24 @@ def main():
 
                             # Iterate through each contour to find the one containing the desired y-coordinate
                             lst=[]
-                            for contour in contours:
-                                print("===== New contour =====")
-                                # Find the bounding rectangle of the contour
-                                x1, y1, w1, h1 = cv2.boundingRect(contour)
-                            
-                                # Check if the desired y-coordinate is within this contour
-                                if y1 < y < y1 + h1:
-                                   # Draw a line constrained within the bounds of this contour
-                                   cv2.line(result, (x1, y), (x1 + w1, y), (255, 0, 0), 2)  # Blue line along x-axis
-                                   #print_intensity_along_line(lst, gray, (x1,y), (x1+w1,y))
-                                   print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
-                                print("=======================")
+                            if args.considerContours == 1:
+                                    for contour in contours:
+                                        print("===== New contour =====")
+                                        # Find the bounding rectangle of the contour
+                                        x1, y1, w1, h1 = cv2.boundingRect(contour)
+                                    
+                                        # Check if the desired y-coordinate is within this contour
+                                        if y1 < y < y1 + h1:
+                                           # Draw a line constrained within the bounds of this contour
+                                           cv2.line(result, (x1, y), (x1 + w1, y), (255, 0, 0), 2)  # Blue line along x-axis
+                                           #print_intensity_along_line(lst, gray, (x1,y), (x1+w1,y))
+                                           print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
+                                        print("=======================")
+                            else: 
+                                            print_intensity_along_line_with_threshold(lst, gray, (x,y), (x+r,y),args.skipPixelsNearCenter)
+                                            print_intensity_along_line_with_threshold(lst, gray, (x,y), (x-r,y),args.skipPixelsNearCenter)
                             print(lst)
-                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename)
+                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold)
 
                 if args.drawContours == 1:
                    cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
