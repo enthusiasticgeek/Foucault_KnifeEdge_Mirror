@@ -60,7 +60,7 @@ Image with debug feature turned on (--drawContours 1)
 
 **Note:** Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio).
 
-**Note:** A CSV output file is created with x-cordinate, y-coordinate, average intensity, distance from x. Column 1 is all points to the left of center of mirror and Column 2 is to the right of the center of mirror.
+**Note:** A CSV output file is created with x-cordinate, y-coordinate, average intensity, distance from x. Column 1 is all points to the left of center of mirror and Column 2 is to the right of the center of mirror. Distance values are in pixels and the intensity value per pixel varies between 0 (darkest) - 255 (brightest)
 
 **Note:** One may try to vary the --brightnessTolerance value between 10 and 100 for the best results depending on the quality of the image. The default value of 20 suffices for most cases. 
 
