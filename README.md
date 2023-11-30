@@ -23,7 +23,7 @@ pip3 install opencv-python scipy
                                                  [-cmt CLOSESTMATCHTHRESHOLD]
                                                  filename
 
-**Usage example:** 
+**Usage example 1:** 
 
 ./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
 
@@ -39,11 +39,15 @@ Image with debug feature turned on (--drawContours 1)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_debugging_image.png "example output")
 
+**Usage example 2:** 
+
 **2D to 3D intensity plot with local maxima.**
 
 ./src/intensity_image_2d_to_3d.py images/1.jpg
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot1.png "example output")
+
+**Usage example 3:** 
 
 **DFT Analysis**
 
