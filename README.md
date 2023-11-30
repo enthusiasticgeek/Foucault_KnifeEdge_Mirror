@@ -1,6 +1,6 @@
 # Foucault_KnifeEdge_Mirror
 
-**Foucault Knife Edge Shadowgram Analyzer for a Mirror for Dobsonian telescopes**
+**Foucault Knife Edge Shadowgram Analyzer for a primary mirror for Dobsonian telescopes**
 
 This program was inspired by a discussion with reference to the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
 
