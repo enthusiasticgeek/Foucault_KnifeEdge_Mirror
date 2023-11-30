@@ -45,6 +45,13 @@ Image with debug feature turned on (--drawContours 1)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot1.png "example output")
 
+**DFT Analysis**
+
+./src/DFT_analysis.py images/1.jpg
+
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/DFT_analysis.png "example output")
+
+
 ## Limitations/Recommendations
 
 **Note:** Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio).
