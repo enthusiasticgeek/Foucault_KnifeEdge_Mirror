@@ -41,6 +41,8 @@ Image with debug feature turned on (--drawContours 1)
 
 **2D to 3D intensity plot with local maxima.**
 
+./src/intensity_image_2d_to_3d.py images/1.jpg
+
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot1.png "example output")
 
 ## Limitations/Recommendations
