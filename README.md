@@ -10,7 +10,7 @@ This program was inspired by a discussion with reference to the following thread
 
 **Tested on Ubuntu 18.04/20.04 LTS**
 
-pip3 install opencv-python
+pip3 install opencv-python scipy
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
@@ -27,11 +27,11 @@ pip3 install opencv-python
 
 ./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
 
-Final Analyzed Output
+**Final Analyzed Output**
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_gray_image.png "example output")
 
-Plot
+**Plot**
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_plot.png "example output")
 
@@ -39,9 +39,9 @@ Image with debug feature turned on (--drawContours 1)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_debugging_image.png "example output")
 
-2D to 3D intensity plot with local maxima.
+**2D to 3D intensity plot with local maxima.**
 
-![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot.png "example output")
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot1.png "example output")
 
 ## Limitations/Recommendations
 
