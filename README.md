@@ -4,6 +4,12 @@
 
 This program was inspired by a discussion with reference to the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
 
+**What is a Shadowgram?**
+
+Stellafane provides a simple and excellent explanation below:
+
+https://stellafane.org/tm/atm/test/shadowgrams.html
+
 ## Dependencies
 
 **Python 3.8+ installation**
