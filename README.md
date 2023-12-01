@@ -24,7 +24,7 @@ pip3 install opencv-python scipy
 
 **Usage:** 
 
-./resize_image.sh <image file>
+./resize_image.sh \<image file\>
 
 ./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
