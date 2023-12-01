@@ -58,7 +58,7 @@ Image with debug feature turned on (--drawContours 1)
 
 ## Limitations/Recommendations
 
-**Note:** Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio).
+**Note:** Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio). ImageMagick should do the trick on Linux. `convert input_image.jpg -resize 640x480 output_image.jpg`
 
 **Note:** Adjust p1, p2, minR, maxR, minDist parameters if necessary. The default values p1 (20), p2 (60), minR (10), maxR (0), minDist (5) are sufficient for majority of the cases. These parameters are critical to detect mirror from the photo using HoughCircularTransform function.
 
