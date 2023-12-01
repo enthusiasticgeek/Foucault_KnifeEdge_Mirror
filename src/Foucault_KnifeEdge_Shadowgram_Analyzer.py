@@ -8,7 +8,7 @@
 # ======================================================
 import matplotlib
 # On some Linux systems may need to uncomment this.
-# matplotlib.use('tkagg')
+#matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import cv2
@@ -63,7 +63,7 @@ def get_average_intensity(image, x, y):
     return average_intensity
 
 
-def write_matching_intensities_to_csv(matches, save_plot, plot_output):
+def write_matching_intensities_to_csv(matches, save_plot, plot_output, plot_legend):
     with open(plot_output+'.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Less Than X1 (x, y, intensity, distance from X1)', 'Greater Than X1 (x, y, intensity, distance from X1)'])
@@ -104,7 +104,8 @@ def write_matching_intensities_to_csv(matches, save_plot, plot_output):
     plt.ylabel('Intensity')
     plt.title('Matching Intensities')
     # Show the plot legend
-    plt.legend()
+    if plot_legend == 1:
+       plt.legend()
     if save_plot == 1:
        # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
        plt.savefig(plot_output + ".plot.png")
@@ -121,7 +122,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold, plot_legend):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -171,7 +172,7 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
 
 
     # Collect data in CSV
-    write_matching_intensities_to_csv(matches, save_plot, plot_output)
+    write_matching_intensities_to_csv(matches, save_plot, plot_output, plot_legend)
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register the signal handler
@@ -180,7 +181,7 @@ def main():
         parser = argparse.ArgumentParser(description='Detect largest circle in an image')
         parser.add_argument('filename', help='Path to the image file')
         parser.add_argument('-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles')
-        parser.add_argument('-p1', '--param1', type=int, default=55, help='First method-specific parameter')
+        parser.add_argument('-p1', '--param1', type=int, default=20, help='First method-specific parameter')
         parser.add_argument('-p2', '--param2', type=int, default=60, help='Second method-specific parameter')
         parser.add_argument('-minR', '--minRadius', type=int, default=10, help='Minimum circle radius')
         parser.add_argument('-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius')
@@ -193,6 +194,7 @@ def main():
         parser.add_argument('-spnc', '--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40')
         parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
+        parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=3, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
         args = parser.parse_args()
 
@@ -282,7 +284,7 @@ def main():
                                             print_intensity_along_line_with_threshold(lst, gray, (x,y), (x+r,y),args.skipPixelsNearCenter)
                                             print_intensity_along_line_with_threshold(lst, gray, (x,y), (x-r,y),args.skipPixelsNearCenter)
                             print(lst)
-                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold)
+                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend)
 
                 if args.drawContours == 1:
                    cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
