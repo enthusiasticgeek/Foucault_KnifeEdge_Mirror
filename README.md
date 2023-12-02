@@ -14,7 +14,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 ## Windows 11/12
 
-### Pre-requisites 
+#### Pre-requisites 
 
 1. Install Python 3 (version 3.11 or greater preferred) from windows software installation search tool.
 2. Install Git 64-bit version via https://git-scm.com/download/win
@@ -24,28 +24,31 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 5. `git clone https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror.git`
 
 
-### Run: (To be executed each time on PC booting)
+#### Run: (To be executed each time on PC booting)
 
 1. Open Windows command prompt.
 2. `cd <user dir path>\Downloads\Foucault_KnifeEdge_Mirror` 
-**Optional** (to get the latest software updates): 
-git pull
+**Optional** (to get the latest software updates): `git pull`
 3. Usage: `python3 ./src\Foucault_KnifeEdge_Shadowgram_Analyzer.py images\1.jpg`
 4. Replace 1.jpg with your 640x480 resolution or slightly smaller image.
 5. You may pass more flags as deemed necessary e.g., -bt 20 for brightness tolerance. README.md contains the complete list of flags.
 6. Repeat steps 3 through 5 as needed.
 
-## Ubuntu/Debian 
+#### Ubuntu/Debian 
 
 **Python 3.8+ installation**
 
 **Tested on Ubuntu 18.04/20.04 LTS**
 
-### Pre-requisites
+#### Pre-requisites
 
 pip3 install opencv-python scipy matplotlib
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
+
+#### Run: (To be executed each time on PC booting)
+
+See example below:
 
 ## Usage
 
