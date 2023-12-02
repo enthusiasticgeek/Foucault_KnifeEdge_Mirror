@@ -8,7 +8,7 @@
 # ======================================================
 import matplotlib
 # On some Linux systems may need to uncomment this.
-#matplotlib.use('tkagg')
+matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import cv2
@@ -196,6 +196,7 @@ def main():
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=3, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
+        parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show flipped and superimposed image. Default value is 0')
         args = parser.parse_args()
 
         try:
@@ -259,6 +260,20 @@ def main():
                             largest_circle = i
                     x, y, r = largest_circle
                     cv2.circle(result, (x, y), 5, (0, 0, 255), -1)
+
+                    # Calculate the bounding box for the circular ROI
+                    x_b, y_b = x - r, y - r
+                    w_b, h_b = 2 * r, 2 * r
+
+                    # Crop the original image to the circular ROI
+                    cropped_image = gray[y_b:y_b+h_b, x_b:x_b+w_b]
+
+                    # Flip the cropped image horizontally
+                    flipped_cropped_image = cv2.flip(cropped_image, 1)
+
+                    # image like phi
+                    phi_image = cv2.absdiff(cropped_image, flipped_cropped_image)
+
                     if args.drawCircles == 1:
                             cv2.circle(result, (x, y), r, (0, 0, 255), 2)
                             # Draw red vertical line inside the circle
@@ -292,6 +307,8 @@ def main():
                    cv2.imwrite(args.filename + '.analysis.jpg', gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
                 #cv2.imshow('Threshold', thresh)
                 cv2.imshow('Image with markers on Shadowgram', gray)
+                if args.showFlippedImage == 1:
+                   cv2.imshow('Image Flipped', phi_image)
                 cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
                 cv2.destroyAllWindows()
         except FileNotFoundError as e:
