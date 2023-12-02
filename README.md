@@ -16,7 +16,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 **Tested on Ubuntu 18.04/20.04 LTS**
 
-pip3 install opencv-python scipy
+pip3 install opencv-python scipy matplotlib
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
