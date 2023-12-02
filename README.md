@@ -6,7 +6,7 @@ This program was inspired by a discussion with reference to the following thread
 
 **What is a Shadowgram?**
 
-Stellafane provides a simple and excellent explanation below:
+Stellafane provides a simple and an excellent explanation below:
 
 https://stellafane.org/tm/atm/test/shadowgrams.html
 
