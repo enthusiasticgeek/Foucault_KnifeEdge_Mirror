@@ -77,6 +77,10 @@ Image with debug feature turned on (--drawContours 1)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_debugging_image.png "example output")
 
+Image with flip and superimpose feature turned on (-fli 1)
+
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/phi_flipped.png "example output")
+
 **Usage example 2:** 
 
 **2D to 3D intensity plot with local maxima.**
