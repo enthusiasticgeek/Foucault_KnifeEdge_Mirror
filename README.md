@@ -115,7 +115,7 @@ Image with debug feature turned on (--drawContours 1)
 
 2. **Python script crashes with segfault or exits with other errors! What could be the reason?**
 
-   **Potential Fix:** Either comment or uncomment `#matplotlib.use('tkagg')` line at the top of the Python script (as applicable). Some Operating system packages may or may not need this for matplotlib and opencv to work well together. Also ensure the image file exists at the location that is passed as an argument to the Python script.
+   **Potential Fix:** Either comment or uncomment `#matplotlib.use('tkagg')` line at the top of the Python script (as applicable). Some Operating system installations setup may or may not need this for matplotlib and opencv to work well together. Also ensure the image file exists at the location that is passed as an argument to the Python script.
 
 3. **Python script is unable to detect the mirror! How do I correct this?**
 
