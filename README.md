@@ -68,8 +68,6 @@ Image with debug feature turned on (--drawContours 1)
 
 **Note:** Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio). ImageMagick should do the trick on Linux. `convert input_image.jpg -resize 640x480 output_image.jpg`
 
-**Note:** Adjust p1, p2, minR, maxR, minDist parameters if necessary. The default values p1 (20), p2 (60), minR (10), maxR (0), minDist (5) are sufficient for majority of the cases. These parameters are critical to detect mirror from the photo using HoughCircularTransform function.
-
 **Note:** A CSV output file is created with x-cordinate, y-coordinate, average intensity, distance from x. Column 1 is all points to the left of center of mirror and Column 2 is to the right of the center of mirror. Distance values are in pixels and the intensity value per pixel varies between 0 (darkest) - 255 (brightest)
 
 **Note:** One may try to vary the --brightnessTolerance value between 10 and 100 for the best results depending on the quality of the image. The default value of 20 suffices for most cases. 
@@ -77,6 +75,21 @@ Image with debug feature turned on (--drawContours 1)
 **Note:** Set --displayWindowPeriod 0 if one doesn't want to automatically exit the program after 10 seconds.
 
 **Note:** One may try to vary the --skipPixelsNearCenter value if not interested in calculating the intensity in the immediate neighbourhood of the center of the mirror. The default value of 40 suffices for most cases.
+
+
+## Troubleshooting
+
+1. **Python script takes too long to execute and display plots and images**
+
+   **Potential Fix:** The detector only works if it is fed a decent quality image. Given this is true (a) Check the value of brightness toleance and try lowering it (e.g. 10) since wider the range - most pixels with similar intensities will lie between the range (b) Check the image resolution and reduce to 640x480.
+
+2. **Python script crashes with segfault or exits with other errors**
+
+   **Potential Fix:** Either comment or uncomment `#matplotlib.use('tkagg')` line at the top of the Python script (as applicable). Some Operating system packages may or may not need this for matplotlib and opencv. Also ensure the image file exists at the location that is passed as an argument to the Python script.
+
+3. **Python script is unable to detect the mirror**
+
+   **Potential Fix:** Adjust p1, p2, minR, maxR, minDist parameters if necessary. The default values p1 (20), p2 (60), minR (10), maxR (0), minDist (5) are sufficient for majority of the cases. These parameters are critical to detect mirror from the photo using HoughCircularTransform function. 
 
 **Credits:**
 
