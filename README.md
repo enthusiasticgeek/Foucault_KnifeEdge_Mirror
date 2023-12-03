@@ -57,11 +57,11 @@ See example below:
 
 Use ImageMagick (Linux) to resize the image to 640x480 resolution first (other smaller resolutions may also work).
 
-	./resize_image.sh <image file>
+	./src/resize_image.sh <image file>
 
 Then execute the following (replacing correct parameters as deemed necessary)
 
-	./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
+	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
                                                  [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES]
                                                  filename
