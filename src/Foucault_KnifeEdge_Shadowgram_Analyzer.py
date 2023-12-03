@@ -62,6 +62,14 @@ def get_average_intensity(image, x, y):
     average_intensity = neighborhood.mean()
     return average_intensity
 
+def write_all_intensities_to_csv(x1, y1, r1, data, plot_output):
+    with open(plot_output+'.data.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['x, y, intensity'])
+
+        for row in data:
+            row_mod = (row[0] - x1, row[1] - y1) + row[2:]
+            writer.writerow([row_mod])
 
 def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_output, plot_legend):
     with open(plot_output+'.csv', mode='w', newline='') as file:
@@ -202,6 +210,7 @@ def main():
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
         parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show flipped and superimposed image. Default value is 0')
+        parser.add_argument('-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. Default value is 1')
         args = parser.parse_args()
 
         try:
@@ -304,6 +313,10 @@ def main():
                                             print_intensity_along_line_with_threshold(lst, gray, (x,y), (x+r,y),args.skipPixelsNearCenter)
                                             print_intensity_along_line_with_threshold(lst, gray, (x,y), (x-r,y),args.skipPixelsNearCenter)
                             print(lst)
+                            #write all data points regardless of matching intensities in a separate CSV file
+                            if args.listAllIntesities == 1:
+                               write_all_intensities_to_csv(x, y, r, lst,args.filename)
+                            #proceed to find matching intensities
                             find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend)
 
                 if args.drawContours == 1:
