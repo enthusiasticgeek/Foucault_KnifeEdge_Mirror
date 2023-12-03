@@ -42,7 +42,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 #### Pre-requisites
 
-`pip3 install opencv-python scipy matplotlib`
+	pip3 install opencv-python scipy matplotlib
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
@@ -61,6 +61,7 @@ See example below:
                                                  [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES]
                                                  filename
 
+The parameters (flags) description and their respective default values are as follows:
 
 	'-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles'
 	'-p1', '--param1', type=int, default=20, help='First method-specific parameter'
@@ -84,7 +85,7 @@ See example below:
 
 **Usage example 1:** 
 
-`./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1`
+	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
 
 **Final Analyzed Output**
 
@@ -106,7 +107,7 @@ Image with flip and superimpose feature turned on (`-fli 1`)
 
 **2D to 3D intensity plot with local maxima.**
 
-`./src/intensity_image_2d_to_3d.py images/1.jpg`
+	./src/intensity_image_2d_to_3d.py images/1.jpg
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot1.png "example output")
 
@@ -114,7 +115,7 @@ Image with flip and superimpose feature turned on (`-fli 1`)
 
 **DFT Analysis**
 
-`./src/DFT_analysis.py images/1.jpg`
+	./src/DFT_analysis.py images/1.jpg
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/DFT_analysis.png "example output")
 
