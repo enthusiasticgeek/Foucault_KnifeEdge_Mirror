@@ -39,11 +39,13 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 #### Ubuntu/Debian 
 
-**Python 3.8+ installation**
-
-**Tested on Ubuntu 18.04/20.04 LTS**
+Tested on Ubuntu 18.04/20.04 LTS
 
 #### Pre-requisites:
+
+        # Python 3.8+ installation (Python 3.11+ preferred)
+
+and execute
 
 	pip3 install opencv-python scipy matplotlib
 
