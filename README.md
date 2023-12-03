@@ -35,6 +35,8 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 6. You may pass more flags as deemed necessary e.g., -bt 20 for brightness tolerance. README.md contains the complete list of flags.
 7. Repeat steps 3 through 5 as needed.
 
+## Linux
+
 #### Ubuntu/Debian 
 
 **Python 3.8+ installation**
