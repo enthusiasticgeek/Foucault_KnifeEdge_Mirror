@@ -1,6 +1,6 @@
 # Foucault_KnifeEdge_Mirror
 
-**Foucault Knife Edge Shadowgram Analyzer for a primary mirror for Dobsonian telescopes**
+**Foucault Knife Edge Shadowgram Analyzer for a primary mirror [Dobsonian telescopes]**
 
 This program was inspired by a discussion with reference to the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
 
@@ -14,7 +14,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 ## Windows 11/12
 
-#### Pre-requisites 
+#### Pre-requisites: 
 
 1. Install Python 3 (version 3.11 or greater preferred) from windows software installation search tool.
 2. Install Git 64-bit version via https://git-scm.com/download/win
@@ -41,7 +41,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 **Tested on Ubuntu 18.04/20.04 LTS**
 
-#### Pre-requisites
+#### Pre-requisites:
 
 	pip3 install opencv-python scipy matplotlib
 
