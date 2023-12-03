@@ -209,8 +209,8 @@ def main():
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
-        parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show flipped and superimposed image. Default value is 0')
-        parser.add_argument('-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. Default value is 1')
+        parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
+        parser.add_argument('-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1')
         args = parser.parse_args()
 
         try:
