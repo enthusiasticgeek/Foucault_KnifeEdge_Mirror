@@ -8,7 +8,7 @@
 # ======================================================
 import matplotlib
 # On some Linux systems may need to uncomment this.
-#matplotlib.use('tkagg')
+matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import cv2
@@ -63,14 +63,19 @@ def get_average_intensity(image, x, y):
     return average_intensity
 
 
-def write_matching_intensities_to_csv(matches, save_plot, plot_output, plot_legend):
+def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_output, plot_legend):
     with open(plot_output+'.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Less Than X1 (x, y, intensity, distance from X1)', 'Greater Than X1 (x, y, intensity, distance from X1)'])
 
         for match in matches:
-            lt_point = ', '.join(map(str, match[0]))  # Convert tuple to string and remove brackets
-            gt_point = ', '.join(map(str, match[1]))  # Convert tuple to string and remove brackets
+            #lt_point = ', '.join(map(str, match[0]))  # Convert tuple to string and remove brackets
+            #gt_point = ', '.join(map(str, match[1]))  # Convert tuple to string and remove brackets
+            #writer.writerow([lt_point, gt_point])
+            lt_match = (match[0][0] - x1, match[0][1] - y1) + match[0][2:]
+            gt_match = (match[1][0] - x1, match[1][1] - y1) + match[1][2:]
+            lt_point = ', '.join(map(str, lt_match))  # Convert tuple to string and remove brackets
+            gt_point = ', '.join(map(str, gt_match))  # Convert tuple to string and remove brackets
             writer.writerow([lt_point, gt_point])
 
     plt.figure(figsize=(12,8)) # 12 inches x 8 inches
@@ -156,23 +161,23 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
                     draw_symmetrical_line(image, gt_point[0], gt_point[1], line_length, (255,255,255))
 
     # Draw the center of the mirror
-    draw_text(image, f"({x1},{y1})", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+    draw_text(image, f"({x1-x1},{y1-y1})", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
     draw_text(image, f"Radius: {r1}", (x1-20,y1+r1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
     # Find the closest match and draw it!
     for i in matches:
         print(f"{i[0]},{i[1]}")
         if abs(int(i[0][2])-int(i[1][2])) < closest_match_threshold:
-           draw_text(image, f"({i[0][0]},{i[0][1]})", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"({i[0][0]-x1},{i[0][1]-y1})", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"Intensity: {i[0][2]}", (i[0][0]-30,i[0][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[0][0],i[0][1], line_length+10, color=(255,255,255))
-           draw_text(image, f"({i[1][0]},{i[1][1]})", (i[1][0]-20,i[1][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"({i[1][0]-x1},{i[1][1]-y1})", (i[1][0]-20,i[1][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"Intensity: {i[1][2]}", (i[1][0]-30,i[1][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[1][0], i[1][1], line_length+10, color=(255,255,255))
 
 
     # Collect data in CSV
-    write_matching_intensities_to_csv(matches, save_plot, plot_output, plot_legend)
+    write_matching_intensities_to_csv(x1,y1,r1,matches, save_plot, plot_output, plot_legend)
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register the signal handler
@@ -195,7 +200,7 @@ def main():
         parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
-        parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=3, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
+        parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
         parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show flipped and superimposed image. Default value is 0')
         args = parser.parse_args()
 
