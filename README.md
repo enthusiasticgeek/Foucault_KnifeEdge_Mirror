@@ -42,7 +42,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 
 #### Pre-requisites
 
-pip3 install opencv-python scipy matplotlib
+`pip3 install opencv-python scipy matplotlib`
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
@@ -73,11 +73,11 @@ See example below:
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_plot.png "example output")
 
-Image with debug feature turned on (--drawContours 1)
+Image with debug feature turned on (`--drawContours 1`)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_debugging_image.png "example output")
 
-Image with flip and superimpose feature turned on (-fli 1)
+Image with flip and superimpose feature turned on (`-fli 1`)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/phi_flipped.png "example output")
 
@@ -104,11 +104,11 @@ Image with flip and superimpose feature turned on (-fli 1)
 
 **Note:** A CSV output file is created with x-cordinate, y-coordinate, average intensity, distance from x. Column 1 is all points to the left of center of mirror and Column 2 is to the right of the center of mirror. Distance values are in pixels and the intensity value per pixel varies between 0 (darkest) - 255 (brightest)
 
-**Note:** One may try to vary the --brightnessTolerance value between 10 and 100 for the best results depending on the quality of the image. The default value of 20 suffices for most cases. 
+**Note:** One may try to vary the `--brightnessTolerance` value between 10 and 100 for the best results depending on the quality of the image. The default value of 20 suffices for most cases. 
 
-**Note:** Set --displayWindowPeriod 0 if one doesn't want to automatically exit the program after 10 seconds.
+**Note:** Set `--displayWindowPeriod 0` if one doesn't want to automatically exit the program after 10 seconds.
 
-**Note:** One may try to vary the --skipPixelsNearCenter value if not interested in calculating the intensity in the immediate neighbourhood of the center of the mirror. The default value of 40 suffices for most cases.
+**Note:** One may try to vary the `--skipPixelsNearCenter` value if not interested in calculating the intensity in the immediate neighbourhood of the center of the mirror. The default value of 40 suffices for most cases.
 
 
 ## Troubleshooting and FAQs
