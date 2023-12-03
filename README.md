@@ -47,7 +47,11 @@ Tested on Ubuntu 18.04/20.04 LTS
 
 and execute
 
-	pip3 install opencv-python scipy matplotlib
+	pip3 install opencv-python scipy matplotlib PySimpleGUI
+
+or optionally with `-m` flag turned on https://stackoverflow.com/questions/50821312/what-is-the-effect-of-using-python-m-pip-instead-of-just-pip
+
+        python -m pip install opencv-python scipy matplotlib PySimpleGUI
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
