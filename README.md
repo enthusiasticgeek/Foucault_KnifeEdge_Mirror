@@ -43,7 +43,7 @@ Tested on Ubuntu 18.04/20.04 LTS
 
 #### Pre-requisites:
 
-        # Python 3.8+ installation (Python 3.11+ preferred)
+	# Python 3.8+ installation (Python 3.11+ preferred)
 
 and execute
 
