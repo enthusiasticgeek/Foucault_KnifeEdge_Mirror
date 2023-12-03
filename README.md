@@ -63,7 +63,7 @@ See example below:
 
 **Usage example 1:** 
 
-./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
+`./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1`
 
 **Final Analyzed Output**
 
@@ -85,7 +85,7 @@ Image with flip and superimpose feature turned on (-fli 1)
 
 **2D to 3D intensity plot with local maxima.**
 
-./src/intensity_image_2d_to_3d.py images/1.jpg
+`./src/intensity_image_2d_to_3d.py images/1.jpg`
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/3d_intensity_plot1.png "example output")
 
@@ -93,7 +93,7 @@ Image with flip and superimpose feature turned on (-fli 1)
 
 **DFT Analysis**
 
-./src/DFT_analysis.py images/1.jpg
+`./src/DFT_analysis.py images/1.jpg`
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/DFT_analysis.png "example output")
 
