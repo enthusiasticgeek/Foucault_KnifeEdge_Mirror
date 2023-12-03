@@ -29,10 +29,11 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 1. Open Windows command prompt.
 2. `cd <user dir path>\Downloads\Foucault_KnifeEdge_Mirror` 
 **Optional** (to get the latest software updates): `git pull`
-3. Usage: `python3 ./src\Foucault_KnifeEdge_Shadowgram_Analyzer.py images\1.jpg`
-4. Replace 1.jpg with your 640x480 resolution or slightly smaller image.
-5. You may pass more flags as deemed necessary e.g., -bt 20 for brightness tolerance. README.md contains the complete list of flags.
-6. Repeat steps 3 through 5 as needed.
+3. Resize the image e.g. 1.jpg to 640x480 and copy the same in `images` folder. Adjust path and image filename in the following command line to where the image file is located if other than `images` folder.
+4. Usage: `python3 ./src\Foucault_KnifeEdge_Shadowgram_Analyzer.py images\1.jpg`
+5. Replace 1.jpg with your 640x480 resolution or slightly smaller image.
+6. You may pass more flags as deemed necessary e.g., -bt 20 for brightness tolerance. README.md contains the complete list of flags.
+7. Repeat steps 3 through 5 as needed.
 
 #### Ubuntu/Debian 
 
@@ -54,7 +55,11 @@ See example below:
 
 **Example of usage on Ubuntu:** 
 
+Use ImageMagick (Linux) to resize the image to 640x480 resolution first (other smaller resolutions may also work).
+
 	./resize_image.sh <image file>
+
+Then execute the following (replacing correct parameters as deemed necessary)
 
 	./Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
