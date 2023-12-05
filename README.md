@@ -20,7 +20,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 2. Install Git 64-bit version via https://git-scm.com/download/win
 3. Open a new Windows command prompt.
 
-	pip3 install opencv-python scipy matplotlib PySimpleGUI Pillow
+	`pip3 install opencv-python scipy matplotlib PySimpleGUI Pillow`
 
 4. `cd <user dir path>\Downloads`
 5. `git clone https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror.git`
