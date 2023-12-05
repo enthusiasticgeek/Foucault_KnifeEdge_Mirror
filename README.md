@@ -23,8 +23,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 4. `cd <user dir path>\Downloads`
 5. `git clone https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror.git`
 
-
-#### Run: (To be executed each time on PC booting)
+#### Run: (To be executed every time)
 
 1. Open Windows command prompt.
 2. `cd <user dir path>\Downloads\Foucault_KnifeEdge_Mirror` 
