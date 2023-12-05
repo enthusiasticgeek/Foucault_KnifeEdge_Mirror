@@ -206,6 +206,7 @@ def main():
         parser.add_argument('-dwp', '--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for infinite window period.')
         parser.add_argument('-spnc', '--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40')
         parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk with the timestamp (value changed to 1). Default value is 1')
+        parser.add_argument('-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1). Default value is 1')
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
@@ -327,6 +328,8 @@ def main():
                 cv2.imshow('Image with markers on Shadowgram', gray)
                 if args.showFlippedImage == 1:
                    cv2.imshow('Image Flipped', phi_image)
+                if args.saveFlippedImage == 1:
+                   cv2.imwrite(args.filename + '.flipped.jpg', phi_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
                 cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
                 cv2.destroyAllWindows()
         except FileNotFoundError as e:
