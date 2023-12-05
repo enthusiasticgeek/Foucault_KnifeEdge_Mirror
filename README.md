@@ -69,30 +69,32 @@ Use ImageMagick (Linux) to resize the image to 640x480 resolution first (other s
 Then execute the following (replacing correct parameters as deemed necessary)
 
 	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
-                                                 [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
-                                                 [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES]
+                                                 [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svf SAVEFLIPPEDIMAGE]
+                                                 [-svc SAVECONTOURSIMAGE] [-svp SAVEPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES]
                                                  <image filename>
 
 The parameters (flags) description and their respective default values are as follows:
 
-	'-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles'
-	'-p1', '--param1', type=int, default=20, help='First method-specific parameter'
-	'-p2', '--param2', type=int, default=60, help='Second method-specific parameter'
-	'-minR', '--minRadius', type=int, default=10, help='Minimum circle radius'
-	'-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius'
-	'-cc', '--considerContours', type=int, default=0, help='Draw intensity only accounting for contours of the shadowgram. This makes analysis more detailed. Default value is 0'
-	'-dc', '--drawContours', type=int, default=0, help='Draw contours'
-	'-dnc', '--drawNestedContours', type=int, default=0, help='Draw Nested contours'
-	'-dr', '--drawCircles', type=int, default=1, help='Draw mirror circle(s)'
-	'-bt', '--brightnessTolerance', type=int, default=20, help='Brightness tolerance value for intensity calculation. Default value is 20'
-	'-dwp', '--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for infinite window period.'
-	'-spnc', '--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40'
-	'-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk with the timestamp (value changed to 1. Default value is 1'
-	'-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk with the timestamp (value changed to 1. Default value is 1'
-	'-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0'
-	'-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3'
-	'-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0'
-	'-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1'
+	'-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles
+	'-p1', '--param1', type=int, default=20, help='First method-specific parameter
+	'-p2', '--param2', type=int, default=60, help='Second method-specific parameter
+	'-minR', '--minRadius', type=int, default=10, help='Minimum circle radius
+	'-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius
+	'-cc', '--considerContours', type=int, default=0, help='Draw intensity only accounting for contours of the shadowgram. This makes analysis more detailed. Default value is 0
+	'-dc', '--drawContours', type=int, default=0, help='Draw contours
+	'-dnc', '--drawNestedContours', type=int, default=0, help='Draw Nested contours
+	'-dr', '--drawCircles', type=int, default=1, help='Draw mirror circle(s)
+	'-bt', '--brightnessTolerance', type=int, default=20, help='Brightness tolerance value for intensity calculation. Default value is 20
+	'-dwp', '--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for infinite window period.
+	'-spnc', '--skipPixelsNearCenter', type=int, default=40, help='Skip the pixels that are too close to the center of the mirror for intensity calculation. Default value is 40
+	'-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk (value changed to 1). Default value is 1
+	'-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1
+	'-svc', '--saveContoursImage', type=int, default=0, help='Save the Contour Image on the disk. Default value is 0
+	'-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1
+	'-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0
+	'-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3
+	'-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0
+	'-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1
 
 
 **Usage example 1:** 
