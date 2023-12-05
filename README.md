@@ -28,7 +28,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 1. Open Windows command prompt.
 2. `cd <user dir path>\Downloads\Foucault_KnifeEdge_Mirror` 
 **Optional** (to get the latest software updates): `git pull`
-3. Resize the image e.g. 1.jpg to 640x480 and copy the same in `images` folder. Adjust path and image filename in the following command line to where the image file is located if other than `images` folder.
+3. ~Resize the image e.g. 1.jpg to 640x480 and~ copy the same in `images` folder. Adjust path and image filename in the following command line to where the image file is located if other than `images` folder.
 4. Usage: `python3 ./src\Foucault_KnifeEdge_Shadowgram_Analyzer.py images\1.jpg`
 5. Replace 1.jpg with your 640x480 resolution or slightly smaller image.
 6. You may pass more flags as deemed necessary e.g., -bt 20 for brightness tolerance. README.md contains the complete list of flags.
@@ -66,7 +66,7 @@ See example below:
 
 **Example of usage on Ubuntu:** 
 
-Use ImageMagick (Linux) to resize the image to 640x480 resolution first (other smaller resolutions may also work).
+~Use ImageMagick (Linux) to resize the image to 640x480 resolution first (other smaller resolutions may also work).~
 
 	./src/resize_image.sh <image filename>
 
@@ -144,7 +144,7 @@ The generated output image is also saved to the disk.
 
 ## Limitations/Recommendations
 
-**Note:** Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio). ImageMagick should do the trick on Linux. `convert input_image.jpg -resize 640x480 output_image.jpg`
+**Note:** ~Use 640x480 or smaller resolution images for faster processing (although the program will attempt to resize the images while still maintaning the aspect ratio). ImageMagick should do the trick on Linux. `convert input_image.jpg -resize 640x480 output_image.jpg`~. Fixed image scaling operation.
 
 **Note:** A CSV output file is created with x-cordinate, y-coordinate, average intensity, distance from x. Column 1 is all points to the left of center of mirror and Column 2 is to the right of the center of mirror. Distance values are in pixels and the intensity value per pixel varies between 0 (darkest) - 255 (brightest)
 

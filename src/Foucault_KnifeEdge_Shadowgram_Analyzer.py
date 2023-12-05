@@ -10,6 +10,7 @@ import matplotlib
 # On some Linux systems may need to uncomment this.
 #matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
+from PIL import Image
 
 import cv2
 import numpy as np
@@ -36,6 +37,16 @@ def resize_image(image, max_width=640):
         new_height = int(height * ratio)
         return cv2.resize(image, (max_width, new_height))
     return image
+
+# Ref: https://stackoverflow.com/questions/14134892/convert-image-from-pil-to-opencv-format
+def convert_from_cv2_to_image(img: np.ndarray) -> Image:
+    # return Image.fromarray(img)
+    return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+# Ref: https://stackoverflow.com/questions/14134892/convert-image-from-pil-to-opencv-format
+def convert_from_image_to_cv2(img: Image) -> np.ndarray:
+    # return np.asarray(img)
+    return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
 def print_intensity_along_line_with_threshold(lst, image, start_point, end_point, distance_threshold):
     # Ensure start_point is the leftmost point
@@ -220,15 +231,33 @@ def main():
                 image = cv2.imread(args.filename)
                 if image is None:
                     raise FileNotFoundError("Image file not found or cannot be read.")
-
-                image = resize_image(image)
-
+                #image = resize_image(image)
                 if image is None:
                     print(f"Unable to load the image from {args.filename}")
                     return
 
+
+                converted_image = convert_from_cv2_to_image(image)
+                max_width = 640
+
+                # Calculate the ratio to maintain aspect ratio while limiting width
+                width, height = converted_image.size
+                ratio = max_width / width
+                new_height = int(height * ratio)
+
+                # Resize while maintaining aspect ratio
+                resized_image = converted_image.resize((max_width, new_height))
+            
+                # Convert the resized PIL image back to OpenCV format
+                resized_cv2_image = convert_from_image_to_cv2(resized_image)
+
+                if image is None:
+                    print(f"Unable to resize from pillow to opencv")
+                    return
+
                 # Convert the image to grayscale
-                gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                gray = cv2.cvtColor(resized_cv2_image, cv2.COLOR_BGR2GRAY)
 
                 # Apply Gaussian blur to reduce noise
                 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -247,7 +276,7 @@ def main():
                         for i in range(len(contours)):
                             # Check if the contour has a parent (nested contour)
                             if hierarchy[0][i][3] != -1:
-                                cv2.drawContours(image, [contours[i]], -1, (0, 0, 255), 2)  # Draw nested contours in red
+                                cv2.drawContours(resized_cv2_image, [contours[i]], -1, (0, 0, 255), 2)  # Draw nested contours in red
 
                 # Find contours in the binary image
                 #contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -256,7 +285,7 @@ def main():
                 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
                 # Draw the contours on the original image
-                result = image.copy()
+                result = resized_cv2_image.copy()
 
                 if args.drawContours == 1 or args.saveContoursImage == 1:
                     cv2.drawContours(result, contours, -1, (0, 255, 0), 2)
