@@ -55,7 +55,7 @@ or optionally with `-m` flag turned on https://stackoverflow.com/questions/50821
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
-#### Run: (To be executed each time on PC booting)
+#### Run: (To be executed every time)
 
 See example below:
 
@@ -65,14 +65,14 @@ See example below:
 
 Use ImageMagick (Linux) to resize the image to 640x480 resolution first (other smaller resolutions may also work).
 
-	./src/resize_image.sh <image file>
+	./src/resize_image.sh <image filename>
 
 Then execute the following (replacing correct parameters as deemed necessary)
 
 	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svp SAVEPLOT]
                                                  [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES]
-                                                 filename
+                                                 <image filename>
 
 The parameters (flags) description and their respective default values are as follows:
 
@@ -150,7 +150,7 @@ Image with flip and superimpose feature turned on (`-fli 1`)
 
 1. **Python script takes too long to execute and display plots and images! Can I tweak some parameters?**
 
-   **Potential Fix:** The detector only works if it is fed a decent quality image. Given this is true (a) Check the value of brightness toleance and try lowering it (e.g. 10) since wider the range - most pixels with similar intensities will lie between the range (b) Check the image resolution and reduce to 640x480 - See the resize image section below if using Windows 11/12.
+   **Potential Fix:** The detector only works if it is fed a decent quality image. Given this is true (a) Check the value of brightness tolerance and try lowering it (e.g. 10) since wider the range - most pixels with similar intensities will lie between the range (b) Check the image resolution and reduce to 640x480 - See the resize image section below if using Windows 11/12.
 
 2. **Python script crashes with segfault or exits with other errors! What could be the reason?**
 
