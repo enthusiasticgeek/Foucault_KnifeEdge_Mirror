@@ -51,6 +51,10 @@ and execute
 or optionally with `-m` flag turned on https://stackoverflow.com/questions/50821312/what-is-the-effect-of-using-python-m-pip-instead-of-just-pip
 
         python -m pip install numpy opencv-python scipy matplotlib PySimpleGUI Pillow
+	
+On Ubuntu20.04 LTS, one may have to execute the following as well.
+
+	sudo apt install python3-pil.imagetk
 
 ***One may use virtualenv https://virtualenv.pypa.io/en/latest/ to create isolated Python environments***
 
@@ -130,6 +134,10 @@ Image with flip and superimpose feature turned on (`-fli 1`)
 **DFT Analysis**
 
 	./src/DFT_analysis.py images/1.jpg
+
+The generated output image is also saved to the disk.
+
+	magnitude_spectrum_<timestamp>.png
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/DFT_analysis.png "example output")
 
