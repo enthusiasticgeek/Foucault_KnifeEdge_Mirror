@@ -32,7 +32,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 **Optional** (to get the latest software updates): `git pull`
 3. ~Resize the image e.g. 1.jpg to 640x480 and~ copy the same in `images` folder. Adjust path and image filename in the following command line to where the image file is located if other than `images` folder.
 4. Usage: `python3 ./src\Foucault_KnifeEdge_Shadowgram_Analyzer.py images\1.jpg`
-5. Replace 1.jpg with your 640x480 resolution or slightly smaller image.
+5. ~Replace 1.jpg with your 640x480 resolution or slightly smaller image.~
 6. You may pass more flags as deemed necessary e.g., -bt 20 for brightness tolerance. README.md contains the complete list of flags.
 7. Repeat steps 3 through 5 as needed.
 
