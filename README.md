@@ -163,7 +163,7 @@ The generated output image is also saved to the disk.
 
 1. **Python script takes too long to execute and display plots and images! Can I tweak some parameters?**
 
-   **Potential Fix:** The detector only works if it is fed a decent quality image. Given this is true (a) Check the value of brightness tolerance and try lowering it (e.g. 10) since wider the range - most pixels with similar intensities will lie between the range (b) Check the image resolution and reduce to 640x480 - See the resize image section below if using Windows 11/12.
+   **Potential Fix:** The detector only works if it is fed a decent quality image. Given this is true (a) Check the value of brightness tolerance and try lowering it (e.g. 10) since wider the range - most pixels with similar intensities will lie between the range (b) Check the image resolution and reduce to 640x480 especially if running the program over the following platforms 1. Windows Subsystem for Linux (WSL) https://learn.microsoft.com/en-us/windows/wsl 2. Docker Container https://www.docker.com/resources/what-container/ 3. VirtualBox https://www.virtualbox.org/ - See the resize image section below if using Windows 11/12.
 
 2. **Python script crashes with segfault or exits with other errors! What could be the reason?**
 
