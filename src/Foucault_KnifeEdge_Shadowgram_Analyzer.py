@@ -224,6 +224,7 @@ def main():
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
         parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
         parser.add_argument('-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1')
+        parser.add_argument('-rpil', '--resizeWithPillow', type=int, default=0, help='Resize with Pillow instead of OpenCV. Default value is 0')
         args = parser.parse_args()
 
         try:
@@ -231,28 +232,27 @@ def main():
                 image = cv2.imread(args.filename)
                 if image is None:
                     raise FileNotFoundError("Image file not found or cannot be read.")
-                #image = resize_image(image)
-                if image is None:
-                    print(f"Unable to load the image from {args.filename}")
-                    return
+                
+                if args.resizeWithPillow == 0: 
+                        resized_cv2_image = resize_image(image)
 
+                elif args.resizeWithPillow == 1: 
+                        converted_image = convert_from_cv2_to_image(image)
+                        max_width = 640
 
-                converted_image = convert_from_cv2_to_image(image)
-                max_width = 640
+                        # Calculate the ratio to maintain aspect ratio while limiting width
+                        width, height = converted_image.size
+                        ratio = max_width / width
+                        new_height = int(height * ratio)
 
-                # Calculate the ratio to maintain aspect ratio while limiting width
-                width, height = converted_image.size
-                ratio = max_width / width
-                new_height = int(height * ratio)
+                        # Resize while maintaining aspect ratio
+                        resized_image = converted_image.resize((max_width, new_height))
+                    
+                        # Convert the resized PIL image back to OpenCV format
+                        resized_cv2_image = convert_from_image_to_cv2(resized_image)
 
-                # Resize while maintaining aspect ratio
-                resized_image = converted_image.resize((max_width, new_height))
-            
-                # Convert the resized PIL image back to OpenCV format
-                resized_cv2_image = convert_from_image_to_cv2(resized_image)
-
-                if image is None:
-                    print(f"Unable to resize from pillow to opencv")
+                if resized_cv2_image is None:
+                    print(f"Unable to resize image")
                     return
 
                 # Convert the image to grayscale
