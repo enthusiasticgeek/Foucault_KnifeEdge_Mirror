@@ -304,6 +304,8 @@ def main():
                         if i[2] > largest_circle[2]:
                             largest_circle = i
                     x, y, r = largest_circle
+                    print(f"Mirror Center: {x},{y}")
+                    print(f"Mirror Radius: {r}")
                     cv2.circle(result, (x, y), 5, (0, 0, 255), -1)
 
                     # Calculate the bounding box for the circular ROI
