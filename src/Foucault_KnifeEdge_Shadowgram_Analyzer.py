@@ -189,7 +189,7 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
         if abs(int(i[0][2])-int(i[1][2])) < closest_match_threshold:
            draw_text(image, f"({i[0][0]-x1},{i[0][1]-y1})", (i[0][0]-20,i[0][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"Intensity: {i[0][2]}", (i[0][0]-30,i[0][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
-           draw_text(image, f"NULL ZONE", (i[0][0]-30,i[0][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"NULL ZONE", (i[0][0]-30,i[0][1]+40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[0][0],i[0][1], line_length+10, color=(255,255,255))
            draw_text(image, f"({i[1][0]-x1},{i[1][1]-y1})", (i[1][0]-20,i[1][1]-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"Intensity: {i[1][2]}", (i[1][0]-30,i[1][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
