@@ -74,10 +74,10 @@ See example below:
 
 Then execute the following (replacing correct parameters as deemed necessary)
 
-	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
+	./sr/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svf SAVEFLIPPEDIMAGE]
-                                                 [-svc SAVECONTOURSIMAGE] [-svp SAVEPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES] 
-                                                 [-rpil RESIZEWITHPILLOW]
+                                                 [-svc SAVECONTOURSIMAGE] [-svcrp SAVECROPPEDIMAGE] [-svp SAVEPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE]
+                                                 [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW]
                                                  <image filename>
 
 The parameters (flags) description and their respective default values are as follows:
@@ -97,6 +97,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk (value changed to 1). Default value is 1
 	'-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1
 	'-svc', '--saveContoursImage', type=int, default=0, help='Save the Contour Image on the disk. Default value is 0
+        '-svcrp', '--saveCroppedImage', type=int, default=1, help='Save the Cropped Image on the disk (value changed to 1). Default value is 1
 	'-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1
 	'-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0
 	'-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3

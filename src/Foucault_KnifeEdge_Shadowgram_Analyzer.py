@@ -221,6 +221,7 @@ def main():
         parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk (value changed to 1). Default value is 1')
         parser.add_argument('-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1')
         parser.add_argument('-svc', '--saveContoursImage', type=int, default=0, help='Save the Contour Image on the disk. Default value is 0')
+        parser.add_argument('-svcrp', '--saveCroppedImage', type=int, default=1, help='Save the Cropped Image on the disk (value changed to 1). Default value is 1')
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1')
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3')
@@ -234,28 +235,30 @@ def main():
                 image = cv2.imread(args.filename)
                 if image is None:
                     raise FileNotFoundError("Image file not found or cannot be read.")
-                
-                if args.resizeWithPillow == 0: 
-                        resized_cv2_image = resize_image(image)
+                try: 
+                        if args.resizeWithPillow == 0: 
+                                resized_cv2_image = resize_image(image)
 
-                elif args.resizeWithPillow == 1: 
-                        converted_image = convert_from_cv2_to_image(image)
-                        max_width = 640
+                        elif args.resizeWithPillow == 1: 
+                                converted_image = convert_from_cv2_to_image(image)
+                                max_width = 640
 
-                        # Calculate the ratio to maintain aspect ratio while limiting width
-                        width, height = converted_image.size
-                        ratio = max_width / width
-                        new_height = int(height * ratio)
+                                # Calculate the ratio to maintain aspect ratio while limiting width
+                                width, height = converted_image.size
+                                ratio = max_width / width
+                                new_height = int(height * ratio)
 
-                        # Resize while maintaining aspect ratio
-                        resized_image = converted_image.resize((max_width, new_height))
-                    
-                        # Convert the resized PIL image back to OpenCV format
-                        resized_cv2_image = convert_from_image_to_cv2(resized_image)
+                                # Resize while maintaining aspect ratio
+                                resized_image = converted_image.resize((max_width, new_height))
+                            
+                                # Convert the resized PIL image back to OpenCV format
+                                resized_cv2_image = convert_from_image_to_cv2(resized_image)
 
-                if resized_cv2_image is None:
-                    print(f"Unable to resize image")
-                    return
+                        if resized_cv2_image is None:
+                            raise Exception(f"Unable to resize image")
+                            #return
+                except Exception as e:
+                       print(f"Error resizing image: {e}") 
 
                 # Convert the image to grayscale
                 #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -264,110 +267,129 @@ def main():
                 # Apply Gaussian blur to reduce noise
                 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-                # Use thresholding to create a binary image
-                _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                try: 
+                        # Use thresholding to create a binary image
+                        _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                except Exception as e:
+                       print(f"Thresholding error: {e}") 
                 
                 # Use adaptive thresholding to create a binary image
                 #thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 5)
 
-                # Find contours and hierarchy
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                try: 
+                        # Find contours and hierarchy
+                        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                        if contours is None:
+                           raise Exception("Failed to find contours")
 
-                if args.drawNestedContours == 1: 
-                        # Identify and draw only nested contours
-                        for i in range(len(contours)):
-                            # Check if the contour has a parent (nested contour)
-                            if hierarchy[0][i][3] != -1:
-                                cv2.drawContours(resized_cv2_image, [contours[i]], -1, (0, 0, 255), 2)  # Draw nested contours in red
+                        if args.drawNestedContours == 1: 
+                                # Identify and draw only nested contours
+                                for i in range(len(contours)):
+                                    # Check if the contour has a parent (nested contour)
+                                    if hierarchy[0][i][3] != -1:
+                                        cv2.drawContours(resized_cv2_image, [contours[i]], -1, (0, 0, 255), 2)  # Draw nested contours in red
 
-                # Find contours in the binary image
-                #contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                        # Find contours in the binary image
+                        #contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                # Sort contours based on their area in descending order
-                contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
+                        # Sort contours based on their area in descending order
+                        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+                except Exception as e:
+                       print(f"Contours processing error: {e}") 
+ 
                 # Draw the contours on the original image
                 result = resized_cv2_image.copy()
 
                 if args.drawContours == 1 or args.saveContoursImage == 1:
                     cv2.drawContours(result, contours, -1, (0, 255, 0), 2)
 
-                # Apply Hough Circle Transform with user-defined parameters
-                circles = cv2.HoughCircles(
-                    blurred,
-                    cv2.HOUGH_GRADIENT, dp=1, minDist=args.minDist, param1=args.param1, param2=args.param2,
-                    minRadius=args.minRadius, maxRadius=args.maxRadius
-                )
+                try: 
+                        # Apply Hough Circle Transform with user-defined parameters
+                        circles = cv2.HoughCircles(
+                            blurred,
+                            cv2.HOUGH_GRADIENT, dp=1, minDist=args.minDist, param1=args.param1, param2=args.param2,
+                            minRadius=args.minRadius, maxRadius=args.maxRadius
+                        )
 
-                if circles is not None:
-                    circles = np.uint16(np.around(circles))
-                    largest_circle = circles[0, 0]
-                    for i in circles[0, :]:
-                        if i[2] > largest_circle[2]:
-                            largest_circle = i
-                    x, y, r = largest_circle
-                    print(f"Mirror Center: {x},{y}")
-                    print(f"Mirror Radius: {r}")
-                    cv2.circle(result, (x, y), 5, (0, 0, 255), -1)
+                        if circles is None:
+                            raise Exception("Hough Circle Transform didn't find any circles")
 
-                    # Calculate the bounding box for the circular ROI
-                    x_b, y_b = abs(int(x) - int(r)), abs(int(y) - int(r))
-                    w_b, h_b = 2 * int(r), 2 * int(r)
+                        if circles is not None:
+                            circles = np.uint16(np.around(circles))
+                            largest_circle = circles[0, 0]
+                            for i in circles[0, :]:
+                                if i[2] > largest_circle[2]:
+                                    largest_circle = i
+                            x, y, r = largest_circle
+                            print(f"Mirror Center: {x},{y}")
+                            print(f"Mirror Radius: {r}")
+                            cv2.circle(result, (x, y), 5, (0, 0, 255), -1)
 
-                    # Crop the original image to the circular ROI
-                    cropped_image = gray[y_b:y_b+h_b, x_b:x_b+w_b]
+                            # Calculate the bounding box for the circular ROI
+                            x_b, y_b = abs(int(x) - int(r)), abs(int(y) - int(r))
+                            w_b, h_b = 2 * int(r), 2 * int(r)
 
-                    # Flip the cropped image horizontally
-                    flipped_cropped_image = cv2.flip(cropped_image, 1)
+                            # Crop the original image to the circular ROI
+                            cropped_image = gray[y_b:y_b+h_b, x_b:x_b+w_b].copy()
+                            if args.saveCroppedImage == 1:
+                               cv2.imwrite(args.filename + '.cropped.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
-                    # image like phi
-                    phi_image = cv2.absdiff(cropped_image, flipped_cropped_image)
+                            # Flip the cropped image horizontally
+                            flipped_cropped_image = cv2.flip(cropped_image, 1)
 
-                    if args.drawCircles == 1:
-                            cv2.circle(result, (x, y), r, (0, 0, 255), 2)
-                            # Draw red vertical line inside the circle
-                            # cv2.line(result, (x, y - r), (x, y + r), (0, 0, 255), 2)
-                            # Get intensity at the center of the circle
+                            # image like phi
+                            phi_image = cv2.absdiff(cropped_image, flipped_cropped_image)
 
-                            # Iterate through each contour to find the one containing the desired y-coordinate
-                            lst=[]
-                            if args.considerContours == 1:
-                                    for contour in contours:
-                                        print("===== New contour =====")
-                                        # Find the bounding rectangle of the contour
-                                        x1, y1, w1, h1 = cv2.boundingRect(contour)
-                                    
-                                        # Check if the desired y-coordinate is within this contour
-                                        if y1 < y < y1 + h1:
-                                           # Draw a line constrained within the bounds of this contour
-                                           cv2.line(result, (x1, y), (x1 + w1, y), (255, 0, 0), 2)  # Blue line along x-axis
-                                           #print_intensity_along_line(lst, gray, (x1,y), (x1+w1,y))
-                                           print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
-                                        print("=======================")
-                            else: 
-                                            print_intensity_along_line_with_threshold(lst, gray, (x,y), (x+r,y),args.skipPixelsNearCenter)
-                                            print_intensity_along_line_with_threshold(lst, gray, (x,y), (x-r,y),args.skipPixelsNearCenter)
-                            print(lst)
-                            #write all data points regardless of matching intensities in a separate CSV file
-                            if args.listAllIntesities == 1:
-                               write_all_intensities_to_csv(x, y, r, lst,args.filename)
-                            #proceed to find matching intensities
-                            find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend)
+                            if args.drawCircles == 1:
+                                    cv2.circle(result, (x, y), r, (0, 0, 255), 2)
+                                    # Draw red vertical line inside the circle
+                                    # cv2.line(result, (x, y - r), (x, y + r), (0, 0, 255), 2)
+                                    # Get intensity at the center of the circle
 
-                if args.drawContours == 1:
-                   cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
-                if args.saveContoursImage == 1:
-                   cv2.imwrite(args.filename + '.contours.jpg', result, [cv2.IMWRITE_JPEG_QUALITY, 100])
-                if args.saveImage == 1:
-                   cv2.imwrite(args.filename + '.analysis.jpg', gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
-                #cv2.imshow('Threshold', thresh)
-                cv2.imshow('Image with markers on Shadowgram', gray)
-                if args.showFlippedImage == 1:
-                   cv2.imshow('Image Flipped', phi_image)
-                if args.saveFlippedImage == 1:
-                   cv2.imwrite(args.filename + '.flipped.jpg', phi_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
-                cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
-                cv2.destroyAllWindows()
+                                    # Iterate through each contour to find the one containing the desired y-coordinate
+                                    lst=[]
+                                    if args.considerContours == 1:
+                                            for contour in contours:
+                                                print("===== New contour =====")
+                                                # Find the bounding rectangle of the contour
+                                                x1, y1, w1, h1 = cv2.boundingRect(contour)
+                                            
+                                                # Check if the desired y-coordinate is within this contour
+                                                if y1 < y < y1 + h1:
+                                                   # Draw a line constrained within the bounds of this contour
+                                                   cv2.line(result, (x1, y), (x1 + w1, y), (255, 0, 0), 2)  # Blue line along x-axis
+                                                   #print_intensity_along_line(lst, gray, (x1,y), (x1+w1,y))
+                                                   print_intensity_along_line_with_threshold(lst, gray, (x1,y), (x1+w1,y),args.skipPixelsNearCenter)
+                                                print("=======================")
+                                    else: 
+                                                    print_intensity_along_line_with_threshold(lst, gray, (x,y), (x+r,y),args.skipPixelsNearCenter)
+                                                    print_intensity_along_line_with_threshold(lst, gray, (x,y), (x-r,y),args.skipPixelsNearCenter)
+                                    print(lst)
+                                    #write all data points regardless of matching intensities in a separate CSV file
+                                    if args.listAllIntesities == 1:
+                                       write_all_intensities_to_csv(x, y, r, lst,args.filename)
+                                    #proceed to find matching intensities
+                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend)
+
+                        if args.saveCroppedImage == 1:
+                           cv2.imwrite(args.filename + '.cropped.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                        if args.drawContours == 1:
+                           cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
+                        if args.saveContoursImage == 1:
+                           cv2.imwrite(args.filename + '.contours.jpg', result, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                        if args.saveImage == 1:
+                           cv2.imwrite(args.filename + '.analysis.jpg', gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                        #cv2.imshow('Threshold', thresh)
+                        cv2.imshow('Image with markers on Shadowgram', gray)
+                        if args.showFlippedImage == 1:
+                           cv2.imshow('Image Flipped', phi_image)
+                        if args.saveFlippedImage == 1:
+                           cv2.imwrite(args.filename + '.flipped.jpg', phi_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                        cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
+                        cv2.destroyAllWindows()
+
+                except Exception as e:
+                       print(f"Hough Circle Transform error: {e}")
         except FileNotFoundError as e:
             print(f"Error: {e}")
         except Exception as e:
