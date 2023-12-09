@@ -174,7 +174,7 @@ The generated output image is also saved to the disk.
 
    **Potential Fix:** Adjust p1, p2, minR, maxR, minDist parameters if necessary. The default values p1 (20), p2 (60), minR (10), maxR (0), minDist (5) are sufficient for majority of the cases. These parameters are critical to detect mirror from the photo using HoughCircularTransform function. 
 
-4. **How may I resize the images on Windows 11/12 since the supplied ImageMagick resize images bash script only works on Linux?**
+4. **How may I resize the images on Windows 11/12 since the supplied ImageMagick resize images bash script only works on Linux? Note: This is not necessary in most cases.**
 
    **Potential Fix:** There are numerous free software tools (and their respective documentation) available online that may help one accomplish this task (a) GIMP https://www.gimp.org/downloads/ (b) IrfanView https://www.irfanview.com/ (c) FastStone https://www.faststone.org/FSResizerDownload.htm . The following URL contains some good tips https://www.makeuseof.com/resize-images-windows-11/
 
