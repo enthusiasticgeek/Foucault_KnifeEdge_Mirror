@@ -112,6 +112,8 @@ The parameters (flags) description and their respective default values are as fo
 
 **Final Analyzed Output**
 
+**Note:** The distance values are in pixels.
+
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_gray_image.png "example output")
 
 **Plot**
