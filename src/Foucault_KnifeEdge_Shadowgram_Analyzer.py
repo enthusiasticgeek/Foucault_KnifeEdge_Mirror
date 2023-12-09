@@ -207,7 +207,7 @@ def main():
         parser = argparse.ArgumentParser(description='Detect largest circle in an image')
         parser.add_argument('filename', help='Path to the image file')
         parser.add_argument('-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles')
-        parser.add_argument('-p1', '--param1', type=int, default=20, help='First method-specific parameter')
+        parser.add_argument('-p1', '--param1', type=int, default=30, help='First method-specific parameter')
         parser.add_argument('-p2', '--param2', type=int, default=60, help='Second method-specific parameter')
         parser.add_argument('-minR', '--minRadius', type=int, default=10, help='Minimum circle radius')
         parser.add_argument('-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius')
@@ -340,6 +340,27 @@ def main():
                             # image like phi
                             phi_image = cv2.absdiff(cropped_image, flipped_cropped_image)
 
+                            # Apply averaging (blur) to phi_image
+                            phi_blurred = cv2.blur(phi_image, (3, 3))
+
+                            # Apply histogram equalization to phi_image
+                            #phi_equalized = cv2.equalizeHist(phi_blurred)
+
+                            # Create a CLAHE (Contrast Limited Adaptive Histogram Equalization) object
+                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))  # Adjust parameters as needed
+
+                            # Apply CLAHE to phi_image
+                            phi_final_image = clahe.apply(phi_blurred)
+
+
+                            # Define the sharpening kernel
+                            #kernel = np.array([[-1, -1, -1],
+                            #               [-1,  9, -1],
+                            #               [-1, -1, -1]])
+
+                            # Apply the kernel to the phi_image
+                            #phi_final_image = cv2.filter2D(phi_final_image, -1, kernel)
+
                             if args.drawCircles == 1:
                                     cv2.circle(result, (x, y), r, (0, 0, 255), 2)
                                     # Draw red vertical line inside the circle
@@ -382,9 +403,9 @@ def main():
                         #cv2.imshow('Threshold', thresh)
                         cv2.imshow('Image with markers on Shadowgram', gray)
                         if args.showFlippedImage == 1:
-                           cv2.imshow('Image Flipped', phi_image)
+                           cv2.imshow('Image Flipped', phi_final_image)
                         if args.saveFlippedImage == 1:
-                           cv2.imwrite(args.filename + '.flipped.jpg', phi_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                           cv2.imwrite(args.filename + '.flipped.jpg', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
                         cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
                         cv2.destroyAllWindows()
 

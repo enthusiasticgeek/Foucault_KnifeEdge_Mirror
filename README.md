@@ -83,7 +83,7 @@ Then execute the following (replacing correct parameters as deemed necessary)
 The parameters (flags) description and their respective default values are as follows:
 
 	'-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles
-	'-p1', '--param1', type=int, default=20, help='First method-specific parameter
+	'-p1', '--param1', type=int, default=30, help='First method-specific parameter
 	'-p2', '--param2', type=int, default=60, help='Second method-specific parameter
 	'-minR', '--minRadius', type=int, default=10, help='Minimum circle radius
 	'-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius
