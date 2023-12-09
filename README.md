@@ -118,7 +118,7 @@ The parameters (flags) description and their respective default values are as fo
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_plot.png "example output")
 
-Image with debug feature turned on (`--drawContours 1`)
+Image with debug features turned on (`--drawContours 1` and `--drawNestedContours 1`)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_debugging_image.png "example output")
 
