@@ -311,8 +311,8 @@ def main():
                     cv2.circle(result, (x, y), 5, (0, 0, 255), -1)
 
                     # Calculate the bounding box for the circular ROI
-                    x_b, y_b = x - r, y - r
-                    w_b, h_b = 2 * r, 2 * r
+                    x_b, y_b = abs(int(x) - int(r)), abs(int(y) - int(r))
+                    w_b, h_b = 2 * int(r), 2 * int(r)
 
                     # Crop the original image to the circular ROI
                     cropped_image = gray[y_b:y_b+h_b, x_b:x_b+w_b]
