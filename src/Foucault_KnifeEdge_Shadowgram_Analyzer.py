@@ -340,18 +340,24 @@ def main():
                             # image like phi
                             phi_image = cv2.absdiff(cropped_image, flipped_cropped_image)
 
-                            # Apply averaging (blur) to phi_image
-                            phi_blurred = cv2.blur(phi_image, (3, 3))
+                            # Apply a filter (e.g., GaussianBlur) to phi_image
+                            filtered_image = cv2.GaussianBlur(phi_image, (5, 5), 0)  # You can choose different filter types and kernel sizes
 
-                            # Apply histogram equalization to phi_image
-                            #phi_equalized = cv2.equalizeHist(phi_blurred)
+                            # Increase the contrast of the filtered image
+                            alpha = 2.0  # Contrast control (1.0-3.0, 1.0 is normal)
+                            beta = 0    # Brightness control (0-100, 0 is normal)
+                            phi_final_image = cv2.convertScaleAbs(filtered_image, alpha=alpha, beta=beta)
 
-                            # Create a CLAHE (Contrast Limited Adaptive Histogram Equalization) object
-                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))  # Adjust parameters as needed
+                            # Define a kernel for dilation
+                            #kernel = np.ones((3, 3), np.uint8)  # Adjust the size and shape as needed
 
-                            # Apply CLAHE to phi_image
-                            phi_final_image = clahe.apply(phi_blurred)
+                            # Apply sharpening
+                            kernel = np.array([[-1,-1,-1],
+                                           [-1,9,-1],
+                                           [-1,-1,-1]])  # Sharpening kernel
 
+                            # Perform dilation on the image
+                            phi_final_image = cv2.dilate(phi_final_image, kernel, iterations=1)  # Adjust the number of iterations as needed
 
                             # Define the sharpening kernel
                             #kernel = np.array([[-1, -1, -1],
