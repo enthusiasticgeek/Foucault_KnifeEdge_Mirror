@@ -97,7 +97,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk (value changed to 1). Default value is 1
 	'-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1
 	'-svc', '--saveContoursImage', type=int, default=0, help='Save the Contour Image on the disk. Default value is 0
-        '-svcrp', '--saveCroppedImage', type=int, default=1, help='Save the Cropped Image on the disk (value changed to 1). Default value is 1
+	'-svcrp', '--saveCroppedImage', type=int, default=1, help='Save the Cropped Image on the disk (value changed to 1). Default value is 1
 	'-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1
 	'-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0
 	'-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it be considered equal intensity value points. Default value is 3
