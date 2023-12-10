@@ -113,7 +113,7 @@ The parameters (flags) description and their respective default values are as fo
 
 **Final Analyzed Output**
 
-**Note:** The distance values are in pixels.
+**Note:** The distance values are in pixels unless otherwise specified. Max intensity value is 255 and min intensity value is 0.
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_gray_image.png "example output")
 
