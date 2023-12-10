@@ -129,6 +129,12 @@ Image with flip and superimpose feature turned on (`-fli 1`)
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/phi_flipped.png "example output")
 
+The following CSV files are generated in the same folder where image file is situated. e.g. for `1.jpg`, `1.jpg.data.csv` has the following columns `X, Y, INTENSITY` [All data points], `1.jpg.zones.csv` has the following columns `NULL ZONE LEFT [inches], NULL ZONE LEFT [mm], INTENSITY LEFT, NULL ZONE RIGHT [inches], NULL ZONE RIGHT [mm], INTENSITY RIGHT, X [pixels], Y [pixels], RADIUS [pixels]` [More information on zones from matches], `1.jpg.csv` has the following columns `Less Than X1 (LEFT) (x [pixels], y [pixels], intensity [0-255], distance from X1 [pixels])	Greater Than X1 (RIGHT) (x [pixels], y [pixels], intensity [0-255], distance from X1 [pixels])` [Only matches from all data points]
+
+	-rw-rw-r-- 1 enthusiasticgeek enthusiasticgeek   3236 Dec 10 16:10 1.jpg.data.csv
+	-rw-rw-r-- 1 enthusiasticgeek enthusiasticgeek    254 Dec 10 16:10 1.jpg.zones.csv
+	-rw-rw-r-- 1 enthusiasticgeek enthusiasticgeek    403 Dec 10 16:10 1.jpg.csv
+
 **Usage example 2:** 
 
 **2D to 3D intensity plot with local maxima.**
