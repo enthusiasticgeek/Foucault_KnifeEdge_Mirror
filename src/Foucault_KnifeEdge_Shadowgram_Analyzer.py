@@ -61,7 +61,7 @@ def print_intensity_along_line_with_threshold(lst, image, start_point, end_point
             distance_from_center = np.sqrt((x_coord - image.shape[1] // 2) ** 2 + (y_coord - image.shape[0] // 2) ** 2)
             if distance_from_center > distance_threshold:
                 intensity = image[y_coord, x_coord]
-                print(f"Intensity at ({x_coord}, {y_coord}): {intensity}")
+                print(f"INTENSITY AT ({x_coord}, {y_coord}): {intensity}")
                 lst.append((x_coord, y_coord, intensity))
     return lst
 
@@ -76,7 +76,7 @@ def get_average_intensity(image, x, y):
 def write_all_intensities_to_csv(x1, y1, r1, data, plot_output):
     with open(plot_output+'.data.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['x, y, intensity'])
+        writer.writerow(['X [pixels], Y [pixels], INTENSITY [0-255]'])
 
         for row in data:
             row_mod = (row[0] - x1, row[1] - y1) + row[2:]
@@ -85,7 +85,7 @@ def write_all_intensities_to_csv(x1, y1, r1, data, plot_output):
 def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_output, plot_legend):
     with open(plot_output+'.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Less Than X1 (x, y, intensity, distance from X1)', 'Greater Than X1 (x, y, intensity, distance from X1)'])
+        writer.writerow(['Less Than X1 (LEFT) (X [pixels], Y [pixels], INTENSITY [0-255], Distance from X1 [pixels])', 'Greater Than X1 (RIGHT) (X [pixels], Y [pixels], INTENSITY [0-255], Distance from X1 [pixels])'])
 
         for match in matches:
             #lt_point = ', '.join(map(str, match[0]))  # Convert tuple to string and remove brackets
@@ -183,6 +183,11 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
     draw_text(image, f"({x1-x1},{y1-y1})", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
     draw_text(image, f"Radius: {r1}", (x1-20,y1+r1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
+    # Append zone values to the CSV file
+    with open(plot_output+'.zones.csv', mode='w', newline='') as file:
+         writer = csv.writer(file)
+         writer.writerow(['NULL ZONE LEFT [inches]','NULL ZONE LEFT [mm]', 'INTENSITY LEFT', 'NULL ZONE RIGHT [inches]','NULL ZONE RIGHT [mm]', 'INTENSITY RIGHT','X [pixels]','Y [pixels]','RADIUS [pixels]'])
+
     # Find the closest match and draw it!
     for i in matches:
         print(f"{i[0]},{i[1]}")
@@ -206,6 +211,13 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
            draw_text(image, f"Mirror Diameter: {mirror_diameter_inches:.2f}\"", (x1-20,y1+r1-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"{null_zone_lhs:.3f}\"", (i[0][0]-10,i[0][1]+60), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"{null_zone_rhs:.3f}\"", (i[1][0]-10,i[1][1]+60), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+
+
+           # Append zone values to the CSV file
+           with open(plot_output+'.zones.csv', mode='a', newline='') as file:
+               writer = csv.writer(file)
+               writer.writerow([f'{null_zone_lhs:.4f}',f'{null_zone_lhs_mm:.4f}', i[0][2], f'{null_zone_rhs:.4f}', f'{null_zone_rhs_mm:.4f}', i[1][2], x1, y1, r1])
+
 
     # Collect data in CSV
     write_matching_intensities_to_csv(x1,y1,r1,matches, save_plot, plot_output, plot_legend)
