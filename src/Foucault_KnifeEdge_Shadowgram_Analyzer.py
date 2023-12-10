@@ -146,7 +146,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold, plot_legend):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold, plot_legend, mirror_diameter_inches):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -195,6 +195,14 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
            draw_text(image, f"Intensity: {i[1][2]}", (i[1][0]-30,i[1][1]+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"NULL ZONE", (i[1][0]-30,i[1][1]+40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_symmetrical_line(image, i[1][0], i[1][1], line_length+10, color=(255,255,255))
+           null_zone_lhs = (int(i[0][3])/r1)*mirror_diameter_inches
+           null_zone_rhs = (int(i[1][3])/r1)*mirror_diameter_inches
+           null_zone_lhs_mm = null_zone_lhs * 2.54
+           null_zone_rhs_mm = null_zone_rhs * 2.54
+           mirror_diameter_mm = mirror_diameter_inches * 2.54
+           print(f"Mirror diameter {mirror_diameter_inches:.4f} inches or {mirror_diameter_mm:.4f} mm")
+           print(f"NULL zone on Left side of the center : {null_zone_lhs:.4f} inches or {null_zone_lhs_mm:.4f} mm")
+           print(f"NULL zone on Right side of the center : {null_zone_rhs:.4f} inches or {null_zone_rhs_mm:.4f} mm")
 
 
     # Collect data in CSV
@@ -228,6 +236,7 @@ def main():
         parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
         parser.add_argument('-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1')
         parser.add_argument('-rpil', '--resizeWithPillow', type=int, default=0, help='Resize with Pillow instead of OpenCV. Default value is 0')
+        parser.add_argument('-mdia', '--mirrorDiameterInches', type=float, default=6, help='Mirror diameter in inches. Default value is 6.0')
         args = parser.parse_args()
 
         try:
@@ -396,7 +405,7 @@ def main():
                                     if args.listAllIntesities == 1:
                                        write_all_intensities_to_csv(x, y, r, lst,args.filename)
                                     #proceed to find matching intensities
-                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend)
+                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend, args.mirrorDiameterInches)
 
                         if args.saveCroppedImage == 1:
                            cv2.imwrite(args.filename + '.cropped.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])

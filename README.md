@@ -104,6 +104,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0
 	'-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1
 	'-rpil', '--resizeWithPillow', type=int, default=0, help='Resize with Pillow instead of OpenCV. Default value is 0'
+	'-mdia', '--mirrorDiameterInches', type=int, default=6, help='Mirror diameter in inches. Default value is 6'
 
 
 **Usage example 1:** 
