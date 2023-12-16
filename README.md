@@ -116,7 +116,7 @@ The parameters (flags) description and their respective default values are as fo
 
 **Final Analyzed Output**
 
-**Note:** The distance values are in pixels unless otherwise specified. Max intensity value is 255 and min intensity value is 0. Please change `--mirrorDiameterInches` flag to a value to match one's mirror diameter as the default value is `6.0` inches e.g. `-mdia 4.25`.
+**Note:** The distance values are in pixels unless otherwise specified. Max intensity value is 255 and min intensity value is 0. Please change `--mirrorDiameterInches` flag to a value to match one's mirror diameter as the default value is `6.0` inches e.g. `-mdia 4.25`. Similarly, please change `--mirrorFocalLengthInches` flag to a value to match one's mirror focal length as the default value is `48.0` inches e.g. `-mfl 20.50`.
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_gray_image.png "example output")
 
