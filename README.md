@@ -1,6 +1,6 @@
 # Foucault_KnifeEdge_Mirror
 
-**Foucault Knife Edge Shadowgram Analyzer for a primary mirror [Dobsonian telescopes]**
+**Foucault Knife Edge Shadowgram Analyzer (FKESA) for a primary mirror [Dobsonian telescopes]**
 
 This program was inspired by a discussion with reference to the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
 
@@ -106,6 +106,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-rpil', '--resizeWithPillow', type=int, default=0, help='Resize with Pillow instead of OpenCV. Default value is 0'
 	'-mdia', '--mirrorDiameterInches', type=int, default=6, help='Mirror diameter in inches. Default value is 6'
 	'-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1'
+	'-gmc', '--gammaCorrection', type=float, default=2.2, help='Adjust image gamma correction. default 2.2'
 
 
 **Usage example 1:** 

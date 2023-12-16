@@ -48,6 +48,16 @@ def convert_from_image_to_cv2(img: Image) -> np.ndarray:
     # return np.asarray(img)
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
+# Ref: https://pyimagesearch.com/2015/10/05/opencv-gamma-correction/
+def adjust_gamma(image, gamma=1.0):
+        # build a lookup table mapping the pixel values [0, 255] to
+        # their adjusted gamma values
+        invGamma = 1.0 / gamma
+        table = np.array([((i / 255.0) ** invGamma) * 255
+                for i in np.arange(0, 256)]).astype("uint8")
+        # apply gamma correction using the lookup table
+        return cv2.LUT(image, table)
+
 def print_intensity_along_line_with_threshold(lst, image, start_point, end_point, distance_threshold):
     # Ensure start_point is the leftmost point
     if start_point[0] > end_point[0]:
@@ -252,11 +262,17 @@ def main():
         parser.add_argument('-rpil', '--resizeWithPillow', type=int, default=0, help='Resize with Pillow instead of OpenCV. Default value is 0')
         parser.add_argument('-mdia', '--mirrorDiameterInches', type=float, default=6, help='Mirror diameter in inches. Default value is 6.0')
         parser.add_argument('-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1')
+        parser.add_argument('-gmc', '--gammaCorrection', type=float, default=2.2, help='Adjust image gamma correction. default 2.2')
         args = parser.parse_args()
 
         try:
                 # Load the image and resize it
                 image = cv2.imread(args.filename)
+                    
+                if args.gammaCorrection > 0.0:
+                   # Apply gamma correction (adjust the gamma value as needed)
+                   image = adjust_gamma(image, gamma=args.gammaCorrection)
+
                 if image is None:
                     raise FileNotFoundError("Image file not found or cannot be read.")
                 try: 
