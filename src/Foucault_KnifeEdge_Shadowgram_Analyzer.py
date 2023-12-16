@@ -202,9 +202,9 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
            draw_symmetrical_line(image, i[1][0], i[1][1], line_length+10, color=(255,255,255))
            null_zone_lhs = (int(i[0][3])/r1)*mirror_diameter_inches/2
            null_zone_rhs = (int(i[1][3])/r1)*mirror_diameter_inches/2
-           null_zone_lhs_mm = null_zone_lhs * 2.54
-           null_zone_rhs_mm = null_zone_rhs * 2.54
-           mirror_diameter_mm = mirror_diameter_inches * 2.54
+           null_zone_lhs_mm = null_zone_lhs * 25.4
+           null_zone_rhs_mm = null_zone_rhs * 25.4
+           mirror_diameter_mm = mirror_diameter_inches * 25.4
            print(f"Mirror diameter {mirror_diameter_inches:.4f} inches or {mirror_diameter_mm:.4f} mm")
            print(f"NULL zone on Left side of the center : {null_zone_lhs:.4f} inches or {null_zone_lhs_mm:.4f} mm")
            print(f"NULL zone on Right side of the center : {null_zone_rhs:.4f} inches or {null_zone_rhs_mm:.4f} mm")
