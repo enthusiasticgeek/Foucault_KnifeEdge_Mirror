@@ -269,13 +269,13 @@ def main():
                 # Load the image and resize it
                 image = cv2.imread(args.filename)
                     
-                if args.gammaCorrection > 0.0:
-                   # Apply gamma correction (adjust the gamma value as needed)
-                   image = adjust_gamma(image, gamma=args.gammaCorrection)
-
                 if image is None:
                     raise FileNotFoundError("Image file not found or cannot be read.")
                 try: 
+                        if args.gammaCorrection > 0.0:
+                                # Apply gamma correction (adjust the gamma value as needed)
+                                image = adjust_gamma(image, gamma=args.gammaCorrection)
+
                         if args.resizeWithPillow == 0: 
                                 resized_cv2_image = resize_image(image)
 
