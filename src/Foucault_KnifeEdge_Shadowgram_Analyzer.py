@@ -144,7 +144,7 @@ def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_outpu
        # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
        plt.savefig(plot_output + ".plot.png")
     # Show the plot
-    #plt.show()
+    plt.show()
 
 def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, color=(255, 255, 255), thickness=1):
     text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
@@ -222,6 +222,8 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
            draw_text(image, f"Mirror Diameter: {mirror_diameter_inches:.2f}\"", (x1-20,y1+r1-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"{null_zone_lhs:.3f}\"", (i[0][0]-10,i[0][1]+60), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
            draw_text(image, f"{null_zone_rhs:.3f}\"", (i[1][0]-10,i[1][1]+60), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"Closest Match Threshold: {closest_match_threshold}", (x1-20,y1-r1+40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+           draw_text(image, f"Brightness Tolerance: {tolerance}", (x1-20,y1-r1+20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
 
            # Append zone values to the CSV file
