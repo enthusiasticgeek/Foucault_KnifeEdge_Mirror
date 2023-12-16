@@ -49,7 +49,7 @@ def convert_from_image_to_cv2(img: Image) -> np.ndarray:
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
 # Ref: https://pyimagesearch.com/2015/10/05/opencv-gamma-correction/
-def adjust_gamma(image, gamma=1.0):
+def adjust_gamma(image, gamma=2.2):
         # build a lookup table mapping the pixel values [0, 255] to
         # their adjusted gamma values
         invGamma = 1.0 / gamma
