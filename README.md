@@ -105,6 +105,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1
 	'-rpil', '--resizeWithPillow', type=int, default=0, help='Resize with Pillow instead of OpenCV. Default value is 0'
 	'-mdia', '--mirrorDiameterInches', type=int, default=6, help='Mirror diameter in inches. Default value is 6'
+	'-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0'
 	'-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1'
 	'-gmc', '--gammaCorrection', type=float, default=2.2, help='Adjust image gamma correction. default 2.2'
 
