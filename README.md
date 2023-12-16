@@ -1,5 +1,7 @@
 # Foucault_KnifeEdge_Mirror
 
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/fkesa.png "example output")
+
 **Foucault Knife Edge Shadowgram Analyzer (FKESA) for a primary mirror [Dobsonian telescopes]**
 
 This program was inspired by a discussion with reference to the following thread. https://www.cloudynights.com/topic/598980-foucault-unmasked-new-foucault-test-software/
