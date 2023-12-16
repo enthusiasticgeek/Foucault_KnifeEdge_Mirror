@@ -349,7 +349,7 @@ def main():
                                 # Loop to retry with different parameters
                                 for _ in range(2):  # 2 times for each set of parameters
                                     if circle_found == True:
-                                       pass#break
+                                       break
                                     for adjustment in [5, 10] if not circle_found else [-5, -10]:
                                         args.param1 = param1_initial + adjustment
                                         args.param2 = param2_initial + adjustment
@@ -364,7 +364,7 @@ def main():
                                         if circles is not None:
                                             circle_found = True
                                             print("Mirror found in retry attempt!")
-                                            #break  # Exit the loop if circles are found with any parameter set
+                                            break  # Exit the loop if circles are found with any parameter set
 
                                 if not circle_found:
                                     raise Exception("Hough Circle Transform didn't find any circles after trying multiple parameter combinations")
