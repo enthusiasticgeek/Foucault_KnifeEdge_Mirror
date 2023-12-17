@@ -76,10 +76,11 @@ See example below:
 
 Then execute the following (replacing correct parameters as deemed necessary)
 
-	./sr/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
+	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svf SAVEFLIPPEDIMAGE]
                                                  [-svc SAVECONTOURSIMAGE] [-svcrp SAVECROPPEDIMAGE] [-svp SAVEPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE]
-                                                 [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW] [-mdia MIRRORDIAMETERINCHES]
+                                                 [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW] [-mdia MIRRORDIAMETERINCHES] [-mfl MIRRORFOCALLENGTHINCHES] [-rfc RETRYFINDMIRROR]
+                                                 [-gmc GAMMACORRECTION]
                                                  <image filename>
 
 The parameters (flags) description and their respective default values are as follows:

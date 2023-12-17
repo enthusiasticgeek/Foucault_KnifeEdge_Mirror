@@ -49,7 +49,7 @@ def convert_from_image_to_cv2(img: Image) -> np.ndarray:
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
 # Ref: https://pyimagesearch.com/2015/10/05/opencv-gamma-correction/
-def adjust_gamma(image, gamma=2.2):
+def adjust_gamma(image, gamma=0):
         # build a lookup table mapping the pixel values [0, 255] to
         # their adjusted gamma values
         invGamma = 1.0 / gamma
@@ -266,7 +266,7 @@ def main():
         parser.add_argument('-mdia', '--mirrorDiameterInches', type=float, default=6, help='Mirror diameter in inches. Default value is 6.0')
         parser.add_argument('-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0')
         parser.add_argument('-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1')
-        parser.add_argument('-gmc', '--gammaCorrection', type=float, default=2.2, help='Adjust image gamma correction. default 2.2')
+        parser.add_argument('-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0')
         args = parser.parse_args()
 
         try:
