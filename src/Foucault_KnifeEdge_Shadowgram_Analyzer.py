@@ -390,14 +390,7 @@ def main():
                     cv2.drawContours(result, contours, -1, (0, 255, 0), 2)
 
                 try: 
-                        #The code attempts the circle detection process four times by shifting search window by 5,10,-5,-10:
-
-                        #Tries with param1 = args.param1 + 5 and param2 = args.param2 + 5.
-                        #Tries with param1 = args.param1 + 10 and param2 = args.param2 + 10.
-                        #Tries with param1 = args.param1 - 5 and param2 = args.param2 - 5.
-                        #Tries with param1 = args.param1 - 10 and param2 = args.param2 - 10.
-
-                        #If circles are found at any point, the circle_found flag is set to True, and the loop breaks, indicating success. If no circles are found after all attempts, it raises an exception.
+                        #The code attempts the circle detection process four times by shifting search window by e.g., 5, 10,-5,-10, etc.
 
                         circles=None
                         #Adaptive params mirror detection method
@@ -409,28 +402,31 @@ def main():
                                 circle_found = False
 
                                 # Loop to retry with different parameters
-                                for _ in range(2):  # 2 times for each set of parameters
-                                    if circle_found == True:
-                                       break
-                                    for adjustment in [5, 10] if not circle_found else [-5, -10]:
-                                        args.param1 = param1_initial + adjustment
-                                        args.param2 = param2_initial + adjustment
-                                        print(f"Trying adaptive mirror detection with Hough Transform param1 {args.param1} and param2 {args.param2} and {adjustment}")
+                                adjustments = [5, 10, 20, 30, -5, -10, -20, -30]
+                                for adjustment in adjustments:
+                                    args.param1 = param1_initial + adjustment
+                                    args.param2 = param2_initial + adjustment
 
-                                        circles = cv2.HoughCircles(
-                                            blurred,
-                                            cv2.HOUGH_GRADIENT, dp=1, minDist=args.minDist, param1=args.param1, param2=args.param2,
-                                            minRadius=args.minRadius, maxRadius=args.maxRadius
-                                        )
+                                    # Ensure param1 and param2 don't fall below certain thresholds
+                                    args.param1 = max(10, args.param1)
+                                    args.param2 = max(20, args.param2)
 
-                                        if circles is not None:
-                                            circle_found = True
-                                            print("Mirror found in retry attempt!")
-                                            break  # Exit the loop if circles are found with any parameter set
+                                    print(f"Trying adaptive mirror detection with Hough Transform param1 {args.param1} and param2 {args.param2} and {adjustment}")
+
+                                    circles = cv2.HoughCircles(
+                                        blurred,
+                                        cv2.HOUGH_GRADIENT, dp=1, minDist=args.minDist, param1=args.param1, param2=args.param2,
+                                        minRadius=args.minRadius, maxRadius=args.maxRadius
+                                    )
+
+                                    if circles is not None:
+                                        circle_found = True
+                                        print("Mirror found in retry attempt!")
+                                        break  # Exit the loop if circles are found with any parameter set
 
                                 if not circle_found:
                                     raise Exception("Hough Circle Transform didn't find any circles after trying multiple parameter combinations")
-                                #
+
 
                         #Simple params mirror detection method
                         else:
