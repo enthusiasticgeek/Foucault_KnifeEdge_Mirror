@@ -78,9 +78,9 @@ Then execute the following (replacing correct parameters as deemed necessary)
 
 	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svf SAVEFLIPPEDIMAGE]
-                                                 [-svc SAVECONTOURSIMAGE] [-svcrp SAVECROPPEDIMAGE] [-svp SAVEPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD] [-fli SHOWFLIPPEDIMAGE]
-                                                 [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW] [-mdia MIRRORDIAMETERINCHES] [-mfl MIRRORFOCALLENGTHINCHES] [-rfc RETRYFINDMIRROR]
-                                                 [-gmc GAMMACORRECTION]
+                                                 [-svc SAVECONTOURSIMAGE] [-svcrp SAVECROPPEDIMAGE] [-svp SAVEPLOT] [-sip SHOWINTENSITYPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD]
+                                                 [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW] [-mdia MIRRORDIAMETERINCHES] [-mfl MIRRORFOCALLENGTHINCHES]
+                                                 [-rfc RETRYFINDMIRROR] [-gmc GAMMACORRECTION]
                                                  <image filename>
 
 The parameters (flags) description and their respective default values are as follows:
@@ -103,6 +103,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-svcrp', '--saveCroppedImage', type=int, default=1, help='Save the Cropped Image on the disk (value changed to 1). Default value is 1
 	'-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1
 	'-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0
+	'-sip', '--showIntensityPlot', type=int, default=1, help='Show the Analysis Plot (value changed to 1). Default value is 1'
 	'-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it to be considered equal intensity value points. Default value is 3
 	'-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0
 	'-lai', '--listAllIntesities', type=int, default=1, help='List all Intensities data regardless of matching intensities. It created two CSV files - one for all data (this flag) and another matching data only. Default value is 1
@@ -119,7 +120,7 @@ The parameters (flags) description and their respective default values are as fo
 
 **Final Analyzed Output**
 
-**Note:** The distance values are in pixels unless otherwise specified. Max intensity value is 255 and min intensity value is 0. Please change `--mirrorDiameterInches` flag to a value to match one's mirror diameter as the default value is `6.0` inches e.g. `-mdia 4.25`. Similarly, please change `--mirrorFocalLengthInches` flag to a value to match one's mirror focal length as the default value is `48.0` inches e.g. `-mfl 20.50`.
+**Note:** The distance values are in pixels unless otherwise specified. Max intensity value is 255 and min intensity value is 0. Please change `--mirrorDiameterInches` flag to a value to match one's mirror diameter as the default value is `6.0` inches e.g. `-mdia 4.25`. Similarly, please change `--mirrorFocalLengthInches` flag to a value to match one's mirror focal length as the default value is `48.0` inches e.g. `-mfl 20.50`. In the following example we have set `--gammaCorrection 2.2` for demonstration purposes but it is not necessary in most cases.
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/saved_gray_image.png "example output")
 

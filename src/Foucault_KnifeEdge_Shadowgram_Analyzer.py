@@ -92,7 +92,7 @@ def write_all_intensities_to_csv(x1, y1, r1, data, plot_output):
             row_mod = (row[0] - x1, row[1] - y1) + row[2:]
             writer.writerow([row_mod])
 
-def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_output, plot_legend):
+def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_output, plot_legend, show_plot):
     with open(plot_output+'.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Less Than X1 (LEFT) (X [pixels], Y [pixels], INTENSITY [0-255], Distance from X1 [pixels])', 'Greater Than X1 (RIGHT) (X [pixels], Y [pixels], INTENSITY [0-255], Distance from X1 [pixels])'])
@@ -144,7 +144,8 @@ def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_outpu
        # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
        plt.savefig(plot_output + ".plot.png")
     # Show the plot
-    plt.show()
+    if show_plot == 1:
+       plt.show()
 
 def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, color=(255, 255, 255), thickness=1):
     text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
@@ -156,7 +157,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold, plot_legend, mirror_diameter_inches, mirror_focal_length_inches):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold, plot_legend, mirror_diameter_inches, mirror_focal_length_inches, show_plot):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -233,7 +234,7 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
 
 
     # Collect data in CSV
-    write_matching_intensities_to_csv(x1,y1,r1,matches, save_plot, plot_output, plot_legend)
+    write_matching_intensities_to_csv(x1,y1,r1,matches, save_plot, plot_output, plot_legend, show_plot)
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register the signal handler
@@ -258,6 +259,7 @@ def main():
         parser.add_argument('-svc', '--saveContoursImage', type=int, default=0, help='Save the Contour Image on the disk. Default value is 0')
         parser.add_argument('-svcrp', '--saveCroppedImage', type=int, default=1, help='Save the Cropped Image on the disk (value changed to 1). Default value is 1')
         parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1')
+        parser.add_argument('-sip', '--showIntensityPlot', type=int, default=1, help='Show the Analysis Plot (value changed to 1). Default value is 1')
         parser.add_argument('-spl', '--showPlotLegend', type=int, default=0, help='Show plot legend. Default value is 0')
         parser.add_argument('-cmt', '--closestMatchThreshold', type=int, default=2, help='Threshold value that allows it to be considered equal intensity value points. Default value is 3')
         parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
@@ -485,7 +487,7 @@ def main():
                                     if args.listAllIntesities == 1:
                                        write_all_intensities_to_csv(x, y, r, lst,args.filename)
                                     #proceed to find matching intensities
-                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend, args.mirrorDiameterInches, args.mirrorFocalLengthInches)
+                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend, args.mirrorDiameterInches, args.mirrorFocalLengthInches, args.showIntensityPlot)
 
                         if args.saveCroppedImage == 1:
                            cv2.imwrite(args.filename + '.cropped.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
