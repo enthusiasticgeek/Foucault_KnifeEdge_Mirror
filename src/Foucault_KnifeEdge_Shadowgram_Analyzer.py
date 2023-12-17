@@ -58,6 +58,42 @@ def adjust_gamma(image, gamma=0):
         # apply gamma correction using the lookup table
         return cv2.LUT(image, table)
 
+def sigma_clipping(pixel, sig, sigma, median, rej):
+    sigmalow = sig[0]
+    sigmahigh = sig[1]
+   
+    if median - pixel > sigmalow * sigma:
+        rej[0] += 1
+        return -1
+    elif pixel - median > sigmahigh * sigma:
+        rej[1] += 1
+        return 1
+    else:
+        return 0
+
+def process_sigma_clipping_image(grayscale_image, use_std_dev=True):
+    # Calculate standard deviation and median from the grayscale image
+    std_dev = np.std(grayscale_image)
+    median_value = np.median(grayscale_image)
+    # Use calculated values for sigma clipping
+    rejection_counts = [0, 0]
+    rows, cols = grayscale_image.shape
+    for i in range(rows):
+        for j in range(cols):
+            pixel_value = grayscale_image[i, j]
+            result=None
+            if use_std_dev == True:
+               result = sigma_clipping(pixel_value, [std_dev * 0.5, std_dev * 2.0], std_dev * 1.5, median_value, rejection_counts)
+            else:
+               result = sigma_clipping(pixel_value, [0.5, 2.0], 1.5, median_value, rejection_counts)
+            if result is None:
+               raise Exception(f"Sigma clipping result error.")
+            if result == -1:
+                grayscale_image[i, j] = 0  # Modify pixel value for low rejection
+            elif result == 1:
+                grayscale_image[i, j] = 255  # Modify pixel value for high rejection
+
+
 def print_intensity_along_line_with_threshold(lst, image, start_point, end_point, distance_threshold):
     # Ensure start_point is the leftmost point
     if start_point[0] > end_point[0]:
@@ -269,6 +305,7 @@ def main():
         parser.add_argument('-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0')
         parser.add_argument('-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1')
         parser.add_argument('-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0')
+        parser.add_argument('-usci', '--useSigmaClippedImage', type=int, default=0, help='Sigma Clipped Image. default 0')
         args = parser.parse_args()
 
         try:
@@ -309,6 +346,9 @@ def main():
                 # Convert the image to grayscale
                 #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                 gray = cv2.cvtColor(resized_cv2_image, cv2.COLOR_BGR2GRAY)
+
+                if args.useSigmaClippedImage == 1: 
+                   process_sigma_clipping_image(gray, use_std_dev=True)
 
                 # Apply Gaussian blur to reduce noise
                 blurred = cv2.GaussianBlur(gray, (5, 5), 0)

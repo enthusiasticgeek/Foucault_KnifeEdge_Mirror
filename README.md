@@ -80,7 +80,7 @@ Then execute the following (replacing correct parameters as deemed necessary)
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svf SAVEFLIPPEDIMAGE]
                                                  [-svc SAVECONTOURSIMAGE] [-svcrp SAVECROPPEDIMAGE] [-svp SAVEPLOT] [-sip SHOWINTENSITYPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD]
                                                  [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW] [-mdia MIRRORDIAMETERINCHES] [-mfl MIRRORFOCALLENGTHINCHES]
-                                                 [-rfc RETRYFINDMIRROR] [-gmc GAMMACORRECTION]
+                                                 [-rfc RETRYFINDMIRROR] [-gmc GAMMACORRECTION] [-usci USESIGMACLIPPEDIMAGE]
                                                  <image filename>
 
 The parameters (flags) description and their respective default values are as follows:
@@ -112,6 +112,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0'
 	'-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1'
 	'-gmc', '--gammaCorrection', type=float, default=2.2, help='Adjust image gamma correction. default 2.2'
+	'-usci', '--useSigmaClippedImage', type=int, default=0, help='Sigma Clipped Image. default 0'
 
 
 **Usage example 1:** 
