@@ -39,6 +39,7 @@ parser.add_argument('-bt', '--brightnessTolerance', type=int, default=10, help='
 parser.add_argument('-rad', '--roiAngleDegrees', type=int, default=10, help='ROI angle degrees. Default 10')
 parser.add_argument('-z', '--Zones', type=int, default=50, help='Number of zones. Default 50')
 parser.add_argument('-szfc', '--skipZonesFromCenter', type=int, default=10, help='Skip Number of zones from the center of the mirror. Default 10')
+parser.add_argument('-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -59,6 +60,7 @@ try:
     # Apply Gaussian blur to reduce noise
     blurred = cv2.GaussianBlur(gray_image, (5, 5), 0)
 
+    """
     # Apply Hough Circle Transform with provided parameters
     circles = cv2.HoughCircles(
         blurred,
@@ -70,6 +72,57 @@ try:
         minRadius=args.minRadius,
         maxRadius=args.maxRadius
     )
+    """
+    #The code attempts the circle detection process four times by shifting search window by e.g., 5, 10,-5,-10, etc.
+
+    circles=None
+    #Adaptive params mirror detection method
+    if args.retryFindMirror == 1:
+            # Define initial parameter values
+            param1_initial = args.param1
+            param2_initial = args.param2
+
+            circle_found = False
+
+            # Loop to retry with different parameters
+            adjustments = [5, 10, 20, 30, -5, -10, -20, -30]
+            for adjustment in adjustments:
+                args.param1 = param1_initial + adjustment
+                args.param2 = param2_initial + adjustment
+
+                # Ensure param1 and param2 don't fall below certain thresholds
+                args.param1 = max(10, args.param1)
+                args.param2 = max(20, args.param2)
+
+                print(f"Trying adaptive mirror detection with Hough Transform param1 {args.param1} and param2 {args.param2} and {adjustment}")
+
+                circles = cv2.HoughCircles(
+                    blurred,
+                    cv2.HOUGH_GRADIENT, dp=1, minDist=args.minDist, param1=args.param1, param2=args.param2,
+                    minRadius=args.minRadius, maxRadius=args.maxRadius
+                )
+
+                if circles is not None:
+                    circle_found = True
+                    print("Mirror found in retry attempt!")
+                    break  # Exit the loop if circles are found with any parameter set
+
+            if not circle_found:
+                raise Exception("Hough Circle Transform didn't find any circles after trying multiple parameter combinations")
+
+
+    #Simple params mirror detection method
+    else:
+            # Apply Hough Circle Transform with user-defined parameters
+            circles = cv2.HoughCircles(
+                blurred,
+                cv2.HOUGH_GRADIENT, dp=1, minDist=args.minDist, param1=args.param1, param2=args.param2,
+                minRadius=args.minRadius, maxRadius=args.maxRadius
+            )
+
+            if circles is None:
+                raise Exception("Hough Circle Transform didn't find any circles")
+
 
     # If circles are found
     if circles is not None:
@@ -237,9 +290,11 @@ try:
         pprint.pprint(f"Zone match: {sorted_deltas[0][0]}")
 
 
-        line_mark = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
-        draw_symmetrical_line(cropped_image, center_x+line_mark, center_y, 20, color=(255,255,255))
-        draw_symmetrical_line(cropped_image, center_x-line_mark, center_y, 20, color=(255,255,255))
+        line_mark1 = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
+        line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
+        #line_mark = (line_mark1 + line_mark2)/2
+        draw_symmetrical_line(cropped_image, center_x+line_mark2, center_y, 20, color=(255,255,255))
+        draw_symmetrical_line(cropped_image, center_x-line_mark2, center_y, 20, color=(255,255,255))
 
         # Extract zones and deltas for plotting
         zones = [zone[0] for zone in deltas]
