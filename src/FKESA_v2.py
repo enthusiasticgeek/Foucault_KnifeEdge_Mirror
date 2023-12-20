@@ -23,7 +23,23 @@ def resize_image(image, max_width=640):
     return image
 
 def draw_symmetrical_line(image, x, y, line_length, color):
-    cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
+    cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=2)
+
+def draw_symmetrical_arc(image, x, y, r, start_angle, end_angle, color):
+    # Define the center, axes lengths, start and end angles of the arc
+    center = (x, y)
+    axes = (r, r)
+    angle = 0  # Angle is set to 0 for a symmetrical arc
+    # Draw the arc on the image
+    cv2.ellipse(image, center, axes, angle, start_angle, end_angle, color, thickness=2)
+
+def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, color=(255, 255, 255), thickness=1):
+    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+    text_x, text_y = position
+    text_y = max(text_y, text_size[1])  # Ensure the text doesn't go out of the image
+    cv2.putText(image, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
+    return image
+
 
 
 # Argument parser setup
@@ -40,6 +56,9 @@ parser.add_argument('-rad', '--roiAngleDegrees', type=int, default=10, help='ROI
 parser.add_argument('-z', '--Zones', type=int, default=50, help='Number of zones. Default 50')
 parser.add_argument('-szfc', '--skipZonesFromCenter', type=int, default=10, help='Skip Number of zones from the center of the mirror. Default 10')
 parser.add_argument('-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1')
+parser.add_argument('-mdia', '--mirrorDiameterInches', type=float, default=6, help='Mirror diameter in inches. Default value is 6.0')
+parser.add_argument('-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0')
+
 
 # Parse the arguments
 args = parser.parse_args()
@@ -158,8 +177,8 @@ try:
 
         # Apply Gaussian blur to reduce noise
         cropped_gray_image = cv2.GaussianBlur(cropped_gray_image, (5, 5), 0)
-        cv2.imshow('Cropped Image', cropped_gray_image)
-        cv2.waitKey(1000)
+        #cv2.imshow('Cropped Image', cropped_gray_image)
+        #cv2.waitKey(1000)
 
 
         # Get image dimensions
@@ -174,6 +193,10 @@ try:
 
         # Create a blank mask
         mask = np.zeros((height, width), dtype=np.uint8)
+
+        #pixels per zone
+        pixels_per_zone = radius // num_zones
+        print(pixels_per_zone)
 
         # List to store average intensities in each zone
         average_intensities_rhs = []
@@ -291,10 +314,26 @@ try:
 
 
         line_mark1 = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
-        line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
-        #line_mark = (line_mark1 + line_mark2)/2
-        draw_symmetrical_line(cropped_image, center_x+line_mark2, center_y, 20, color=(255,255,255))
-        draw_symmetrical_line(cropped_image, center_x-line_mark2, center_y, 20, color=(255,255,255))
+        #line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
+        line_mark = int(int(line_mark1) + (int(pixels_per_zone)/2))
+        #draw_symmetrical_line(cropped_image, center_x+line_mark, center_y, 20, color=(255,255,255))
+        #draw_symmetrical_line(cropped_image, center_x-line_mark, center_y, 20, color=(255,255,255))
+
+
+        # Define parameters for the arc
+        start_angle = -20
+        end_angle = 20
+        color = (255, 255, 255)  # Blue color in BGR
+
+        # Use the function to draw the symmetrical arc on the image
+        draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle, end_angle, color)
+        draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
+        
+
+        draw_text(image, f"Radius: {radius}", (center_x-20,center_y+radius-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+
+        cv2.imshow('Cropped Image', cropped_image)
+        cv2.waitKey(1000)
 
         # Extract zones and deltas for plotting
         zones = [zone[0] for zone in deltas]
