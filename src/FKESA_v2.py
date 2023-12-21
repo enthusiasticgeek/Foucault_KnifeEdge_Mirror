@@ -5,7 +5,7 @@
 #I have attempted to implement this
 import matplotlib
 # On some Linux systems may need to uncomment this.
-matplotlib.use('tkagg')
+#matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from PIL import Image
 import os
