@@ -22,6 +22,16 @@ def resize_image(image, max_width=640):
         return cv2.resize(image, (max_width, new_height))
     return image
 
+# Ref: https://pyimagesearch.com/2015/10/05/opencv-gamma-correction/
+def adjust_gamma(image, gamma=0):
+        # build a lookup table mapping the pixel values [0, 255] to
+        # their adjusted gamma values
+        invGamma = 1.0 / gamma
+        table = np.array([((i / 255.0) ** invGamma) * 255
+                for i in np.arange(0, 256)]).astype("uint8")
+        # apply gamma correction using the lookup table
+        return cv2.LUT(image, table)
+
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=2)
 
@@ -40,8 +50,6 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
     cv2.putText(image, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
     return image
 
-
-
 # Argument parser setup
 parser = argparse.ArgumentParser(description='Detect largest circle in an image')
 parser.add_argument('filename', help='Path to the image file')
@@ -53,12 +61,18 @@ parser.add_argument('-maxR', '--maxRadius', type=int, default=0, help='Maximum c
 parser.add_argument('-dwpz', '--displayWindowPeriodZones', type=int, default=100, help='Maximum period to wait in milliseconds between displaying zones. Default 100 milliseconds')
 parser.add_argument('-bt', '--brightnessTolerance', type=int, default=10, help='Brightness Tolerance. Default 10')
 parser.add_argument('-rad', '--roiAngleDegrees', type=int, default=10, help='ROI angle degrees. Default 10')
-parser.add_argument('-z', '--Zones', type=int, default=50, help='Number of zones. Default 50')
+parser.add_argument('-z', '--Zones', type=int, default=50, help='Number of zones [30 to 50]. Default 50')
 parser.add_argument('-szfc', '--skipZonesFromCenter', type=int, default=10, help='Skip Number of zones from the center of the mirror. Default 10')
 parser.add_argument('-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1')
 parser.add_argument('-mdia', '--mirrorDiameterInches', type=float, default=6, help='Mirror diameter in inches. Default value is 6.0')
 parser.add_argument('-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0')
-
+parser.add_argument('-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk (value changed to 1). Default value is 1')
+parser.add_argument('-dwp', '--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for an infinite window period.')
+parser.add_argument('-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1')
+parser.add_argument('-spl', '--showPlot', type=int, default=1, help='Display the Analysis Plot (value changed to 1). Default value is 1')
+parser.add_argument('-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0')
+parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
+parser.add_argument('-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -70,7 +84,10 @@ try:
     
     if image is None:
         raise FileNotFoundError(f"File not found: {args.filename}")
- 
+    if args.gammaCorrection > 0.0:
+        # Apply gamma correction (adjust the gamma value as needed)
+        image = adjust_gamma(image, gamma=args.gammaCorrection)
+
     image = resize_image(image)
     
     # Convert the image to grayscale
@@ -180,6 +197,30 @@ try:
         #cv2.imshow('Cropped Image', cropped_gray_image)
         #cv2.waitKey(1000)
 
+        # Flip the cropped image horizontally
+        flipped_cropped_gray_image = cv2.flip(cropped_gray_image, 1)
+
+        # image like phi
+        phi_image = cv2.absdiff(cropped_gray_image, flipped_cropped_gray_image)
+
+        # Apply a filter (e.g., GaussianBlur) to phi_image
+        filtered_image = cv2.GaussianBlur(phi_image, (5, 5), 0)  # You can choose different filter types and kernel sizes
+
+        # Increase the contrast of the filtered image
+        alpha = 2.0  # Contrast control (1.0-3.0, 1.0 is normal)
+        beta = 0    # Brightness control (0-100, 0 is normal)
+        phi_final_image = cv2.convertScaleAbs(filtered_image, alpha=alpha, beta=beta)
+
+        # Define a kernel for dilation
+        #kernel = np.ones((3, 3), np.uint8)  # Adjust the size and shape as needed
+
+        # Apply sharpening
+        kernel = np.array([[-1,-1,-1],
+                       [-1,9,-1],
+                       [-1,-1,-1]])  # Sharpening kernel
+
+        # Perform dilation on the image
+        phi_final_image = cv2.dilate(phi_final_image, kernel, iterations=1)  # Adjust the number of iterations as needed
 
         # Get image dimensions
         height, width = cropped_image.shape[:2]
@@ -190,6 +231,13 @@ try:
 
         # Define the number of zones
         num_zones = args.Zones
+
+        if num_zones > 50:
+            print("WARNING!!! - Number of zones exceed 50. Limiting to 50.")
+            num_zones = 50
+        elif num_zones < 30:
+            print("WARNING!!! - Number of zones are less than 30. Limiting to 30.")
+            num_zones = 30
 
         # Create a blank mask
         mask = np.zeros((height, width), dtype=np.uint8)
@@ -337,7 +385,7 @@ try:
         draw_text(image, f"Mirror Focal Length: {args.mirrorFocalLengthInches} \"", (center_x-20,center_y-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
         cv2.imshow('Cropped Image', cropped_image)
-        cv2.waitKey(1000)
+        cv2.waitKey(args.displayWindowPeriod)
 
         # Extract zones and deltas for plotting
         zones = [zone[0] for zone in deltas]
@@ -351,9 +399,19 @@ try:
         plt.ylabel('Delta Values')
         plt.grid(True)
         plt.xticks(zones)  # Set x-axis ticks to match zones
-        plt.show()
+        if args.showPlot == 1:
+           plt.show()
+        if args.savePlot == 1:
+           # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
+           plt.savefig(args.filename + ".plot.png")
 
-        cv2.imwrite(args.filename + '.cropped.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+        if args.saveImage == 1:
+            cv2.imwrite(args.filename + '.analysis.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+        if args.showFlippedImage == 1:
+           cv2.imshow('Image Flipped', phi_final_image)
+        if args.saveFlippedImage == 1:
+           cv2.imwrite(args.filename + '.flipped.jpg', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
         cv2.destroyAllWindows()
     else:
         raise ValueError("No circles detected.")
