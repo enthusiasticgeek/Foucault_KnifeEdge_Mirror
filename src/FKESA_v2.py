@@ -195,7 +195,7 @@ try:
         mask = np.zeros((height, width), dtype=np.uint8)
 
         #pixels per zone
-        pixels_per_zone = radius // num_zones
+        pixels_per_zone = float(radius / num_zones)
         print("pixels per zone are ", pixels_per_zone)
 
         # List to store average intensities in each zone
@@ -330,7 +330,7 @@ try:
         draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
         
         zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
-        zone_inches = float(float(zone_pixels/radius)*args.mirrorDiameterInches)
+        zone_inches = float(float(zone_pixels/radius)*args.mirrorDiameterInches)/2
         draw_text(image, f"Radius: {radius} pixels ", (center_x-20,center_y+radius-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
         draw_text(image, f"Zone: {zone_pixels:.0f} pixels or {zone_inches:.4f} \"", (center_x-20,center_y+radius-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
         draw_text(image, f"Mirror Diameter: {args.mirrorDiameterInches} \"", (center_x-20,center_y-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
