@@ -14,6 +14,15 @@ import numpy as np
 import argparse
 import pprint
 
+
+def create_folder_if_not_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_path}' created successfully.")
+    else:
+        print(f"Folder '{folder_path}' already exists.")
+
+
 def resize_image(image, max_width=640):
     height, width, _ = image.shape
     if width > max_width:
@@ -53,6 +62,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 # Argument parser setup
 parser = argparse.ArgumentParser(description='Detect largest circle in an image')
 parser.add_argument('filename', help='Path to the image file')
+parser.add_argument('-dir', '--folder', default='', help='Folder name/path (default: {filename}_output)')
 parser.add_argument('-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles. Default 50')
 parser.add_argument('-p1', '--param1', type=int, default=20, help='First method-specific parameter. Default 30')
 parser.add_argument('-p2', '--param2', type=int, default=60, help='Second method-specific parameter. Default 60')
@@ -76,6 +86,12 @@ parser.add_argument('-svf', '--saveFlippedImage', type=int, default=1, help='Sav
 
 # Parse the arguments
 args = parser.parse_args()
+
+filename, file_extension = os.path.splitext(os.path.basename(args.filename))
+folder_path = args.folder or f'{filename}_output'
+
+create_folder_if_not_exists(folder_path)
+
 
 try:
     # Load the image using the provided filename
@@ -406,13 +422,19 @@ try:
            plt.savefig(args.filename + ".plot.png")
 
         if args.saveImage == 1:
-            cv2.imwrite(args.filename + '.analysis.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+           #pass
+           analyzed_image_filename = f'{filename}.analysis{file_extension}'
+           analyzed_image_path = os.path.join(folder_path, analyzed_image_filename)
+           cv2.imwrite(f'{analyzed_image_path}', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
         if args.showFlippedImage == 1:
            cv2.imshow('Image Flipped', phi_final_image)
         if args.saveFlippedImage == 1:
-           cv2.imwrite(args.filename + '.flipped.jpg', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+           flipped_image_filename = f'{filename}.flipped{file_extension}'
+           flipped_image_path = os.path.join(folder_path, flipped_image_filename)
+           cv2.imwrite(f'{flipped_image_path}', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
         cv2.destroyAllWindows()
+
     else:
         raise ValueError("No circles detected.")
 except FileNotFoundError as e:
