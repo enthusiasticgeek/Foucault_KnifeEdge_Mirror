@@ -89,9 +89,7 @@ args = parser.parse_args()
 
 filename, file_extension = os.path.splitext(os.path.basename(args.filename))
 folder_path = args.folder or f'{filename}_output'
-
 create_folder_if_not_exists(folder_path)
-
 
 try:
     # Load the image using the provided filename
@@ -423,13 +421,13 @@ try:
 
         if args.saveImage == 1:
            #pass
-           analyzed_image_filename = f'{filename}.analysis{file_extension}'
+           analyzed_image_filename = f'{filename}.analysis.jpg'
            analyzed_image_path = os.path.join(folder_path, analyzed_image_filename)
            cv2.imwrite(f'{analyzed_image_path}', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
         if args.showFlippedImage == 1:
            cv2.imshow('Image Flipped', phi_final_image)
         if args.saveFlippedImage == 1:
-           flipped_image_filename = f'{filename}.flipped{file_extension}'
+           flipped_image_filename = f'{filename}.flipped.jpg'
            flipped_image_path = os.path.join(folder_path, flipped_image_filename)
            cv2.imwrite(f'{flipped_image_path}', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
