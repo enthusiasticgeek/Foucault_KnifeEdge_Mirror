@@ -20,11 +20,21 @@ import random
 import signal
 import sys
 import csv
+import os
+import pprint
 
 # Refrain from using larger images
 # Smaller photos like 640x480 is ideal for faster processing and better results
 
 # Helper functions
+def create_folder_if_not_exists(folder_path):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_path}' created successfully.")
+    else:
+        print(f"Folder '{folder_path}' already exists.")
+
+
 def signal_handler(sig, frame):
     # Handle Ctrl+C (SIGINT)
     print("\nOperation interrupted by user.")
@@ -119,8 +129,11 @@ def get_average_intensity(image, x, y):
     average_intensity = neighborhood.mean()
     return average_intensity
 
-def write_all_intensities_to_csv(x1, y1, r1, data, plot_output):
-    with open(plot_output+'.data.csv', mode='w', newline='') as file:
+def write_all_intensities_to_csv(x1, y1, r1, data, plot_folder, plot_output):
+    filename, file_extension = os.path.splitext(os.path.basename(plot_output))
+    analyzed_csv_filename = f'{filename}.data.csv'
+    analyzed_csv_path = os.path.join(plot_folder, analyzed_csv_filename)
+    with open(analyzed_csv_path, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['X [pixels], Y [pixels], INTENSITY [0-255]'])
 
@@ -128,8 +141,13 @@ def write_all_intensities_to_csv(x1, y1, r1, data, plot_output):
             row_mod = (row[0] - x1, row[1] - y1) + row[2:]
             writer.writerow([row_mod])
 
-def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_output, plot_legend, show_plot):
-    with open(plot_output+'.csv', mode='w', newline='') as file:
+def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_folder, plot_output, plot_legend, show_plot):
+
+    filename, file_extension = os.path.splitext(os.path.basename(plot_output))
+    analyzed_csv_filename = f'{filename}.csv'
+    analyzed_csv_path = os.path.join(plot_folder, analyzed_csv_filename)
+
+    with open(analyzed_csv_path, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Less Than X1 (LEFT) (X [pixels], Y [pixels], INTENSITY [0-255], Distance from X1 [pixels])', 'Greater Than X1 (RIGHT) (X [pixels], Y [pixels], INTENSITY [0-255], Distance from X1 [pixels])'])
 
@@ -146,7 +164,7 @@ def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_outpu
     plt.figure(figsize=(12,8)) # 12 inches x 8 inches
     # Read the CSV to plot the points
     colors = ['r', 'g', 'b', 'c', 'm', 'y']  # List of colors for different segments
-    with open(plot_output+'.csv', mode='r') as file:
+    with open(analyzed_csv_path, mode='r') as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row
 
@@ -177,8 +195,10 @@ def write_matching_intensities_to_csv(x1, y1, r1, matches, save_plot, plot_outpu
     if plot_legend == 1:
        plt.legend()
     if save_plot == 1:
+       analyzed_plot_filename = f'{filename}.plot.png'
+       analyzed_plot_path = os.path.join(plot_folder, analyzed_plot_filename)
        # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
-       plt.savefig(plot_output + ".plot.png")
+       plt.savefig(f"{analyzed_plot_path}")
     # Show the plot
     if show_plot == 1:
        plt.show()
@@ -193,7 +213,7 @@ def draw_text(image, text, position, font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1
 def draw_symmetrical_line(image, x, y, line_length, color):
     cv2.line(image, (x, y - line_length), (x, y + line_length), color, thickness=1)
 
-def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_output, closest_match_threshold, plot_legend, mirror_diameter_inches, mirror_focal_length_inches, show_plot):
+def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, line_length, save_plot, plot_folder, plot_output, closest_match_threshold, plot_legend, mirror_diameter_inches, mirror_focal_length_inches, show_plot):
     matches = []
     less_than_x1 = []
     greater_than_x1 = []
@@ -230,8 +250,12 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
     draw_text(image, f"({x1-x1},{y1-y1})", (x1-20,y1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
     draw_text(image, f"Radius: {r1}", (x1-20,y1+r1-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
+    filename, file_extension = os.path.splitext(os.path.basename(plot_output))
+    analyzed_csv_filename = f'{filename}.zones.csv'
+    analyzed_csv_path = os.path.join(plot_folder, analyzed_csv_filename)
+
     # Append zone values to the CSV file
-    with open(plot_output+'.zones.csv', mode='w', newline='') as file:
+    with open(analyzed_csv_path, mode='w', newline='') as file:
          writer = csv.writer(file)
          writer.writerow(['NULL ZONE LEFT [inches]','NULL ZONE LEFT [mm]', 'INTENSITY LEFT', 'NULL ZONE RIGHT [inches]','NULL ZONE RIGHT [mm]', 'INTENSITY RIGHT','X [pixels]','Y [pixels]','RADIUS [pixels]'])
 
@@ -264,13 +288,13 @@ def find_matching_intensities_and_draw_lines(lst, x1, y1, r1, tolerance, image, 
 
 
            # Append zone values to the CSV file
-           with open(plot_output+'.zones.csv', mode='a', newline='') as file:
+           with open(analyzed_csv_path, mode='a', newline='') as file:
                writer = csv.writer(file)
                writer.writerow([f'{null_zone_lhs:.4f}',f'{null_zone_lhs_mm:.4f}', i[0][2], f'{null_zone_rhs:.4f}', f'{null_zone_rhs_mm:.4f}', i[1][2], x1, y1, r1])
 
 
     # Collect data in CSV
-    write_matching_intensities_to_csv(x1,y1,r1,matches, save_plot, plot_output, plot_legend, show_plot)
+    write_matching_intensities_to_csv(x1,y1,r1,matches, save_plot, plot_folder, plot_output, plot_legend, show_plot)
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register the signal handler
@@ -278,6 +302,7 @@ def main():
     try:
         parser = argparse.ArgumentParser(description='Detect largest circle in an image')
         parser.add_argument('filename', help='Path to the image file')
+        parser.add_argument('-dir', '--folder', default='', help='Folder name/path (default: {filename}_output)')
         parser.add_argument('-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles')
         parser.add_argument('-p1', '--param1', type=int, default=30, help='First method-specific parameter')
         parser.add_argument('-p2', '--param2', type=int, default=60, help='Second method-specific parameter')
@@ -307,6 +332,11 @@ def main():
         parser.add_argument('-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0')
         parser.add_argument('-usci', '--useSigmaClippedImage', type=int, default=0, help='Sigma Clipped Image. default 0')
         args = parser.parse_args()
+
+        filename, file_extension = os.path.splitext(os.path.basename(args.filename))
+        folder_path = args.folder or f'{filename}_output'
+
+        create_folder_if_not_exists(folder_path)
 
         try:
                 # Load the image and resize it
@@ -521,24 +551,32 @@ def main():
                                     print(lst)
                                     #write all data points regardless of matching intensities in a separate CSV file
                                     if args.listAllIntesities == 1:
-                                       write_all_intensities_to_csv(x, y, r, lst,args.filename)
+                                       write_all_intensities_to_csv(x, y, r, lst, folder_path, args.filename)
                                     #proceed to find matching intensities
-                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot,args.filename, args.closestMatchThreshold, args.showPlotLegend, args.mirrorDiameterInches, args.mirrorFocalLengthInches, args.showIntensityPlot)
+                                    find_matching_intensities_and_draw_lines(lst,x,y,r,args.brightnessTolerance,gray,2,args.savePlot, folder_path, args.filename, args.closestMatchThreshold, args.showPlotLegend, args.mirrorDiameterInches, args.mirrorFocalLengthInches, args.showIntensityPlot)
 
                         if args.saveCroppedImage == 1:
-                           cv2.imwrite(args.filename + '.cropped.jpg', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                           cropped_image_filename = f'{filename}.cropped.jpg'
+                           cropped_image_path = os.path.join(folder_path, cropped_image_filename)
+                           cv2.imwrite(f'{cropped_image_path}', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
                         if args.drawContours == 1:
                            cv2.imshow('Image with Segmentation Boundaries and Circle/ Contours on Shadowgram', result)
                         if args.saveContoursImage == 1:
-                           cv2.imwrite(args.filename + '.contours.jpg', result, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                           contours_image_filename = f'{filename}.contours.jpg'
+                           contours_image_path = os.path.join(folder_path, contours_image_filename)
+                           cv2.imwrite(f'{contours_image_path}', contours_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
                         if args.saveImage == 1:
-                           cv2.imwrite(args.filename + '.analysis.jpg', gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                           analyzed_image_filename = f'{filename}.analysis.jpg'
+                           analyzed_image_path = os.path.join(folder_path, analyzed_image_filename)
+                           cv2.imwrite(f'{analyzed_image_path}', gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
                         #cv2.imshow('Threshold', thresh)
                         cv2.imshow('Image with markers on Shadowgram', gray)
                         if args.showFlippedImage == 1:
                            cv2.imshow('Image Flipped', phi_final_image)
                         if args.saveFlippedImage == 1:
-                           cv2.imwrite(args.filename + '.flipped.jpg', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                           flipped_image_filename = f'{filename}.flipped.jpg'
+                           flipped_image_path = os.path.join(folder_path, flipped_image_filename)
+                           cv2.imwrite(f'{flipped_image_path}', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
                         cv2.waitKey(args.displayWindowPeriod) # Wait 10 seconds max. Set to 0 for infinite
                         cv2.destroyAllWindows()
 

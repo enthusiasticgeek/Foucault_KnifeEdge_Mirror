@@ -76,7 +76,7 @@ See example below:
 
 Then execute the following (replacing correct parameters as deemed necessary)
 
-	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
+	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py [-h] [-dir FOLDER] [-d MINDIST] [-p1 PARAM1] [-p2 PARAM2] [-minR MINRADIUS] [-maxR MAXRADIUS] [-cc CONSIDERCONTOURS] [-dc DRAWCONTOURS] [-dnc DRAWNESTEDCONTOURS]
                                                  [-dr DRAWCIRCLES] [-bt BRIGHTNESSTOLERANCE] [-dwp DISPLAYWINDOWPERIOD] [-spnc SKIPPIXELSNEARCENTER] [-svi SAVEIMAGE] [-svf SAVEFLIPPEDIMAGE]
                                                  [-svc SAVECONTOURSIMAGE] [-svcrp SAVECROPPEDIMAGE] [-svp SAVEPLOT] [-sip SHOWINTENSITYPLOT] [-spl SHOWPLOTLEGEND] [-cmt CLOSESTMATCHTHRESHOLD]
                                                  [-fli SHOWFLIPPEDIMAGE] [-lai LISTALLINTESITIES] [-rpil RESIZEWITHPILLOW] [-mdia MIRRORDIAMETERINCHES] [-mfl MIRRORFOCALLENGTHINCHES]
@@ -85,6 +85,7 @@ Then execute the following (replacing correct parameters as deemed necessary)
 
 The parameters (flags) description and their respective default values are as follows:
 
+	'-dir', '--folder', default='', help='Folder name/path (default: {filename}_output)'
 	'-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles
 	'-p1', '--param1', type=int, default=30, help='First method-specific parameter
 	'-p2', '--param2', type=int, default=60, help='Second method-specific parameter
