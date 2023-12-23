@@ -354,84 +354,89 @@ try:
                print(f"{zone} intensity matches with difference {abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]):.4f}" )
                difference = abs(average_intensities_rhs[zone] - average_intensities_lhs[zone])
                deltas.append((zone,difference))
-        #"""
-        """
-        deltas=[]
-        #Check if the intensities match
-        for zone in range(num_zones):
-               print(f"{zone} intensity matches with difference {abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]):.4f}" )
-               difference = abs(average_intensities_rhs[zone] - average_intensities_lhs[zone])
-               deltas.append((zone,difference))
+        if deltas:
+            #"""
+            """
+            deltas=[]
+            #Check if the intensities match
+            for zone in range(num_zones):
+                   print(f"{zone} intensity matches with difference {abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]):.4f}" )
+                   difference = abs(average_intensities_rhs[zone] - average_intensities_lhs[zone])
+                   deltas.append((zone,difference))
 
-        """
+            """
 
-        # Sort the deltas list by the second value (absolute differences), skipping when the second value is 0
-        sorted_deltas = sorted(
-            [t for t in deltas if t[0] != 0],  # Exclude tuples where the first value is 0
-            key=lambda x: x[1]
-        )
+            # Sort the deltas list by the second value (absolute differences), skipping when the first value is 0
+            #sorted_deltas = sorted(
+            #    [t for t in deltas if t[0] != 0],  # Exclude tuples where the first value is 0
+            #    key=lambda x: x[1]
+            #)
 
-        sorted_deltas = sorted(deltas, key=lambda x: x[1])
-        pprint.pprint(f"Zone match: {sorted_deltas[0][0]}")
-
-
-        line_mark1 = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
-        #line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
-        line_mark = int(int(line_mark1) + (int(pixels_per_zone)/2))
-        #draw_symmetrical_line(cropped_image, center_x+line_mark, center_y, 20, color=(255,255,255))
-        #draw_symmetrical_line(cropped_image, center_x-line_mark, center_y, 20, color=(255,255,255))
+            print(f"here0")
+            sorted_deltas = sorted(deltas, key=lambda x: x[1])
+            pprint.pprint(f"Zone match: {sorted_deltas[0][0]}")
+            print(f"here")
 
 
-        # Define parameters for the arc
-        start_angle = -20
-        end_angle = 20
-        color = (255, 255, 255)  # Blue color in BGR
+            line_mark1 = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
+            #line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
+            line_mark = int(int(line_mark1) + (int(pixels_per_zone)/2))
+            #draw_symmetrical_line(cropped_image, center_x+line_mark, center_y, 20, color=(255,255,255))
+            #draw_symmetrical_line(cropped_image, center_x-line_mark, center_y, 20, color=(255,255,255))
 
-        # Use the function to draw the symmetrical arc on the image
-        draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle, end_angle, color)
-        draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
-        
-        zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
-        zone_inches = float(float(zone_pixels/radius)*args.mirrorDiameterInches)/2
-        draw_text(image, f"Radius: {radius} pixels ", (center_x-20,center_y+radius-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
-        draw_text(image, f"Zone: {zone_pixels:.0f} pixels or {zone_inches:.4f} \"", (center_x-20,center_y+radius-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
-        draw_text(image, f"Mirror Diameter: {args.mirrorDiameterInches} \"", (center_x-20,center_y-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
-        draw_text(image, f"Mirror Focal Length: {args.mirrorFocalLengthInches} \"", (center_x-20,center_y-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
-        cv2.imshow('Cropped Image', cropped_image)
-        cv2.waitKey(args.displayWindowPeriod)
+            # Define parameters for the arc
+            start_angle = -20
+            end_angle = 20
+            color = (255, 255, 255)  # Blue color in BGR
 
-        # Extract zones and deltas for plotting
-        zones = [zone[0] for zone in deltas]
-        differences = [zone[1] for zone in deltas]
+            # Use the function to draw the symmetrical arc on the image
+            draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle, end_angle, color)
+            draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
+            
+            zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
+            zone_inches = float(float(zone_pixels/radius)*args.mirrorDiameterInches)/2
+            draw_text(image, f"Radius: {radius} pixels ", (center_x-20,center_y+radius-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+            draw_text(image, f"Zone: {zone_pixels:.0f} pixels or {zone_inches:.4f} \"", (center_x-20,center_y+radius-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+            draw_text(image, f"Mirror Diameter: {args.mirrorDiameterInches} \"", (center_x-20,center_y-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+            draw_text(image, f"Mirror Focal Length: {args.mirrorFocalLengthInches} \"", (center_x-20,center_y-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
-        # Plotting the zones against their delta values
-        plt.figure(figsize=(8, 6))
-        plt.plot(zones, differences, marker='o', linestyle='-', color='blue')
-        plt.title(f'Zones vs Delta Values for {filename_base} for {num_zones} zones within angle {args.roiAngleDegrees} Degrees')
-        plt.xlabel('Zones')
-        plt.ylabel('Delta Values')
-        plt.grid(True)
-        plt.xticks(zones)  # Set x-axis ticks to match zones
-        if args.savePlot == 1:
-           # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
-           plt.savefig(args.filename + ".fkesa_v2.plot.png")
-        if args.showPlot == 1:
-           plt.show()
+            cv2.imshow('Cropped Image', cropped_image)
+            cv2.waitKey(args.displayWindowPeriod)
 
-        if args.saveImage == 1:
-           #pass
-           analyzed_image_filename = f'{filename}.fkesa_v2.analysis.jpg'
-           analyzed_image_path = os.path.join(folder_path, analyzed_image_filename)
-           print(f'{analyzed_image_path}')
-           cv2.imwrite(f'{analyzed_image_path}', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
-        if args.showFlippedImage == 1:
-           cv2.imshow('Image Flipped', phi_final_image)
-        if args.saveFlippedImage == 1:
-           flipped_image_filename = f'{filename}.fkesa_v2.flipped.jpg'
-           flipped_image_path = os.path.join(folder_path, flipped_image_filename)
-           print(f'{flipped_image_path}')
-           cv2.imwrite(f'{flipped_image_path}', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+            # Extract zones and deltas for plotting
+            zones = [zone[0] for zone in deltas]
+            differences = [zone[1] for zone in deltas]
+
+            # Plotting the zones against their delta values
+            plt.figure(figsize=(8, 6))
+            plt.plot(zones, differences, marker='o', linestyle='-', color='blue')
+            plt.title(f'Zones vs Delta Values for {filename_base} for {num_zones} zones within angle {args.roiAngleDegrees} Degrees')
+            plt.xlabel('Zones')
+            plt.ylabel('Delta Values')
+            plt.grid(True)
+            plt.xticks(zones)  # Set x-axis ticks to match zones
+            if args.savePlot == 1:
+               # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
+               plt.savefig(args.filename + ".fkesa_v2.plot.png")
+            if args.showPlot == 1:
+               plt.show()
+
+            if args.saveImage == 1:
+               #pass
+               analyzed_image_filename = f'{filename}.fkesa_v2.analysis.jpg'
+               analyzed_image_path = os.path.join(folder_path, analyzed_image_filename)
+               print(f'{analyzed_image_path}')
+               cv2.imwrite(f'{analyzed_image_path}', cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+            if args.showFlippedImage == 1:
+               cv2.imshow('Image Flipped', phi_final_image)
+            if args.saveFlippedImage == 1:
+               flipped_image_filename = f'{filename}.fkesa_v2.flipped.jpg'
+               flipped_image_path = os.path.join(folder_path, flipped_image_filename)
+               print(f'{flipped_image_path}')
+               cv2.imwrite(f'{flipped_image_path}', phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+        else:
+             print("No zones have matching intensities!")
 
         cv2.destroyAllWindows()
 
