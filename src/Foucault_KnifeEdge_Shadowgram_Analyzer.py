@@ -304,7 +304,7 @@ def main():
         parser.add_argument('filename', help='Path to the image file')
         parser.add_argument('-dir', '--folder', default='', help='Folder name/path (default: {filename}_output)')
         parser.add_argument('-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles')
-        parser.add_argument('-p1', '--param1', type=int, default=30, help='First method-specific parameter')
+        parser.add_argument('-p1', '--param1', type=int, default=25, help='First method-specific parameter')
         parser.add_argument('-p2', '--param2', type=int, default=60, help='Second method-specific parameter')
         parser.add_argument('-minR', '--minRadius', type=int, default=10, help='Minimum circle radius')
         parser.add_argument('-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius')
