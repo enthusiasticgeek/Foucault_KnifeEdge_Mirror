@@ -116,7 +116,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-usci', '--useSigmaClippedImage', type=int, default=0, help='Sigma Clipped Image. default 0'
 
 
-**Usage example 1:** 
+**Usage example 1.a:** 
 
 	./src/Foucault_KnifeEdge_Shadowgram_Analyzer.py images/1.jpg --brightnessTolerance 20 --drawContours 1
 
@@ -143,6 +143,42 @@ The following CSV files are generated in the same folder where image file is sit
 	-rw-rw-r-- 1 enthusiasticgeek enthusiasticgeek   3236 Dec 10 16:10 1.jpg.data.csv
 	-rw-rw-r-- 1 enthusiasticgeek enthusiasticgeek    254 Dec 10 16:10 1.jpg.zones.csv
 	-rw-rw-r-- 1 enthusiasticgeek enthusiasticgeek    403 Dec 10 16:10 1.jpg.csv
+
+**Update**
+
+**Usage example 1.b:** 
+
+A new way to calculate using zones specifying ROI angle (zones in a slice of a pie) is now available!!! 
+
+	./src/FKESA_v2.py images/1.jpg
+
+The parameters (flags) description and their respective default values are as follows:
+
+	'filename', help='Path to the image file'
+	'-dir', '--folder', default='', help='Folder name/path (default: {filename}_output)'
+	'-d', '--minDist', type=int, default=50, help='Minimum distance between detected circles. Default 50'
+	'-p1', '--param1', type=int, default=20, help='First method-specific parameter. Default 30'
+	'-p2', '--param2', type=int, default=60, help='Second method-specific parameter. Default 60'
+	'-minR', '--minRadius', type=int, default=10, help='Minimum circle radius. Default 10'
+	'-maxR', '--maxRadius', type=int, default=0, help='Maximum circle radius. Default 0'
+	'-dwpz', '--displayWindowPeriodZones', type=int, default=100, help='Maximum period to wait in milliseconds between displaying zones. Default 100 milliseconds'
+	'-bt', '--brightnessTolerance', type=int, default=10, help='Brightness Tolerance. Default 10'
+	'-rad', '--roiAngleDegrees', type=int, default=10, help='ROI angle degrees. Default 10'
+	'-z', '--Zones', type=int, default=50, help='Number of zones [30 to 50]. Default 50'
+	'-szfc', '--skipZonesFromCenter', type=int, default=10, help='Skip Number of zones from the center of the mirror. Default 10'
+	'-rfc', '--retryFindMirror', type=int, default=1, help='Adjust Hough Transform search window (adaptive) and attempt to find Mirror. default 1'
+	'-mdia', '--mirrorDiameterInches', type=float, default=6, help='Mirror diameter in inches. Default value is 6.0'
+	'-mfl', '--mirrorFocalLengthInches', type=float, default=48, help='Mirror Focal Length in inches. Default value is 48.0'
+	'-svi', '--saveImage', type=int, default=1, help='Save the Analysis Image on the disk (value changed to 1). Default value is 1'
+	'-dwp', '--displayWindowPeriod', type=int, default=10000, help='Display window period 10 seconds. Set to 0 for an infinite window period.'
+	'-svp', '--savePlot', type=int, default=1, help='Save the Analysis Plot on the disk (value changed to 1). Default value is 1'
+	'-spl', '--showPlot', type=int, default=1, help='Display the Analysis Plot (value changed to 1). Default value is 1'
+	'-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0'
+	'-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0'
+	'-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1'
+
+
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/1.fkesa_v2.analysis.jpg "example output")
 
 **Usage example 2:** 
 
