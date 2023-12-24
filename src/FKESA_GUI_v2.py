@@ -40,18 +40,18 @@ def main():
 
     # Define the window layout
     layout = [
-        [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA)", size=(100, 1), justification="center", font=('Times New Roman', 14, 'normal'),text_color='darkgreen')],
+        [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA)", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-")],
         [
-            [sg.Text('Select Camera:')],
+            [sg.Text("Select Camera", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
             [sg.DropDown(working_ports, key='-CAMERA SELECT-')],
             [sg.Button('OK'), sg.Button('Cancel')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Circular Hough Transform Parameters", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkblue')],
+        [sg.Text("Circular Hough Transform Parameters [Mirror Detection]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
-            sg.Text("Min Dist (pixels), Delay msec [Default: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'normal'), key="-MINDIST-"),
+            sg.Text("Min Dist (pixels), Delay milsec [Default: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
             sg.Slider(
                 (0, 255),
                 50,
@@ -59,7 +59,7 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-MINDIST SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Times New Roman', 10, 'bold'),
             ),
             sg.Slider(
                 (500, 10000),
@@ -68,12 +68,12 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-FRAMES SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Times New Roman', 10, 'bold'),
             ),
 
         ],
         [
-            sg.Text("Parameters 1 and 2 (pixels) [Default: 25/60]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'normal'), key="-PARAMS-"),
+            sg.Text("Parameters 1 and 2 (pixels) [Default: 25/60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS-"),
             sg.Slider(
                 (0, 255),
                 25,
@@ -81,6 +81,7 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-PARAM SLIDER A-",
+                font=('Times New Roman', 10, 'bold'),
             ),
             sg.Slider(
                 (0, 255),
@@ -89,10 +90,11 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-PARAM SLIDER B-",
+                font=('Times New Roman', 10, 'bold'),
             ),
         ],
         [
-            sg.Text("Min and Max Radius (pixels) [Default: 10/0]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'normal'), key="-RADIUS-"),
+            sg.Text("Min and Max Radius (pixels) [Default: 10/0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RADIUS-"),
             sg.Slider(
                 (0, 255),
                 20,
@@ -100,6 +102,7 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-RADIUS SLIDER A-",
+                font=('Times New Roman', 10, 'bold'),
             ),
             sg.Slider(
                 (0, 255),
@@ -108,12 +111,13 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-RADIUS SLIDER B-",
+                font=('Times New Roman', 10, 'bold'),
             ),
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Intensity Parameters", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkblue')],
+        [sg.Text("Intensity Parameters [Null Zones Identification]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
-            sg.Text("Brightness Tolerance and Zones [Default: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'normal'), key="-INTENSITY PARAMS-"),
+            sg.Text("Brightness Tolerance and Zones [Default: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS-"),
             sg.Slider(
                 (0, 50),
                 10,
@@ -121,6 +125,7 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-BRIGHTNESS SLIDER-",
+                font=('Times New Roman', 10, 'bold'),
             ),
             sg.Slider(
                 (30, 50),
@@ -129,10 +134,11 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-ZONES SLIDER-",
+                font=('Times New Roman', 10, 'bold'),
             ),
         ],
         [
-            sg.Text("Angle of Brightness Slice (degrees) [Default: 10]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'normal'), key="-ANGLE-"),
+            sg.Text("Angle of Brightness Slice (degrees) [Default: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
             sg.Slider(
                 (10, 90),
                 10,
@@ -140,13 +146,13 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-ANGLE SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Times New Roman', 10, 'bold'),
             ),
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Primary Mirror Parameters [Parabolic Mirror]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkblue')],
+        [sg.Text("Primary Mirror Parameters [Parabolic Mirror]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
-            sg.Text("Diameter and Focal Length (inches) [Default: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'normal'), key="-MIRROR PARAMS-"),
+            sg.Text("Diameter and Focal Length (inches) [Default: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
             sg.Slider(
                 (1, 255),
                 6,
@@ -154,6 +160,7 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-DIAMETER SLIDER-",
+                font=('Times New Roman', 10, 'bold'),
             ),
             sg.Slider(
                 (1, 255),
@@ -162,6 +169,7 @@ def main():
                 orientation="h",
                 size=(50, 15),
                 key="-FOCAL LENGTH SLIDER-",
+                font=('Times New Roman', 10, 'bold'),
             ),
         ],
         [sg.Button("Exit", size=(10, 1))],
