@@ -90,7 +90,7 @@ def main():
         [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("MIN DIST (PIXELS), DELAY MILSEC [Default: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
+            sg.Text("MIN DIST (PIXELS), DELAY MILSEC [DEFAULT: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -114,7 +114,7 @@ def main():
 
         ],
         [
-            sg.Text("PARAMETERS 1 AND 2 (PIXELS) [Default: 25/60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS-"),
+            sg.Text("PARAMETERS 1 AND 2 (PIXELS) [DEFAULT: 25/60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -137,7 +137,7 @@ def main():
             ),
         ],
         [
-            sg.Text("MIN AND MAX RADIUS (PIXELS) [Default: 10/0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RADIUS-"),
+            sg.Text("MIN AND MAX RADIUS (PIXELS) [DEFAULT: 10/0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -163,7 +163,7 @@ def main():
         [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("BRIGHTNESS TOLERANCE AND ZONES [Default: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS-"),
+            sg.Text("BRIGHTNESS TOLERANCE AND ZONES [DEFAULT: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 50),
@@ -186,7 +186,7 @@ def main():
             ),
         ],
         [
-            sg.Text("ANGLE OF BRIGHTNESS SLICE (DEGREES) [Default: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
+            sg.Text("ANGLE OF BRIGHTNESS SLICE (DEGREES) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (10, 90),
@@ -203,7 +203,7 @@ def main():
         [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("DIAMETER AND FOCAL LENGTH (inches) [Default: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
+            sg.Text("DIAMETER AND FOCAL LENGTH (inches) [DEFAULT: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
