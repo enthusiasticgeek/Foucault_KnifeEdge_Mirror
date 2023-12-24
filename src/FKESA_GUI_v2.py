@@ -6,11 +6,11 @@ import time
 
 def author_window():
     layout = [
-        [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
-        [sg.Text('FKESA Version: 2.1')],
-        [sg.Text('Release Date: December 25, 2023')],
-        [sg.Text('Foucault KnifeEdge Shadowgram Analyzer (FKESA)')],
-        [sg.Text('Credits: Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
+        [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA)", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-APP-")],
+        [sg.Text("Author: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
+        [sg.Text("FKESA: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-VERSION-"),sg.Text(' Version: 2.1')],
+        [sg.Text("Release Date: ", size=(14, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RELEASE DATE-"),sg.Text('December 25, 2023')],
+        [sg.Text("Credits: ", size=(10, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
         [sg.Text('Amateur Telescope Making (ATM) workshop')],
         [sg.Text('Washington D.C, U.S.A')],
         [sg.Button('Close')]
@@ -27,7 +27,9 @@ def author_window():
 
 # Ref: https://stackoverflow.com/questions/57577445/list-available-cameras-opencv-python
 def list_available_cameras():
-    print("PLEASE WAIT....DETECTING AVAILABLE CAMERAS")
+    print("=============================================")
+    print("PLEASE WAIT....DETECTING AVAILABLE CAMERAS...")
+    print("=============================================")
     CAM_DEBUG=False
     """
     Test the ports and returns a tuple with the available ports and the ones that are working.
@@ -72,12 +74,13 @@ def main():
         [
             [sg.Text("Select Camera", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
             [sg.DropDown(working_ports, key='-CAMERA SELECT-')],
-            [sg.Button('OK'), sg.Button('Cancel')]
+            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("Circular Hough Transform Parameters [Mirror Detection]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
             sg.Text("Min Dist (pixels), Delay milsec [Default: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 50,
@@ -87,6 +90,7 @@ def main():
                 key="-MINDIST SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (500, 10000),
                 500,
@@ -100,6 +104,7 @@ def main():
         ],
         [
             sg.Text("Parameters 1 and 2 (pixels) [Default: 25/60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 25,
@@ -109,6 +114,7 @@ def main():
                 key="-PARAM SLIDER A-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 60,
@@ -121,6 +127,7 @@ def main():
         ],
         [
             sg.Text("Min and Max Radius (pixels) [Default: 10/0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RADIUS-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 20,
@@ -130,6 +137,7 @@ def main():
                 key="-RADIUS SLIDER A-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 60,
@@ -144,6 +152,7 @@ def main():
         [sg.Text("Intensity Parameters [Null Zones Identification]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
             sg.Text("Brightness Tolerance and Zones [Default: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 50),
                 10,
@@ -153,6 +162,7 @@ def main():
                 key="-BRIGHTNESS SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (30, 50),
                 60,
@@ -165,6 +175,7 @@ def main():
         ],
         [
             sg.Text("Angle of Brightness Slice (degrees) [Default: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (10, 90),
                 10,
@@ -174,11 +185,13 @@ def main():
                 key="-ANGLE SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Primary Mirror Parameters [Parabolic Mirror or K=-1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
+        [sg.Text("Primary Mirror Parameters [Parabolic Mirror or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
             sg.Text("Diameter and Focal Length (inches) [Default: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
                 6,
@@ -188,6 +201,7 @@ def main():
                 key="-DIAMETER SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
                 48,
@@ -198,7 +212,7 @@ def main():
                 font=('Times New Roman', 10, 'bold'),
             ),
         ],
-        [sg.Button("Exit", size=(10, 1)),sg.Button("About", size=(10, 1))],
+        [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1))],
     ]
 
     try:
