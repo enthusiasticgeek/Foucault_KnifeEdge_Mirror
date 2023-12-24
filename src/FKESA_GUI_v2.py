@@ -4,8 +4,31 @@ import cv2
 import numpy as np
 import time
 
+def author_window():
+    layout = [
+        [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
+        [sg.Text('FKESA Version: 2.1')],
+        [sg.Text('Release Date: December 25, 2023')],
+        [sg.Text('Foucault KnifeEdge Shadowgram Analyzer (FKESA)')],
+        [sg.Text('Credits: Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
+        [sg.Text('Amateur Telescope Making (ATM) workshop')],
+        [sg.Text('Washington D.C, U.S.A')],
+        [sg.Button('Close')]
+    ]
+
+    window = sg.Window('About', layout)
+
+    while True:
+        event, _ = window.read()
+        if event == sg.WINDOW_CLOSED or event == 'Close':
+            window.close()
+            break
+
+
 # Ref: https://stackoverflow.com/questions/57577445/list-available-cameras-opencv-python
 def list_available_cameras():
+    print("PLEASE WAIT....DETECTING AVAILABLE CAMERAS")
+    CAM_DEBUG=False
     """
     Test the ports and returns a tuple with the available ports and the ones that are working.
     """
@@ -17,16 +40,19 @@ def list_available_cameras():
         camera = cv2.VideoCapture(dev_port)
         if not camera.isOpened():
             non_working_ports.append(dev_port)
-            print("Port %s is not working." %dev_port)
+            if CAM_DEBUG==True:
+               print("Port %s is not working." %dev_port)
         else:
             is_reading, img = camera.read()
             w = camera.get(3)
             h = camera.get(4)
             if is_reading:
-                print("Port %s is working and reads images (%s x %s)" %(dev_port,h,w))
+                if CAM_DEBUG==True:
+                   print("Port %s is working and reads images (%s x %s)" %(dev_port,h,w))
                 working_ports.append(dev_port)
             else:
-                print("Port %s for camera ( %s x %s) is present but does not reads." %(dev_port,h,w))
+                if CAM_DEBUG==True:
+                   print("Port %s for camera ( %s x %s) is present but does not reads." %(dev_port,h,w))
                 available_ports.append(dev_port)
         dev_port +=1
     return available_ports,working_ports,non_working_ports
@@ -150,7 +176,7 @@ def main():
             ),
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Primary Mirror Parameters [Parabolic Mirror]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
+        [sg.Text("Primary Mirror Parameters [Parabolic Mirror or K=-1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
         [
             sg.Text("Diameter and Focal Length (inches) [Default: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
             sg.Slider(
@@ -172,46 +198,53 @@ def main():
                 font=('Times New Roman', 10, 'bold'),
             ),
         ],
-        [sg.Button("Exit", size=(10, 1))],
+        [sg.Button("Exit", size=(10, 1)),sg.Button("About", size=(10, 1))],
     ]
 
-    # Create the window and show it without the plot
-    window = sg.Window("FKESA v2 GUI [LIVE]", layout, location=(800, 400))
-    selected_camera = 0
-    cap = cv2.VideoCapture(selected_camera)
-
-    # Setting the desired resolution (640x480)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-
-    while True:
-        event, values = window.read(timeout=20)
-        if event == "Exit" or event == sg.WIN_CLOSED:
-            break
-        elif event == 'OK':
-            selected_camera = values['-CAMERA SELECT-']
-            print(f"Camera selected: {selected_camera}")
-
-            cap.release()
+    try:
+            # Create the window and show it without the plot
+            window = sg.Window("FKESA v2 GUI [LIVE]", layout, location=(800, 400))
+            selected_camera = 0
             cap = cv2.VideoCapture(selected_camera)
 
             # Setting the desired resolution (640x480)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        ret, frame = cap.read()
-        if frame is None:
-           continue
-       
 
-        imgbytes = cv2.imencode(".png", frame)[1].tobytes()
-        window["-IMAGE-"].update(data=imgbytes)
-        # Sleep for 0.5 milliseconds (500 microseconds)
-        milliseconds = 100 / 1000
-        time.sleep(milliseconds)
+            while True:
+                event, values = window.read(timeout=20)
+                if event == "Exit" or event == sg.WIN_CLOSED:
+                    break
+                elif event == 'About':
+                    #window.hide()  # Hide the main window
+                    author_window()  # Open the author information window
+                elif event == 'OK':
+                    selected_camera = values['-CAMERA SELECT-']
+                    print(f"Camera selected: {selected_camera}")
 
-    cap.release()
-    window.close()
+                    cap.release()
+                    cap = cv2.VideoCapture(selected_camera)
+
+                    # Setting the desired resolution (640x480)
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+                ret, frame = cap.read()
+                if frame is None:
+                   continue
+               
+
+                imgbytes = cv2.imencode(".png", frame)[1].tobytes()
+                window["-IMAGE-"].update(data=imgbytes)
+                # Sleep for 0.5 milliseconds (500 microseconds)
+                milliseconds = 100 / 1000
+                time.sleep(milliseconds)
+
+            cap.release()
+            window.close()
+
+    except Exception as e:
+            print(f"An error occurred: {e}")
 
 main()
