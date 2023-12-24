@@ -372,11 +372,8 @@ try:
             #    key=lambda x: x[1]
             #)
 
-            print(f"here0")
             sorted_deltas = sorted(deltas, key=lambda x: x[1])
             pprint.pprint(f"Zone match: {sorted_deltas[0][0]}")
-            print(f"here")
-
 
             line_mark1 = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
             #line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
@@ -398,6 +395,7 @@ try:
             zone_inches = float(float(zone_pixels/radius)*args.mirrorDiameterInches)/2
             draw_text(image, f"Radius: {radius} pixels ", (center_x-20,center_y+radius-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
             draw_text(image, f"Zone: {zone_pixels:.0f} pixels or {zone_inches:.4f} \"", (center_x-20,center_y+radius-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+            draw_text(image, f"Zone match: {sorted_deltas[0][0]} zone of total {num_zones} zones", (center_x-20,center_y+radius-60), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
             draw_text(image, f"Mirror Diameter: {args.mirrorDiameterInches} \"", (center_x-20,center_y-20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
             draw_text(image, f"Mirror Focal Length: {args.mirrorFocalLengthInches} \"", (center_x-20,center_y-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
