@@ -6,13 +6,15 @@ import time
 
 def author_window():
     layout = [
-        [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA)", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-APP-")],
+        [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA) Version 2", size=(60, 1), justification="center", font=('Times New Roman', 10, 'bold'), key="-APP-")],
+        [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("Author: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
-        [sg.Text("FKESA: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-VERSION-"),sg.Text(' Version: 2.1')],
+        [sg.Text("FKESA: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-VERSION-"),sg.Text(' Version 2.1')],
         [sg.Text("Release Date: ", size=(14, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RELEASE DATE-"),sg.Text('December 25, 2023')],
-        [sg.Text("Credits: ", size=(10, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
+        [sg.Text("Credits: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-")],
+        [sg.Text('Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
         [sg.Text('Amateur Telescope Making (ATM) workshop')],
-        [sg.Text('Washington D.C, U.S.A')],
+        [sg.Text('Washington D.C., U.S.A.')],
         [sg.Button('Close')]
     ]
 
@@ -66,19 +68,26 @@ def main():
     available_ports, working_ports, non_working_ports = list_available_cameras()
     print(available_ports)
 
+    # Define the menu items
+    menu_def = [
+	    ['&File', ['---', '&Exit']],
+	    ['&Help', ['&About']]
+    ]
+
     # Define the window layout
     layout = [
         [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) GUI VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
+        [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-")],
         [
-            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
+            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
 	    [sg.HorizontalSeparator()],  # Separator 
-            [sg.DropDown(working_ports, key='-CAMERA SELECT-')],
+            [sg.DropDown(working_ports, default_value='0', key='-CAMERA SELECT-')],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
+        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("MIN DIST (PIXELS), DELAY MILSEC [Default: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
@@ -151,7 +160,7 @@ def main():
             ),
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
+        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("BRIGHTNESS TOLERANCE AND ZONES [Default: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS-"),
@@ -191,7 +200,7 @@ def main():
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='brown')],
+        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("DIAMETER AND FOCAL LENGTH (inches) [Default: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
@@ -219,6 +228,7 @@ def main():
         [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1))],
     ]
 
+    #sg.theme_previewer()
     try:
             # Create the window and show it without the plot
             window = sg.Window("FKESA v2 GUI [LIVE]", layout, location=(800, 400))
