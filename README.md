@@ -176,6 +176,7 @@ The parameters (flags) description and their respective default values are as fo
 	'-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0'
 	'-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0'
 	'-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1'
+	'-gic', '--gradientIntensityChange', type=int, default=5, help='Gradient Intensity Change. Default value is 5'
 
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/1.fkesa_v2.analysis.jpg "example output")
