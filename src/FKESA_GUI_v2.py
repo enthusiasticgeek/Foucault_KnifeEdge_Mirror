@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 import PySimpleGUI as sg
+from PIL import Image, ImageTk
 import cv2
 import numpy as np
+import os.path
 import time
+
+# Initialize a variable to store image data
+image_data = None
 
 def author_window():
     layout = [
@@ -70,19 +75,41 @@ def main():
 
     # Define the menu items
     menu_def = [
-	    ['&File', ['---', '&Exit']],
-	    ['&Help', ['&About']]
+            ['&File', ['---', '&Exit']],
+            ['&Help', ['&About']]
     ]
+
+    # First the window layout in 2 columns
+    file_list_column = [
+        [
+            sg.Text("Image Folder",font=('Times New Roman', 12, 'bold'), text_color="navyblue"), 
+            sg.In(size=(25, 1), enable_events=True, key="-FOLDER-"),
+            sg.FolderBrowse(),
+        ],
+        [
+            sg.Listbox(
+                values=[], enable_events=True, size=(40, 30), key="-FILE LIST-"
+            )
+        ],
+    ]
+
+    # For now will only show the name of the file that was chosen
+    image_viewer_column = [
+        [sg.Text("Choose an image from list on left:", font=('Times New Roman', 14, 'bold'), text_color="navyblue")],
+        [sg.Text(size=(40, 1), key="-TOUT-")],
+        [sg.Image(key="-LOAD IMAGE-",size=(320,240))],
+    ]
+
 
     # Define the window layout
     layout = [
         [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) GUI VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Image(filename="", key="-IMAGE-")],
+        [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
             [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
-	    [sg.HorizontalSeparator()],  # Separator 
+            [sg.HorizontalSeparator()],  # Separator 
             [sg.DropDown(working_ports, default_value='0', key='-CAMERA SELECT-')],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
@@ -225,7 +252,7 @@ def main():
                 font=('Times New Roman', 10, 'bold'),
             ),
         ],
-        [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1))],
+        [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1)) ],
     ]
 
     #sg.theme_previewer()
@@ -244,6 +271,43 @@ def main():
                 event, values = window.read(timeout=20)
                 if event == "Exit" or event == sg.WIN_CLOSED:
                     break
+                elif event == 'Save Image':
+                    if image_data is not None:
+                        # Use OpenCV to write the image data to a file
+                        filename = f"fkesa_v2_{int(time.time())}.png"  # Generate a filename (you can adjust this)
+                        with open(filename, 'wb') as f:
+                            f.write(image_data)
+                        sg.popup(f"Image saved as: {filename}")
+                # Folder name was filled in, make a list of files in the folder
+                elif event == "-FOLDER-":
+                    folder = values["-FOLDER-"]
+                    try:
+                        # Get list of files in folder
+                        file_list = os.listdir(folder)
+                    except:
+                        file_list = []
+
+                    fnames = [
+                        f
+                        for f in file_list
+                        if os.path.isfile(os.path.join(folder, f))
+                        and f.lower().endswith((".bmp",".jpg",".svg",".jpeg",".png", ".gif"))
+                    ]
+                    window["-FILE LIST-"].update(fnames)
+                # Inside your event loop where you update the image element
+                elif event == "-FILE LIST-":  # A file was chosen from the listbox
+                    try:
+                      filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
+                      window["-TOUT-"].update(filename)
+                      image = Image.open(filename)
+                      image.thumbnail((400, 400))  # Resize image if needed
+                      bio = ImageTk.PhotoImage(image)
+                      window["-LOAD IMAGE-"].update(data=bio)
+                    except Exception as e:
+                      print(e)
+                    except:
+                        pass
+
                 elif event == 'About':
                     #window.hide()  # Hide the main window
                     author_window()  # Open the author information window
@@ -265,6 +329,8 @@ def main():
 
                 imgbytes = cv2.imencode(".png", frame)[1].tobytes()
                 window["-IMAGE-"].update(data=imgbytes)
+                image_data = imgbytes  # Update the image data variable
+
                 # Sleep for 0.5 milliseconds (500 microseconds)
                 milliseconds = 100 / 1000
                 time.sleep(milliseconds)
