@@ -83,6 +83,7 @@ parser.add_argument('-spl', '--showPlot', type=int, default=1, help='Display the
 parser.add_argument('-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0')
 parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
 parser.add_argument('-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1')
+parser.add_argument('-gic', '--gradientIntensityChange', type=int, default=5, help='Gradient Intensity Change. Default value is 5')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -345,6 +346,62 @@ try:
             #cv2.imshow('Image with Custom ROI', roi)
             #cv2.waitKey(args.displayWindowPeriodZones)
 
+       # Initialize an empty list to store the zonal_intensity_deltas
+        zonal_intensity_deltas_rhs = []
+
+        # Iterate through the list to find zonal_intensity_deltas between consecutive elements
+        for i in range(len(average_intensities_rhs) - 1):
+            diff = round(average_intensities_rhs[i + 1] - average_intensities_rhs[i], 2)
+            zonal_intensity_deltas_rhs.append(diff)
+
+        print(f"Zonal intensity difference between consecutive elements rhs: {zonal_intensity_deltas_rhs} and {len(zonal_intensity_deltas_rhs)}")
+
+       # Initialize an empty list to store the zonal_intensity_deltas
+        zonal_intensity_deltas_lhs = []
+
+        # Iterate through the list to find zonal_intensity_deltas between consecutive elements
+        for i in range(len(average_intensities_lhs) - 1):
+            diff = round(average_intensities_lhs[i + 1] - average_intensities_lhs[i], 2)
+            zonal_intensity_deltas_lhs.append(diff)
+
+        print(f"Zonal intensity difference between consecutive elements lhs: {zonal_intensity_deltas_lhs} and {len(zonal_intensity_deltas_lhs)}")
+
+        null_zone_rhs_possibility = False
+        for diff in zonal_intensity_deltas_rhs:
+            if abs(diff) > args.gradientIntensityChange:
+                null_zone_rhs_possibility = True
+                break  # No need to continue checking if one element meets the condition
+        print("Null Zone RHS Possibility:", null_zone_rhs_possibility)
+
+        null_zone_lhs_possibility = False
+        for diff in zonal_intensity_deltas_lhs:
+            if abs(diff) > args.gradientIntensityChange:
+                null_zone_lhs_possibility = True
+                break  # No need to continue checking if one element meets the condition
+        print("Null Zone LHS Possibility:", null_zone_lhs_possibility)
+
+        if args.showPlot == 1:
+            # Plot zonal_intensity_deltas_rhs vs i
+            plt.figure(figsize=(8, 5))
+            plt.plot(range(len(zonal_intensity_deltas_rhs)), zonal_intensity_deltas_rhs, label='Zonal Intensity Deltas RHS')
+            plt.xlabel('i')
+            plt.ylabel('Zonal Intensity Deltas')
+            plt.title('Zonal Intensity Deltas RHS vs i')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+
+        if args.showPlot == 1:
+            # Plot zonal_intensity_deltas_lhs vs i
+            plt.figure(figsize=(8, 5))
+            plt.plot(range(len(zonal_intensity_deltas_lhs)), zonal_intensity_deltas_lhs, label='Zonal Intensity Deltas LHS')
+            plt.xlabel('i')
+            plt.ylabel('Zonal Intensity Deltas')
+            plt.title('Zonal Intensity Deltas LHS vs i')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+
         #"""
         deltas=[]
         #Check if the intensities match
@@ -385,7 +442,13 @@ try:
             # Define parameters for the arc
             start_angle = -20
             end_angle = 20
-            color = (255, 255, 255)  # Blue color in BGR
+
+            if null_zone_lhs_possibility == True and null_zone_lhs_possibility == True:
+                color = (255, 255, 255)  # White color in BGR
+                draw_text(image, f"NULL Zones found", (center_x-20,center_y+radius-80), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 255, 0), thickness=1)
+            else:
+                color = (0, 0, 255)  # Red color in BGR
+                draw_text(image, f"NULL Zones not found", (center_x-20,center_y+radius-80), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 0, 255), thickness=1)
 
             # Use the function to draw the symmetrical arc on the image
             draw_symmetrical_arc(cropped_image, center_x, center_y, line_mark1, start_angle, end_angle, color)
@@ -416,7 +479,9 @@ try:
             plt.xticks(zones)  # Set x-axis ticks to match zones
             if args.savePlot == 1:
                # Save the plot as an image (e.g., PNG, PDF, SVG, etc.)
-               plt.savefig(args.filename + ".fkesa_v2.plot.png")
+               analyzed_image_filename = f'{filename}.fkesa_v2.plot.png'
+               analyzed_image_path = os.path.join(folder_path, analyzed_image_filename)
+               plt.savefig(analyzed_image_path)
             if args.showPlot == 1:
                plt.show()
 
