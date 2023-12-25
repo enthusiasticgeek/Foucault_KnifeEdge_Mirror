@@ -20,6 +20,7 @@ def author_window():
         [sg.Text('Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
         [sg.Text('Amateur Telescope Making (ATM) workshop')],
         [sg.Text('Washington D.C., U.S.A.')],
+        [sg.Text('Inputs: Alin Tolea, PhD - System Engineer, Human Spaceflight Communication and Tracking Network, NASA Goddard Space Flight Center')],
         [sg.Button('Close')]
     ]
 
