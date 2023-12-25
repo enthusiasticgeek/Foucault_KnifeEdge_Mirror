@@ -181,6 +181,14 @@ The parameters (flags) description and their respective default values are as fo
 
 ![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/1.fkesa_v2.analysis.jpg "example output")
 
+**Example of Null Zones are found with matching intensities (white arcs)**
+
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/nullfound.jpg "example output")
+
+**Example of no Null Zones are found but matching intensities are still found (red arcs)**
+
+![alt text]( https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror/blob/main/images/nullnotfound.jpg "example output")
+
 **Usage example 2:** 
 
 **2D to 3D intensity plot with local maxima.**
