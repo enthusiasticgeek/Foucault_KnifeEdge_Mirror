@@ -83,7 +83,7 @@ parser.add_argument('-spl', '--showPlot', type=int, default=1, help='Display the
 parser.add_argument('-gmc', '--gammaCorrection', type=float, default=0, help='Adjust image gamma correction. Typical correction value is 2.2. default 0')
 parser.add_argument('-fli', '--showFlippedImage', type=int, default=0, help='Show absolute difference, followed by flipped and superimposed cropped image. Default value is 0')
 parser.add_argument('-svf', '--saveFlippedImage', type=int, default=1, help='Save the Flipped Image on the disk (value changed to 1). Default value is 1')
-parser.add_argument('-gic', '--gradientIntensityChange', type=int, default=5, help='Gradient Intensity Change. Default value is 5')
+parser.add_argument('-gic', '--gradientIntensityChange', type=int, default=3, help='Gradient Intensity Change. Default value is 5')
 
 # Parse the arguments
 args = parser.parse_args()
