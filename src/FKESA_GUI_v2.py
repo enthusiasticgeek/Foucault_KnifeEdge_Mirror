@@ -5,9 +5,11 @@ import cv2
 import numpy as np
 import os.path
 import time
+from FKESA_v2_core import FKESABuilder  # Replace 'fkesa_builder_module' with your module name
 
 # Initialize a variable to store image data
 image_data = None
+process_fkesa = False
 
 def author_window():
     layout = [
@@ -326,14 +328,44 @@ def main():
                 ret, frame = cap.read()
                 if frame is None:
                    continue
-               
 
-                imgbytes = cv2.imencode(".png", frame)[1].tobytes()
+                if process_fkesa == True:
+                    builder = FKESABuilder()
+                    builder.with_folder('output_folder')
+                    builder.with_param('minDist', 50)
+                    builder.with_param('param1', 25)
+                    builder.with_param('param2', 60)
+                    builder.with_param('minRadius', 10)
+                    builder.with_param('maxRadius', 0)
+                    builder.with_param('brightnessTolerance', 10)
+                    builder.with_param('roiAngleDegrees', 10)
+                    builder.with_param('zones', 50)
+                    builder.with_param('mirrorDiameterInches', 6)
+                    builder.with_param('mirrorFocalLengthInches', 48)
+                    builder.with_param('gradientIntensityChange', 3)
+                    builder.with_param('skipZonesFromCenter', 10)
+                    # ... Include other parameters as needed
+                    print("==========")
+
+                    # Build and execute the operation
+                    fkesa_frame = builder.build(frame)
+
+                    if fkesa_frame is None:
+                       continue
+
+                    # Define the desired width and height
+                    new_width, new_height = 640, 480
+                    # Resize the image
+                    resized_fkesa_frame = cv2.resize(fkesa_frame, (new_width, new_height))
+                    imgbytes = cv2.imencode(".png", resized_fkesa_frame)[1].tobytes()
+
+                else:
+                    imgbytes = cv2.imencode(".png", frame)[1].tobytes()
                 window["-IMAGE-"].update(data=imgbytes)
                 image_data = imgbytes  # Update the image data variable
 
                 # Sleep for 0.5 milliseconds (500 microseconds)
-                milliseconds = 100 / 1000
+                milliseconds = 1000 / 1000
                 time.sleep(milliseconds)
 
             cap.release()
