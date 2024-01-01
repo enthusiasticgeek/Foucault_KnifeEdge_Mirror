@@ -1,15 +1,33 @@
 #!/usr/bin/env python3
+import cv2
 import PySimpleGUI as sg
 from PIL import Image, ImageTk
-import cv2
 import numpy as np
 import os.path
 import time
+import threading
 from FKESA_v2_core import FKESABuilder  # Replace 'fkesa_builder_module' with your module name
 
 # Initialize a variable to store image data
 image_data = None
 process_fkesa = False
+selected_camera=0
+shared_frame = None
+cap = None
+# Create synchronization events
+exit_event = threading.Event()  # Event to signal thread exit
+
+mindist_val = 50
+frames_val = 1
+param_a_val = 25 
+param_b_val = 60
+radius_a_val = 10
+radius_b_val = 0
+brightness_tolerance_val = 10
+zones_val = 50
+angle_val = 10
+diameter_val = 6.0
+focal_length_val = 48.0
 
 def author_window():
     layout = [
@@ -18,11 +36,12 @@ def author_window():
         [sg.Text("Author: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
         [sg.Text("FKESA: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-VERSION-"),sg.Text(' Version 2.1')],
         [sg.Text("Release Date: ", size=(14, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RELEASE DATE-"),sg.Text('December 25, 2023')],
-        [sg.Text("Credits: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-")],
+        [sg.Text("Credits/Feedback: ", size=(18, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-")],
         [sg.Text('Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
         [sg.Text('Amateur Telescope Making (ATM) workshop')],
         [sg.Text('Washington D.C., U.S.A.')],
-        [sg.Text('Inputs: Alin Tolea, PhD - System Engineer, Human Spaceflight Communication and Tracking Network, NASA Goddard Space Flight Center')],
+        [sg.Text("Suggestions/Feedback: ", size=(25, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-")],
+        [sg.Text('Alin Tolea, PhD - System Engineer, NASA Goddard Space Flight Center')],
         [sg.Button('Close')]
     ]
 
@@ -33,7 +52,6 @@ def author_window():
         if event == sg.WINDOW_CLOSED or event == 'Close':
             window.close()
             break
-
 
 # Ref: https://stackoverflow.com/questions/57577445/list-available-cameras-opencv-python
 def list_available_cameras():
@@ -67,9 +85,107 @@ def list_available_cameras():
                    print("Port %s for camera ( %s x %s) is present but does not reads." %(dev_port,h,w))
                 available_ports.append(dev_port)
         dev_port +=1
+        if camera is not None:
+           camera.release()
     return available_ports,working_ports,non_working_ports
 
-def main():
+
+# Create a lock
+lock = threading.Lock()
+# Flag to indicate if processing_frames thread is running
+processing_frames_running = True
+
+def process_frames():
+    global processing_frames_running
+    global selected_camera
+    global cap
+    global exit_event
+    if cap is not None:
+        cap.release()
+    cap = cv2.VideoCapture(selected_camera)  # Open the default camera
+       
+    #while processing_frames_running==True:
+    while not exit_event.is_set():
+        try:
+            if cap is None:
+               cv2.destroyAllWindows()
+               return
+
+            ret, frame = cap.read()
+
+            # Setting the desired resolution (640x480)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+            if frame is None:
+                continue
+            
+            # Acquire the lock before updating the shared resource
+            with lock:
+                # Your image processing logic here
+                # For example, convert frame to grayscale
+                #fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                global mindist_val
+                global frames_val
+                global param_a_val 
+                global param_b_val
+                global radius_a_val
+                global radius_b_val
+                global brightness_tolerance_val
+                global zones_val
+                global angle_val
+                global diameter_val
+                global focal_length_val
+
+                builder = FKESABuilder()
+                builder.with_folder('output_folder')
+                builder.with_param('minDist', mindist_val)
+                builder.with_param('param1', param_a_val)
+                builder.with_param('param2', param_b_val)
+                builder.with_param('minRadius', radius_a_val)
+                builder.with_param('maxRadius', radius_b_val)
+                builder.with_param('brightnessTolerance', brightness_tolerance_val)
+                builder.with_param('roiAngleDegrees', zones_val)
+                builder.with_param('zones', zones_val)
+                builder.with_param('mirrorDiameterInches', diameter_val)
+                builder.with_param('mirrorFocalLengthInches', focal_length_val)
+                builder.with_param('gradientIntensityChange', 3)
+                builder.with_param('skipZonesFromCenter', 10)
+                # ... Include other parameters as needed
+                #print("==========")
+                print("MINDIST :", mindist_val)
+
+                # Build and execute the operation
+                fkesa_frame = builder.build(frame)
+
+                if fkesa_frame is None:
+                   continue
+
+                global shared_frame
+                if fkesa_frame is not None:
+                   shared_frame = fkesa_frame.copy()
+        except Exception as e:
+               print(f"An exception occurred {e}")
+    cap.release()
+    cv2.destroyAllWindows()
+
+"""
+def update_gui(window):
+    global processing_frames_running
+    global exit_event
+    #while processing_frames_running==True:
+    while exit_event.is_set():
+        # Acquire the lock before accessing the shared resource
+        with lock:
+             global shared_frame
+             if shared_frame is not None:
+                imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
+                window['-IMAGE-'].update(data=imgbytes)
+"""
+
+try:
+
     sg.theme("LightBlue")
     list_available_cameras()
     # Fetch available cameras
@@ -258,120 +374,102 @@ def main():
         [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1)) ],
     ]
 
-    #sg.theme_previewer()
-    try:
-            # Create the window and show it without the plot
-            window = sg.Window("FKESA v2 GUI [LIVE]", layout, location=(800, 400))
-            selected_camera = 0
-            cap = cv2.VideoCapture(selected_camera)
 
-            # Setting the desired resolution (640x480)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    # Create the window
+    window = sg.Window("FKESA v2 GUI [LIVE]", layout)
+
+    # Start the thread for processing frames
+    thread = threading.Thread(target=process_frames)
+    thread.daemon = True
+    thread.start()
 
 
-            while True:
-                event, values = window.read(timeout=20)
-                if event == "Exit" or event == sg.WIN_CLOSED:
-                    break
-                elif event == 'Save Image':
-                    if image_data is not None:
-                        # Use OpenCV to write the image data to a file
-                        filename = f"fkesa_v2_{int(time.time())}.png"  # Generate a filename (you can adjust this)
-                        with open(filename, 'wb') as f:
-                            f.write(image_data)
-                        sg.popup(f"Image saved as: {filename}")
-                # Folder name was filled in, make a list of files in the folder
-                elif event == "-FOLDER-":
-                    folder = values["-FOLDER-"]
-                    try:
-                        # Get list of files in folder
-                        file_list = os.listdir(folder)
-                    except:
-                        file_list = []
+    #thread = threading.Thread(target=update_gui, args=(window,))
+    #thread.daemon = True
+    #thread.start()
 
-                    fnames = [
-                        f
-                        for f in file_list
-                        if os.path.isfile(os.path.join(folder, f))
-                        and f.lower().endswith((".bmp",".jpg",".svg",".jpeg",".png", ".gif"))
-                    ]
-                    window["-FILE LIST-"].update(fnames)
-                # Inside your event loop where you update the image element
-                elif event == "-FILE LIST-":  # A file was chosen from the listbox
-                    try:
-                      filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
-                      window["-TOUT-"].update(filename)
-                      image = Image.open(filename)
-                      image.thumbnail((400, 400))  # Resize image if needed
-                      bio = ImageTk.PhotoImage(image)
-                      window["-LOAD IMAGE-"].update(data=bio)
-                    except Exception as e:
-                      print(e)
-                    except:
-                        pass
+    while True:
+        event, values = window.read(timeout=20)  # Update the GUI every 20 milliseconds
+        if event == sg.WIN_CLOSED or event == 'Exit':
+            processing_frames_running = False  # Signal the processing_frames thread to exit
+            exit_event.set()  # Signal the processing_frames thread to exit
+            break
+        # Inside the main event loop where the sliders are handled
+        elif event == "-MINDIST SLIDER-" or event == "-FRAMES SLIDER-" \
+             or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
+             or event == "-RADIUS SLIDER A-" or event == "-RADIUS SLIDER B-" \
+             or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
+             or event == "-ANGLE SLIDER-" \
+             or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
+            mindist_val = int(values["-MINDIST SLIDER-"])
+            frames_val = int(values["-FRAMES SLIDER-"])
+            param_a_val = int(values["-PARAM SLIDER A-"])
+            param_b_val = int(values["-PARAM SLIDER B-"])
+            radius_a_val = int(values["-RADIUS SLIDER A-"])
+            radius_b_val = int(values["-RADIUS SLIDER B-"])
+            brightness_tolerance_val = int(values["-BRIGHTNESS SLIDER-"])
+            zones_val = int(values["-ZONES SLIDER-"])
+            angle_val = int(values["-ANGLE SLIDER-"])
+            diameter_val = float(values["-DIAMETER SLIDER-"])
+            focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
+        elif event == 'Save Image':
+            if image_data is not None:
+                # Use OpenCV to write the image data to a file
+                filename = f"fkesa_v2_{int(time.time())}.png"  # Generate a filename (you can adjust this)
+                with open(filename, 'wb') as f:
+                    f.write(image_data)
+                sg.popup(f"Image saved as: {filename}")
+        # Folder name was filled in, make a list of files in the folder
+        elif event == "-FOLDER-":
+            folder = values["-FOLDER-"]
+            try:
+                # Get list of files in folder
+                file_list = os.listdir(folder)
+            except:
+                file_list = []
+            fnames = [
+                f
+                for f in file_list
+                if os.path.isfile(os.path.join(folder, f))
+                and f.lower().endswith((".bmp",".jpg",".svg",".jpeg",".png", ".gif"))
+            ]
+            window["-FILE LIST-"].update(fnames)
+        # Inside your event loop where you update the image element
+        elif event == "-FILE LIST-":  # A file was chosen from the listbox
+            try:
+              filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
+              window["-TOUT-"].update(filename)
+              image = Image.open(filename)
+              image.thumbnail((640, 480))  # Resize image if needed
+              bio = ImageTk.PhotoImage(image)
+              window["-LOAD IMAGE-"].update(data=bio)
+            except Exception as e:
+              print(e)
+            except:
+                pass
+        elif event == 'About':
+            #window.hide()  # Hide the main window
+            author_window()  # Open the author information window
+        elif event == 'OK':
+            selected_camera = values['-CAMERA SELECT-']
+            print(f"Camera selected: {selected_camera}")
 
-                elif event == 'About':
-                    #window.hide()  # Hide the main window
-                    author_window()  # Open the author information window
-                elif event == 'OK':
-                    selected_camera = values['-CAMERA SELECT-']
-                    print(f"Camera selected: {selected_camera}")
+        
+        # Update the GUI from the main thread
+        if 'shared_frame' in globals():
+            if shared_frame is not None and window is not None:
+               imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
+               window['-IMAGE-'].update(data=imgbytes)
+       
 
-                    cap.release()
-                    cap = cv2.VideoCapture(selected_camera)
+    # Wait for the processing thread to complete before closing the window
+    if thread.is_alive():
+       thread.join()
 
-                    # Setting the desired resolution (640x480)
-                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    if cap is not None:
+       cap.release()  # Release the camera explicitly
+    window.close()
 
-                ret, frame = cap.read()
-                if frame is None:
-                   continue
+except Exception as e:
+        print(f"An error occurred: {e}")
 
-                if process_fkesa == True:
-                    builder = FKESABuilder()
-                    builder.with_folder('output_folder')
-                    builder.with_param('minDist', 50)
-                    builder.with_param('param1', 25)
-                    builder.with_param('param2', 60)
-                    builder.with_param('minRadius', 10)
-                    builder.with_param('maxRadius', 0)
-                    builder.with_param('brightnessTolerance', 10)
-                    builder.with_param('roiAngleDegrees', 10)
-                    builder.with_param('zones', 50)
-                    builder.with_param('mirrorDiameterInches', 6)
-                    builder.with_param('mirrorFocalLengthInches', 48)
-                    builder.with_param('gradientIntensityChange', 3)
-                    builder.with_param('skipZonesFromCenter', 10)
-                    # ... Include other parameters as needed
-                    print("==========")
-
-                    # Build and execute the operation
-                    fkesa_frame = builder.build(frame)
-
-                    if fkesa_frame is None:
-                       continue
-
-                    # Define the desired width and height
-                    new_width, new_height = 640, 480
-                    # Resize the image
-                    resized_fkesa_frame = cv2.resize(fkesa_frame, (new_width, new_height))
-                    imgbytes = cv2.imencode(".png", resized_fkesa_frame)[1].tobytes()
-
-                else:
-                    imgbytes = cv2.imencode(".png", frame)[1].tobytes()
-                window["-IMAGE-"].update(data=imgbytes)
-                image_data = imgbytes  # Update the image data variable
-
-                # Sleep for 0.5 milliseconds (500 microseconds)
-                milliseconds = 1000 / 1000
-                time.sleep(milliseconds)
-
-            cap.release()
-            window.close()
-
-    except Exception as e:
-            print(f"An error occurred: {e}")
-
-main()
