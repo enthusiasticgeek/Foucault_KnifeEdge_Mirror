@@ -244,6 +244,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-MINDIST SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -254,6 +255,7 @@ try:
                 500,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-FRAMES SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -268,6 +270,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-PARAM SLIDER A-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -278,6 +281,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-PARAM SLIDER B-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -291,6 +295,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-RADIUS SLIDER A-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -301,6 +306,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-RADIUS SLIDER B-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -317,6 +323,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-BRIGHTNESS SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -327,6 +334,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-ZONES SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -340,6 +348,7 @@ try:
                 1,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-ANGLE SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -357,6 +366,7 @@ try:
                 0.25,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-DIAMETER SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -367,6 +377,7 @@ try:
                 0.25,
                 orientation="h",
                 size=(50, 15),
+                enable_events=True,
                 key="-FOCAL LENGTH SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -401,6 +412,7 @@ try:
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
              or event == "-ANGLE SLIDER-" \
              or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
+            print("**MINDIST** :", mindist_val)
             mindist_val = int(values["-MINDIST SLIDER-"])
             frames_val = int(values["-FRAMES SLIDER-"])
             param_a_val = int(values["-PARAM SLIDER A-"])

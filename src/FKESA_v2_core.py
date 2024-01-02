@@ -86,6 +86,22 @@ class FKESABuilder:
         cv2.putText(image, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
         return image
 
+    def fill_image_boundary(self, image):
+        desired_width, desired_height = 640, 480
+        height, width = image.shape[:2]
+
+        # Create a canvas of the desired size
+        canvas = np.zeros((desired_height, desired_width, 3), dtype=np.uint8)
+
+        # Calculate where to place the image on the canvas
+        start_x = (desired_width - width) // 2
+        start_y = (desired_height - height) // 2
+
+        # Paste the image onto the canvas
+        canvas[start_y:start_y+height, start_x:start_x+width] = image
+
+        return canvas
+
 
     def build(self, image):
         try:
@@ -392,7 +408,7 @@ class FKESABuilder:
                         self.draw_text(image, f"Mirror Focal Length: {self.args['mirrorFocalLengthInches']} \"", (center_x-20,center_y-40), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
 
                         #cv2.imshow('Cropped Image', cropped_image)
-                        #cv2.waitKey(args.displayWindowPeriod)
+                        #cv2.waitKey(100)
 
                         # Extract zones and deltas for plotting
                         zones = [zone[0] for zone in deltas]
@@ -400,6 +416,11 @@ class FKESABuilder:
 
                     else:
                          print("No zones have matching intensities!")
+                    # Check if the image size is smaller than 640x480
+                    
+                    if cropped_image.shape[0] < 480 or cropped_image.shape[1] < 640:
+                        # Fill the boundary
+                        cropped_image = self.fill_image_boundary(cropped_image)
                     # Return the cropped image
                     return cropped_image
 
