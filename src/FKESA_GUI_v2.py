@@ -302,7 +302,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
-                60,
+                0,
                 1,
                 orientation="h",
                 size=(50, 15),

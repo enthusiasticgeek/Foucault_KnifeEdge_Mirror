@@ -5,7 +5,7 @@
 #I have attempted to implement this
 import matplotlib
 # On some Linux systems may need to uncomment this.
-matplotlib.use('tkagg')
+#matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from PIL import Image
 import os
@@ -119,8 +119,8 @@ class FKESABuilder:
                 # Loop for adaptive mirror detection with different parameters
                 adjustments = [5, 10, 20, 30, -5, -10, -20, -30]
                 for adjustment in adjustments:
-                    self.args['param1'] = self.args['param1'] + adjustment
-                    self.args['param2'] = self.args['param2'] + adjustment
+                    self.args['param1'] = int(self.args['param1']) + adjustment
+                    self.args['param2'] = int(self.args['param2']) + adjustment
 
                     # Ensure param1 and param2 don't fall below certain thresholds
                     self.args['param1'] = max(10, self.args['param1'])
@@ -128,11 +128,12 @@ class FKESABuilder:
 
                     print(f"Trying adaptive mirror detection with Hough Transform "
                           f"param1 {self.args['param1']} and param2 {self.args['param2']} and {adjustment}")
+                    print(f"min distance ->>> {self.args['minDist']} , {self.args['param1']} , {self.args['param2']}, {self.args['minRadius']}, {self.args['maxRadius']}")
 
                     circles = cv2.HoughCircles(
                         blurred,
-                        cv2.HOUGH_GRADIENT, dp=1, minDist=self.args['minDist'], param1=self.args['param1'],
-                        param2=self.args['param2'], minRadius=self.args['minRadius'], maxRadius=self.args['maxRadius']
+                        cv2.HOUGH_GRADIENT, dp=1, minDist=int(self.args['minDist']), param1=int(self.args['param1']),
+                        param2=int(self.args['param2']), minRadius=int(self.args['minRadius']), maxRadius=int(self.args['maxRadius'])
                     )
 
                     if circles is not None:
