@@ -9,7 +9,7 @@ import threading
 from FKESA_v2_core import FKESABuilder  # Replace 'fkesa_builder_module' with your module name
 
 # Initialize a variable to store image data
-image_data = None
+#image_data = None
 process_fkesa = False
 selected_camera=0
 shared_frame = None
@@ -32,6 +32,7 @@ gradient_intensity_val = 3
 skip_zones_val = 10
 raw_video = False
 color_video = True
+fkesa_time_delay = 1
 
 def author_window():
     layout = [
@@ -148,6 +149,7 @@ def process_frames():
                 global color_video
                 global gradient_intensity_val
                 global skip_zones_val
+                global fkesa_time_delay
                 preprocess_frame = None
                 # color or grayscale?
                 if color_video == False:
@@ -177,6 +179,7 @@ def process_frames():
 
                         # Build and execute the operation
                         fkesa_frame = builder.build(frame)
+                        time.sleep(fkesa_time_delay)
 
                 if fkesa_frame is None:
                    continue
@@ -235,7 +238,22 @@ try:
             [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
-            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=False, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-')],
+            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=False, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-'), 
+            sg.VerticalSeparator(),  # Separator 
+            sg.Text("PROCESSING DELAY (SECONDS) [DEFAULT: 1]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PROCESSING DELAY-"),
+            sg.VerticalSeparator(),  # Separator 
+            sg.Slider(
+                (0, 30),
+                1,
+                1,
+                orientation="h",
+                enable_events=True,
+                size=(50, 15),
+                key="-DELAY SLIDER-",
+                font=('Times New Roman', 10, 'bold'),
+            ),
+            sg.VerticalSeparator(),  # Separator 
+            ],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
@@ -431,6 +449,8 @@ try:
                 color_video = False
              elif values["-COLOR VIDEO SELECT-"] == True:
                 color_video = True
+        elif event == "-DELAY SLIDER-":
+             fkesa_time_delay = int(values["-DELAY SLIDER-"])
         # Inside the main event loop where the sliders are handled
         elif event == "-MINDIST SLIDER-" or event == "-FRAMES SLIDER-" \
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
@@ -451,11 +471,13 @@ try:
             focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
             skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
         elif event == 'Save Image':
-            if image_data is not None:
+            with lock:
+              if shared_frame is not None:
                 # Use OpenCV to write the image data to a file
                 filename = f"fkesa_v2_{int(time.time())}.png"  # Generate a filename (you can adjust this)
-                with open(filename, 'wb') as f:
-                    f.write(image_data)
+                cv2.imwrite(filename, shared_frame)
+                #with open(filename, 'wb') as f:
+                #    f.write(shared_frame)
                 sg.popup(f"Image saved as: {filename}")
         # Folder name was filled in, make a list of files in the folder
         elif event == "-FOLDER-":
@@ -493,8 +515,9 @@ try:
             print(f"Camera selected: {selected_camera}")
 
         
-        # Update the GUI from the main thread
-        if 'shared_frame' in globals():
+        with lock:
+          # Update the GUI from the main thread
+          if 'shared_frame' in globals():
             if shared_frame is not None and window is not None:
                imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
                window['-IMAGE-'].update(data=imgbytes)
