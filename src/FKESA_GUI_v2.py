@@ -28,6 +28,8 @@ zones_val = 50
 angle_val = 10
 diameter_val = 6.0
 focal_length_val = 48.0
+gradient_intensity_val = 3
+raw_video = False
 
 def author_window():
     layout = [
@@ -137,27 +139,31 @@ def process_frames():
                 global angle_val
                 global diameter_val
                 global focal_length_val
+                global raw_video
+                global gradient_intensity_val
+                if raw_video == True:
+                        fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                else:
+                        builder = FKESABuilder()
+                        builder.with_folder('output_folder')
+                        builder.with_param('minDist', mindist_val)
+                        builder.with_param('param1', param_a_val)
+                        builder.with_param('param2', param_b_val)
+                        builder.with_param('minRadius', radius_a_val)
+                        builder.with_param('maxRadius', radius_b_val)
+                        builder.with_param('brightnessTolerance', brightness_tolerance_val)
+                        builder.with_param('roiAngleDegrees', zones_val)
+                        builder.with_param('zones', zones_val)
+                        builder.with_param('mirrorDiameterInches', diameter_val)
+                        builder.with_param('mirrorFocalLengthInches', focal_length_val)
+                        builder.with_param('gradientIntensityChange', gradient_intensity_val)
+                        builder.with_param('skipZonesFromCenter', 10)
+                        # ... Include other parameters as needed
+                        #print("==========")
+                        print("MINDIST :", mindist_val)
 
-                builder = FKESABuilder()
-                builder.with_folder('output_folder')
-                builder.with_param('minDist', mindist_val)
-                builder.with_param('param1', param_a_val)
-                builder.with_param('param2', param_b_val)
-                builder.with_param('minRadius', radius_a_val)
-                builder.with_param('maxRadius', radius_b_val)
-                builder.with_param('brightnessTolerance', brightness_tolerance_val)
-                builder.with_param('roiAngleDegrees', zones_val)
-                builder.with_param('zones', zones_val)
-                builder.with_param('mirrorDiameterInches', diameter_val)
-                builder.with_param('mirrorFocalLengthInches', focal_length_val)
-                builder.with_param('gradientIntensityChange', 3)
-                builder.with_param('skipZonesFromCenter', 10)
-                # ... Include other parameters as needed
-                #print("==========")
-                print("MINDIST :", mindist_val)
-
-                # Build and execute the operation
-                fkesa_frame = builder.build(frame)
+                        # Build and execute the operation
+                        fkesa_frame = builder.build(frame)
 
                 if fkesa_frame is None:
                    continue
@@ -230,13 +236,14 @@ try:
             [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
             [sg.HorizontalSeparator()],  # Separator 
             [sg.DropDown(working_ports, default_value='0', key='-CAMERA SELECT-')],
-            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
+            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')],
+            [sg.Checkbox('RAW VIDEO', default=False, key='-RAW VIDEO SELECT-')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("MIN DIST (PIXELS), DELAY MILSEC [DEFAULT: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
+            sg.Text("MIN DIST (PIXELS), GRADIENT INTENSITY CHANGE [DEFAULT: 50/3]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -250,13 +257,13 @@ try:
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (500, 10000),
-                500,
-                500,
+                (1,20),
+                3,
+                1,
                 orientation="h",
                 size=(50, 15),
                 enable_events=True,
-                key="-FRAMES SLIDER-",
+                key="-GIC SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
 
@@ -405,12 +412,21 @@ try:
             processing_frames_running = False  # Signal the processing_frames thread to exit
             exit_event.set()  # Signal the processing_frames thread to exit
             break
+        elif values["-RAW VIDEO SELECT-"] == False:
+             raw_video = False
+        elif values["-RAW VIDEO SELECT-"] == True:
+             raw_video = True
+        elif values["-COLOR SELECT-"] == False:
+             color_video = False
+        elif values["-COLOR SELECT-"] == True:
+             color_video = True
         # Inside the main event loop where the sliders are handled
         elif event == "-MINDIST SLIDER-" or event == "-FRAMES SLIDER-" \
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
              or event == "-RADIUS SLIDER A-" or event == "-RADIUS SLIDER B-" \
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
              or event == "-ANGLE SLIDER-" \
+             or event == "-GIC SLIDER-" \
              or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
             print("**MINDIST** :", mindist_val)
             mindist_val = int(values["-MINDIST SLIDER-"])
@@ -424,6 +440,7 @@ try:
             angle_val = int(values["-ANGLE SLIDER-"])
             diameter_val = float(values["-DIAMETER SLIDER-"])
             focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
+            gradient_intensity_val = int(values["-GIC SLIDER-"])
         elif event == 'Save Image':
             if image_data is not None:
                 # Use OpenCV to write the image data to a file
