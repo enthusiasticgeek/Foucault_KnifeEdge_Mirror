@@ -33,8 +33,6 @@ skip_zones_val = 10
 raw_video = False
 color_video = True
 
-
-
 def author_window():
     layout = [
         [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA) Version 2", size=(60, 1), justification="center", font=('Times New Roman', 10, 'bold'), key="-APP-")],
@@ -109,6 +107,9 @@ def process_frames():
     if cap is not None:
         cap.release()
     cap = cv2.VideoCapture(selected_camera)  # Open the default camera
+    # Setting the desired resolution (640x480)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
        
     #while processing_frames_running==True:
     while not exit_event.is_set():
@@ -120,8 +121,8 @@ def process_frames():
             ret, frame = cap.read()
 
             # Setting the desired resolution (640x480)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
             if frame is None:
                 continue
@@ -345,7 +346,7 @@ try:
             ),
         ],
         [
-            sg.Text("ANGLE OF BRIGHTNESS SLICE (DEGREES) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
+            sg.Text("ANGLE (DEGREES) AND SKIP ZONES [DEFAULT: 10/10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (10, 90),
@@ -358,6 +359,16 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Slider(
+                (1, 20),
+                10,
+                1,
+                orientation="h",
+                size=(50, 15),
+                enable_events=True,
+                key="-SKIP ZONES SLIDER-",
+                font=('Times New Roman', 10, 'bold'),
+            ),
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
@@ -425,9 +436,8 @@ try:
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
              or event == "-RADIUS SLIDER A-" or event == "-RADIUS SLIDER B-" \
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
-             or event == "-ANGLE SLIDER-" \
+             or event == "-ANGLE SLIDER-" or event == "-SKIP ZONES SLIDER-" \
              or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
-            print("here......")
             mindist_val = int(values["-MINDIST SLIDER-"])
             frames_val = int(values["-FRAMES SLIDER-"])
             param_a_val = int(values["-PARAM SLIDER A-"])
@@ -439,6 +449,7 @@ try:
             angle_val = int(values["-ANGLE SLIDER-"])
             diameter_val = float(values["-DIAMETER SLIDER-"])
             focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
+            skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
         elif event == 'Save Image':
             if image_data is not None:
                 # Use OpenCV to write the image data to a file
