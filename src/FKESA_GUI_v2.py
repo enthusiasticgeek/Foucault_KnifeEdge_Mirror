@@ -29,7 +29,11 @@ angle_val = 10
 diameter_val = 6.0
 focal_length_val = 48.0
 gradient_intensity_val = 3
+skip_zones_val = 10
 raw_video = False
+color_video = True
+
+
 
 def author_window():
     layout = [
@@ -140,9 +144,19 @@ def process_frames():
                 global diameter_val
                 global focal_length_val
                 global raw_video
+                global color_video
                 global gradient_intensity_val
+                global skip_zones_val
+                preprocess_frame = None
+                # color or grayscale?
+                if color_video == False:
+                        preprocess_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                else:
+                        preprocess_frame = frame
+
+                # color or grayscale?
                 if raw_video == True:
-                        fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        fkesa_frame = preprocess_frame
                 else:
                         builder = FKESABuilder()
                         builder.with_folder('output_folder')
@@ -157,10 +171,8 @@ def process_frames():
                         builder.with_param('mirrorDiameterInches', diameter_val)
                         builder.with_param('mirrorFocalLengthInches', focal_length_val)
                         builder.with_param('gradientIntensityChange', gradient_intensity_val)
-                        builder.with_param('skipZonesFromCenter', 10)
+                        builder.with_param('skipZonesFromCenter', skip_zones_val)
                         # ... Include other parameters as needed
-                        #print("==========")
-                        print("MINDIST :", mindist_val)
 
                         # Build and execute the operation
                         fkesa_frame = builder.build(frame)
@@ -175,20 +187,6 @@ def process_frames():
                print(f"An exception occurred {e}")
     cap.release()
     cv2.destroyAllWindows()
-
-"""
-def update_gui(window):
-    global processing_frames_running
-    global exit_event
-    #while processing_frames_running==True:
-    while exit_event.is_set():
-        # Acquire the lock before accessing the shared resource
-        with lock:
-             global shared_frame
-             if shared_frame is not None:
-                imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
-                window['-IMAGE-'].update(data=imgbytes)
-"""
 
 try:
 
@@ -222,7 +220,7 @@ try:
     image_viewer_column = [
         [sg.Text("Choose an image from list on left:", font=('Times New Roman', 14, 'bold'), text_color="navyblue")],
         [sg.Text(size=(40, 1), key="-TOUT-")],
-        [sg.Image(key="-LOAD IMAGE-",size=(320,240))],
+        [sg.Image(key="-LOAD IMAGE-",size=(200,200))],
     ]
 
 
@@ -235,35 +233,35 @@ try:
         [
             [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
             [sg.HorizontalSeparator()],  # Separator 
-            [sg.DropDown(working_ports, default_value='0', key='-CAMERA SELECT-')],
-            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')],
-            [sg.Checkbox('RAW VIDEO', default=False, key='-RAW VIDEO SELECT-')]
+            #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
+            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=False, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-')],
+            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("MIN DIST (PIXELS), GRADIENT INTENSITY CHANGE [DEFAULT: 50/3]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
+            sg.Text("MIN DIST (PIXELS), DELAY MILSEC [DEFAULT: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 50,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-MINDIST SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (1,20),
-                3,
-                1,
+                (500, 10000),
+                500,
+                500,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
-                key="-GIC SLIDER-",
+                size=(50, 15),
+                key="-FRAMES SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
 
@@ -276,8 +274,8 @@ try:
                 25,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-PARAM SLIDER A-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -287,8 +285,8 @@ try:
                 60,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-PARAM SLIDER B-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -301,8 +299,8 @@ try:
                 20,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-RADIUS SLIDER A-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -312,8 +310,8 @@ try:
                 0,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-RADIUS SLIDER B-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -329,8 +327,8 @@ try:
                 10,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-BRIGHTNESS SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -340,8 +338,8 @@ try:
                 60,
                 1,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-ZONES SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -372,8 +370,8 @@ try:
                 6,
                 0.25,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-DIAMETER SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -383,8 +381,8 @@ try:
                 48,
                 0.25,
                 orientation="h",
-                size=(50, 15),
                 enable_events=True,
+                size=(50, 15),
                 key="-FOCAL LENGTH SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
@@ -412,23 +410,24 @@ try:
             processing_frames_running = False  # Signal the processing_frames thread to exit
             exit_event.set()  # Signal the processing_frames thread to exit
             break
-        elif values["-RAW VIDEO SELECT-"] == False:
-             raw_video = False
-        elif values["-RAW VIDEO SELECT-"] == True:
-             raw_video = True
-        elif values["-COLOR SELECT-"] == False:
-             color_video = False
-        elif values["-COLOR SELECT-"] == True:
-             color_video = True
+        elif event == "-RAW VIDEO SELECT-":
+             if values["-RAW VIDEO SELECT-"] == False:
+                raw_video = False
+             elif values["-RAW VIDEO SELECT-"] == True:
+                raw_video = True
+        elif event == "-COLOR VIDEO SELECT-":
+             if values["-COLOR VIDEO SELECT-"] == False:
+                color_video = False
+             elif values["-COLOR VIDEO SELECT-"] == True:
+                color_video = True
         # Inside the main event loop where the sliders are handled
         elif event == "-MINDIST SLIDER-" or event == "-FRAMES SLIDER-" \
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
              or event == "-RADIUS SLIDER A-" or event == "-RADIUS SLIDER B-" \
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
              or event == "-ANGLE SLIDER-" \
-             or event == "-GIC SLIDER-" \
              or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
-            print("**MINDIST** :", mindist_val)
+            print("here......")
             mindist_val = int(values["-MINDIST SLIDER-"])
             frames_val = int(values["-FRAMES SLIDER-"])
             param_a_val = int(values["-PARAM SLIDER A-"])
@@ -440,7 +439,6 @@ try:
             angle_val = int(values["-ANGLE SLIDER-"])
             diameter_val = float(values["-DIAMETER SLIDER-"])
             focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
-            gradient_intensity_val = int(values["-GIC SLIDER-"])
         elif event == 'Save Image':
             if image_data is not None:
                 # Use OpenCV to write the image data to a file
