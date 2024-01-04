@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import cv2
 import PySimpleGUI as sg
-from PIL import Image, ImageTk
+#from PIL import Image, ImageTk
+from PIL import Image as PILImage
+import io
 import numpy as np
 import os.path
 import time
@@ -542,10 +544,19 @@ try:
             try:
               filename = os.path.join(values["-FOLDER-"], values["-FILE LIST-"][0])
               window["-TOUT-"].update(filename)
+              """
               image = Image.open(filename)
               image.thumbnail((640, 480))  # Resize image if needed
               bio = ImageTk.PhotoImage(image)
               window["-LOAD IMAGE-"].update(data=bio)
+              """
+              # Load the image and resize it to fit within 150x150 pixels
+              image = PILImage.open(filename)
+              image.thumbnail((533, 400))
+              # Convert the resized image to bytes for PySimpleGUI
+              bio = io.BytesIO()
+              image.save(bio, format="PNG")
+              window["-LOAD IMAGE-"].update(data=bio.getvalue())
             except Exception as e:
               print(e)
             except:
