@@ -32,7 +32,7 @@ gradient_intensity_val = 3
 skip_zones_val = 10
 raw_video = True
 color_video = True
-fkesa_time_delay = 1
+fkesa_time_delay = 100
 current_time = time.time()
 
 def author_window():
@@ -184,7 +184,7 @@ def process_frames():
 
                         # Build and execute the operation
                         fkesa_frame = builder.build(frame)
-                        time.sleep(fkesa_time_delay)
+                        time.sleep(fkesa_time_delay / 1000)
                         """
                         end_time = time.time()
                         time_diff_seconds = end_time - start_time
@@ -279,12 +279,12 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY SECONDS [DEFAULT: 1]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 500]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (0,3),
-                1,
-                1,
+                (0,1000),
+                500,
+                100,
                 orientation="h",
                 enable_events=True,
                 size=(50, 15),
@@ -467,10 +467,22 @@ try:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('black','yellow'))
                 window['-PAUSE PLAY VIDEO-'].update(text = ('PLAY VIDEO'))
                 is_playing = False
+                print("Pausing the worker thread...")
+                exit_event.set()  # Set the exit event to stop the loop
+                # Wait for the processing thread to complete before closing the window
+                if thread.is_alive():
+                   thread.join()
              elif is_playing == False:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('white','green'))
                 window['-PAUSE PLAY VIDEO-'].update(text = ('PAUSE VIDEO'))
                 is_playing = True
+                # Resume the worker thread
+                print("Resuming the worker thread...")
+                exit_event.clear()  # Clear the exit event to allow the loop to continue
+                # Start the thread for processing frames
+                thread = threading.Thread(target=process_frames)
+                thread.daemon = True
+                thread.start()
         elif event == "-RAW VIDEO SELECT-":
              if values["-RAW VIDEO SELECT-"] == False:
                 raw_video = False
