@@ -18,7 +18,6 @@ cap = None
 exit_event = threading.Event()  # Event to signal thread exit
 
 mindist_val = 50
-frames_val = 1
 param_a_val = 25 
 param_b_val = 60
 radius_a_val = 10
@@ -33,6 +32,7 @@ skip_zones_val = 10
 raw_video = False
 color_video = True
 fkesa_time_delay = 1
+current_time = time.time()
 
 def author_window():
     layout = [
@@ -105,6 +105,7 @@ def process_frames():
     global selected_camera
     global cap
     global exit_event
+    global current_time
     if cap is not None:
         cap.release()
     cap = cv2.VideoCapture(selected_camera)  # Open the default camera
@@ -135,7 +136,6 @@ def process_frames():
                 #fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
                 global mindist_val
-                global frames_val
                 global param_a_val 
                 global param_b_val
                 global radius_a_val
@@ -161,6 +161,9 @@ def process_frames():
                 if raw_video == True:
                         fkesa_frame = preprocess_frame
                 else:
+                        """
+                        start_time = time.time()
+                        """
                         builder = FKESABuilder()
                         builder.with_folder('output_folder')
                         builder.with_param('minDist', mindist_val)
@@ -180,6 +183,18 @@ def process_frames():
                         # Build and execute the operation
                         fkesa_frame = builder.build(frame)
                         time.sleep(fkesa_time_delay)
+                        """
+                        end_time = time.time()
+                        time_diff_seconds = end_time - start_time
+                        time_diff_milliseconds = time_diff_seconds * 1000  # Convert to milliseconds
+                        time_diff_microseconds = time_diff_seconds * 1000000  # Convert to microseconds
+                        
+                        print(f"Time taken (seconds): {time_diff_seconds}")
+                        print(f"Time taken (milliseconds): {time_diff_milliseconds}")
+                        print(f"Time taken (microseconds): {time_diff_microseconds}")
+                        # Sleep for remaining time (5 seconds - time taken for process execution)
+                        time.sleep(max(0, fkesa_time_delay - time_diff_seconds))
+                        """
 
                 if fkesa_frame is None:
                    continue
@@ -189,6 +204,8 @@ def process_frames():
                    shared_frame = fkesa_frame.copy()
         except Exception as e:
                print(f"An exception occurred {e}")
+      
+
     cap.release()
     cv2.destroyAllWindows()
 
@@ -240,19 +257,6 @@ try:
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=False, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-'), 
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY (SECONDS) [DEFAULT: 1]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PROCESSING DELAY-"),
-            sg.VerticalSeparator(),  # Separator 
-            sg.Slider(
-                (0, 30),
-                1,
-                1,
-                orientation="h",
-                enable_events=True,
-                size=(50, 15),
-                key="-DELAY SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
-            ),
-            sg.VerticalSeparator(),  # Separator 
             ],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
@@ -260,7 +264,7 @@ try:
         [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("MIN DIST (PIXELS), DELAY MILSEC [DEFAULT: 50/1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST-"),
+            sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -273,20 +277,22 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Text("PROCESSING DELAY SECONDS [DEFAULT: 1]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (500, 10000),
-                500,
-                500,
+                (0,3),
+                1,
+                1,
                 orientation="h",
                 enable_events=True,
                 size=(50, 15),
-                key="-FRAMES SLIDER-",
+                key="-DELAY SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
-
+            sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("PARAMETERS 1 AND 2 (PIXELS) [DEFAULT: 25/60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS-"),
+            sg.Text("PARAMETERS 1 (PIXELS) [DEFAULT: 25]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -299,6 +305,8 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Text("PARAMETER 2 (PIXELS) [DEFAULT: 60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS B-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 60,
@@ -309,9 +317,10 @@ try:
                 key="-PARAM SLIDER B-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("MIN AND MAX RADIUS (PIXELS) [DEFAULT: 10/0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RADIUS-"),
+            sg.Text("MIN RADIUS (PIXELS) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIN RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -324,6 +333,8 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Text("MAX RADIUS (PIXELS) [DEFAULT: 0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MAX RADIUS-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
                 0,
@@ -334,12 +345,13 @@ try:
                 key="-RADIUS SLIDER B-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("BRIGHTNESS TOLERANCE AND ZONES [DEFAULT: 10/50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS-"),
+            sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 50),
@@ -352,6 +364,8 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Text("NUMBER OF ZONES [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS B-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (30, 50),
                 60,
@@ -362,9 +376,10 @@ try:
                 key="-ZONES SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("ANGLE (DEGREES) AND SKIP ZONES [DEFAULT: 10/10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
+            sg.Text("ANGLE (SLICE OR PIE) (DEGREES) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (10, 90),
@@ -377,6 +392,8 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Text("SKIP ZONES FROM THE MIRROR CENTER [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-SKIP ZONES-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 20),
                 10,
@@ -387,12 +404,13 @@ try:
                 key="-SKIP ZONES SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("DIAMETER AND FOCAL LENGTH (inches) [DEFAULT: 6/48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS-"),
+            sg.Text("DIAMETER (inches) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -405,6 +423,8 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
+            sg.Text("FOCAL LENGTH (inches) [DEFAULT: 48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS B-"),
+            sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
                 48,
@@ -415,6 +435,7 @@ try:
                 key="-FOCAL LENGTH SLIDER-",
                 font=('Times New Roman', 10, 'bold'),
             ),
+            sg.VerticalSeparator(),  # Separator 
         ],
         [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1)) ],
     ]
@@ -452,14 +473,13 @@ try:
         elif event == "-DELAY SLIDER-":
              fkesa_time_delay = int(values["-DELAY SLIDER-"])
         # Inside the main event loop where the sliders are handled
-        elif event == "-MINDIST SLIDER-" or event == "-FRAMES SLIDER-" \
+        elif event == "-MINDIST SLIDER-" \
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
              or event == "-RADIUS SLIDER A-" or event == "-RADIUS SLIDER B-" \
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
              or event == "-ANGLE SLIDER-" or event == "-SKIP ZONES SLIDER-" \
              or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
             mindist_val = int(values["-MINDIST SLIDER-"])
-            frames_val = int(values["-FRAMES SLIDER-"])
             param_a_val = int(values["-PARAM SLIDER A-"])
             param_b_val = int(values["-PARAM SLIDER B-"])
             radius_a_val = int(values["-RADIUS SLIDER A-"])
