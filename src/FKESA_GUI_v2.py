@@ -16,6 +16,7 @@ shared_frame = None
 cap = None
 # Create synchronization events
 exit_event = threading.Event()  # Event to signal thread exit
+is_playing = True
 
 mindist_val = 50
 param_a_val = 25 
@@ -29,7 +30,7 @@ diameter_val = 6.0
 focal_length_val = 48.0
 gradient_intensity_val = 3
 skip_zones_val = 10
-raw_video = False
+raw_video = True
 color_video = True
 fkesa_time_delay = 1
 current_time = time.time()
@@ -106,6 +107,7 @@ def process_frames():
     global cap
     global exit_event
     global current_time
+    global is_playing
     if cap is not None:
         cap.release()
     cap = cv2.VideoCapture(selected_camera)  # Open the default camera
@@ -252,10 +254,10 @@ try:
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
-            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
+            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue'), sg.VerticalSeparator(), sg.Button('PAUSE VIDEO', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
-            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=False, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-'), 
+            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-'), 
             sg.VerticalSeparator(),  # Separator 
             ],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
@@ -460,6 +462,15 @@ try:
             processing_frames_running = False  # Signal the processing_frames thread to exit
             exit_event.set()  # Signal the processing_frames thread to exit
             break
+        elif event == "-PAUSE PLAY VIDEO-":
+             if is_playing == True:
+                window['-PAUSE PLAY VIDEO-'].update(button_color = ('black','yellow'))
+                window['-PAUSE PLAY VIDEO-'].update(text = ('PLAY VIDEO'))
+                is_playing = False
+             elif is_playing == False:
+                window['-PAUSE PLAY VIDEO-'].update(button_color = ('white','green'))
+                window['-PAUSE PLAY VIDEO-'].update(text = ('PAUSE VIDEO'))
+                is_playing = True
         elif event == "-RAW VIDEO SELECT-":
              if values["-RAW VIDEO SELECT-"] == False:
                 raw_video = False
