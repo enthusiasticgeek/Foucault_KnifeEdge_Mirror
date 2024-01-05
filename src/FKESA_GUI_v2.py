@@ -256,10 +256,10 @@ try:
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
-            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue'), sg.VerticalSeparator(), sg.Button('PAUSE VIDEO', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) ],
+            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue'), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
-            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-'), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-'), 
+            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
             sg.VerticalSeparator(),  # Separator 
             ],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
@@ -281,11 +281,11 @@ try:
                 font=('Times New Roman', 10, 'bold'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 500]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 100]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                500,
+                100,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -441,7 +441,7 @@ try:
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
-        [sg.Button("Exit", size=(10, 1)), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1)) ],
+        [sg.Button("Exit", size=(10, 1), button_color=('white','darkred')), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1)) ],
     ]
 
 
@@ -460,14 +460,20 @@ try:
 
     while True:
         event, values = window.read(timeout=20)  # Update the GUI every 20 milliseconds
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            processing_frames_running = False  # Signal the processing_frames thread to exit
-            exit_event.set()  # Signal the processing_frames thread to exit
-            break
+        if event == 'Exit':
+           confirm_exit = sg.popup_yes_no("Are you sure you want to exit?")
+           if confirm_exit == "Yes":
+              processing_frames_running = False  # Signal the processing_frames thread to exit
+              exit_event.set()  # Signal the processing_frames thread to exit
+              break
+        if event == sg.WIN_CLOSED:
+              processing_frames_running = False  # Signal the processing_frames thread to exit
+              exit_event.set()  # Signal the processing_frames thread to exit
+              break
         elif event == "-PAUSE PLAY VIDEO-":
              if is_playing == True:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('black','yellow'))
-                window['-PAUSE PLAY VIDEO-'].update(text = ('PLAY VIDEO'))
+                window['-PAUSE PLAY VIDEO-'].update(text = ('Play Video'))
                 is_playing = False
                 print("Pausing the worker thread...")
                 exit_event.set()  # Set the exit event to stop the loop
@@ -476,7 +482,7 @@ try:
                    thread.join()
              elif is_playing == False:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('white','green'))
-                window['-PAUSE PLAY VIDEO-'].update(text = ('PAUSE VIDEO'))
+                window['-PAUSE PLAY VIDEO-'].update(text = ('Pause Video'))
                 is_playing = True
                 # Resume the worker thread
                 print("Resuming the worker thread...")
