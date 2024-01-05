@@ -19,6 +19,7 @@ cap = None
 # Create synchronization events
 exit_event = threading.Event()  # Event to signal thread exit
 is_playing = True
+is_recording = False
 
 mindist_val = 50
 param_a_val = 25 
@@ -36,6 +37,18 @@ raw_video = True
 color_video = True
 fkesa_time_delay = 100
 current_time = time.time()
+
+#Define video recording parameters
+# Define the codec and create VideoWriter object
+# See https://docs.opencv.org/4.x/dd/d43/tutorial_py_video_display.html
+#fourcc = cv2.VideoWriter_fourcc(*'XVID')
+#fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+#fourcc = cv2.VideoWriter_fourcc(*'X264')
+#fourcc = cv2.VideoWriter_fourcc(*'WMV1')
+#fourcc = cv2.VideoWriter_fourcc(*'WMV2')
+fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+#out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,  480))
+out = None
 
 def author_window():
     layout = [
@@ -109,7 +122,8 @@ def process_frames():
     global cap
     global exit_event
     global current_time
-    global is_playing
+    global fourcc
+    global out
     if cap is not None:
         cap.release()
     cap = cv2.VideoCapture(selected_camera)  # Open the default camera
@@ -154,6 +168,8 @@ def process_frames():
                 global gradient_intensity_val
                 global skip_zones_val
                 global fkesa_time_delay
+                global is_playing
+                global is_recording
                 preprocess_frame = None
                 # color or grayscale?
                 if color_video == False:
@@ -206,6 +222,16 @@ def process_frames():
                 global shared_frame
                 if fkesa_frame is not None:
                    shared_frame = fkesa_frame.copy()
+                   #Record if flag set
+                   if is_recording == True:
+                      if out is not None:
+                         print("Continuing Video Recording....")
+                         out.write(shared_frame)
+                   #elif is_recording == False:
+                   #   if out is not None:
+                   #      print("Stopping Video Recording....")
+                   #      out.release()
+                   #      out = None
         except Exception as e:
                print(f"An exception occurred {e}")
       
@@ -229,9 +255,10 @@ try:
 
     # First the window layout in 2 columns
     file_list_column = [
+        [sg.Text("SELECT IMAGES FOLDER",font=('Times New Roman', 12, 'bold'), text_color="darkred"),], 
         [
-            sg.Text("Image Folder",font=('Times New Roman', 12, 'bold'), text_color="navyblue"), 
-            sg.In(size=(25, 1), enable_events=True, key="-FOLDER-"),
+            #sg.Text("Select Images Folder",font=('Times New Roman', 12, 'bold'), text_color="darkred"), 
+            sg.In(size=(30, 1), enable_events=True, key="-FOLDER-"),
             sg.FolderBrowse(),
         ],
         [
@@ -243,20 +270,20 @@ try:
 
     # For now will only show the name of the file that was chosen
     image_viewer_column = [
-        [sg.Text("Choose an image from list on left:", font=('Times New Roman', 14, 'bold'), text_color="navyblue")],
-        [sg.Text(size=(40, 1), key="-TOUT-")],
+        [sg.Text("CLICK TO VIEW AN IMAGE FROM THE LEFT PANE", font=('Times New Roman', 14, 'bold'), text_color="darkred")],
+        [sg.Text(size=(70, 1), key="-TOUT-")],
         [sg.Image(key="-LOAD IMAGE-",size=(200,200))],
     ]
 
 
     # Define the window layout
     layout = [
-        [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) GUI VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
+        [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
-            [sg.Text("SELECT CAMERA", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue'), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) ],
+            [sg.Text("SELECT CAMERA ⌄", size=(15, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred'), sg.VerticalSeparator(), sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), sg.VerticalSeparator() ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
@@ -265,7 +292,7 @@ try:
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
+        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST A-"),
@@ -352,7 +379,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
+        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS A-"),
@@ -411,7 +438,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='navyblue')],
+        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("DIAMETER (inches) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
@@ -441,7 +468,7 @@ try:
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
-        [sg.Button("Exit", size=(10, 1), button_color=('white','darkred')), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1)) ],
+        [sg.Button("Exit", size=(10, 1), button_color=('white','darkred')), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), ],
     ]
 
 
@@ -470,6 +497,25 @@ try:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
+        elif event == "-RECORD VIDEO-":
+             if is_recording == False:
+                print("Starting video recording.....") 
+                window['-RECORD VIDEO-'].update(button_color = ('black','yellow'))
+                window['-RECORD VIDEO-'].update(text = ('Stop Recording'))
+                video_filename = f"fkesa_v2_{int(time.time())}.avi"  # Generate a filename (you can adjust this)
+                if out is not None:
+                   out.release()
+                   out = None
+                out = cv2.VideoWriter(video_filename, fourcc, 20.0, (640,  480))
+                is_recording = True
+             elif is_recording == True:
+                print("Stopping video recording.....") 
+                window['-RECORD VIDEO-'].update(button_color = ('white','red'))
+                window['-RECORD VIDEO-'].update(text = ('Start Recording'))
+                if out is not None:
+                   out.release()
+                   out = None
+                is_recording = False
         elif event == "-PAUSE PLAY VIDEO-":
              if is_playing == True:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('black','yellow'))
@@ -589,6 +635,10 @@ try:
 
     if cap is not None:
        cap.release()  # Release the camera explicitly
+
+    if out is not None:
+       out.release()
+
     window.close()
 
 except Exception as e:
