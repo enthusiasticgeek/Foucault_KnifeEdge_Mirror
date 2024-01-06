@@ -52,6 +52,8 @@ out = None
 
 def author_window():
     layout = [
+
+        [sg.Image(filename='fkesa.ico.png'),],
         [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA) Version 2", size=(60, 1), justification="center", font=('Times New Roman', 10, 'bold'), key="-APP-")],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("Author: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
@@ -278,7 +280,7 @@ try:
 
     # Define the window layout
     layout = [
-        [sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
+        [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
