@@ -283,7 +283,7 @@ try:
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
-            [sg.Text("SELECT CAMERA ⌄", size=(15, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred'), sg.VerticalSeparator(), sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), sg.VerticalSeparator() ],
+            [sg.Text("SELECT CAMERA ↓", size=(15, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred'), sg.VerticalSeparator(), sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), sg.VerticalSeparator() ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
@@ -473,7 +473,7 @@ try:
 
 
     # Create the window
-    window = sg.Window("FKESA v2 GUI [LIVE]", layout)
+    window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(1640, 1040))
 
     # Start the thread for processing frames
     thread = threading.Thread(target=process_frames)
@@ -619,6 +619,25 @@ try:
         elif event == 'OK':
             selected_camera = values['-CAMERA SELECT-']
             print(f"Camera selected: {selected_camera}")
+            print("Stopping the worker thread...")
+            is_playing = False
+            is_recording = False
+            exit_event.set()  # Set the exit event to stop the loop
+            # Wait for the processing thread to complete before closing the window
+            if thread.is_alive():
+               thread.join()
+            #Some time to stop and resume
+            time.sleep(1)
+            # Resume the worker thread
+            print("Resuming the worker thread...")
+            exit_event.clear()  # Clear the exit event to allow the loop to continue
+            #Get to the initial state of boolean values
+            is_playing = True
+            is_recording = False
+            # Start the thread for processing frames
+            thread = threading.Thread(target=process_frames)
+            thread.daemon = True
+            thread.start()
 
         
         with lock:
