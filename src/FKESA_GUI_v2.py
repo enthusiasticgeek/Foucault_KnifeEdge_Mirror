@@ -203,7 +203,7 @@ def process_frames():
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
-                        fkesa_frame = builder.build(frame)
+                        _,fkesa_frame = builder.build(frame)
                         time.sleep(fkesa_time_delay / 1000)
                         """
                         end_time = time.time()
@@ -288,7 +288,7 @@ try:
             [sg.Text("SELECT CAMERA ↓", size=(15, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred'), sg.VerticalSeparator(), sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), sg.VerticalSeparator() ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
-            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
+            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='darkgreen', text_color='white'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
             sg.VerticalSeparator(),  # Separator 
             ],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]

@@ -33,6 +33,7 @@ class FKESABuilder:
             'skipZonesFromCenter': 10
             # Include default values for other parameters here
         }
+        stale_image=False
 
     def with_folder(self, folder_path=''):
         self.args['folder'] = folder_path or self.args['folder']
@@ -106,12 +107,22 @@ class FKESABuilder:
     def build(self, image):
         try:
             cropped_image=None
+            mask_ret=None
             # Your existing logic, but using class methods with self.
             if image is not None:
                 if self.args['gammaCorrection'] > 0.0:
                     image = self.adjust_gamma(image, gamma=self.args['gammaCorrection'])
 
                 image = self.resize_image(image)
+
+                # Define the dimensions of the mask
+                mask_width = image.shape[1]
+                mask_height = image.shape[0]
+
+                # Create a transparent mask with an alpha channel
+                mask_ret = np.zeros((mask_height, mask_width, 4), dtype=np.uint8)
+                mask_ret[:, :, 3] = 0  # Full transparency initially
+
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                 blurred = cv2.GaussianBlur(gray_image, (5, 5), 0)
 
@@ -141,6 +152,7 @@ class FKESABuilder:
                         break  # Exit the loop if circles are found with any parameter set
 
                 if circles is None:
+                    self.stale_image = True
                     raise Exception("Hough Mirror Transform didn't find any circles after trying multiple parameter combinations")
 
                 # If circles are found
@@ -389,6 +401,7 @@ class FKESABuilder:
                         start_angle = -20
                         end_angle = 20
 
+                        """
                         if null_zone_lhs_possibility == True and null_zone_lhs_possibility == True:
                             color = (255, 255, 255)  # White color in BGR
                             self.draw_text(image, f"NULL Zones found", (center_x-20,center_y+radius-80), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 255, 0), thickness=1)
@@ -410,20 +423,54 @@ class FKESABuilder:
 
                         #cv2.imshow('Cropped Image', cropped_image)
                         #cv2.waitKey(100)
+                        """
 
                         # Extract zones and deltas for plotting
                         zones = [zone[0] for zone in deltas]
                         differences = [zone[1] for zone in deltas]
 
+
+                        #============================ do same thing on mask ==============================
+                        if null_zone_lhs_possibility == True and null_zone_lhs_possibility == True:
+                            color = (255, 255, 255)  # White color in BGR
+                            self.draw_text(mask_ret, f"NULL Zones found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 255, 0), thickness=1)
+                        else:
+                            color = (0, 0, 255)  # Red color in BGR
+                            self.draw_text(mask_ret, f"NULL Zones not found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 0, 255), thickness=1)
+
+                        # Use the function to draw the symmetrical arc on the image
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+                        
+                        zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
+                        zone_inches = float(float(zone_pixels/radius)*self.args['mirrorDiameterInches'])/2
+                        self.draw_text(mask_ret, f"Radius: {radius} pixels ", (center_x-20+top_left_x,center_y+radius-20+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+                        self.draw_text(mask_ret, f"Zone: {zone_pixels:.0f} pixels or {zone_inches:.4f} \"", (center_x-20+top_left_x,center_y+radius-40+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+                        self.draw_text(mask_ret, f"Zone match: {sorted_deltas[0][0]} zone of total {num_zones} zones", (center_x-20+top_left_x,center_y+radius-60+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+                        self.draw_text(mask_ret, f"Mirror Diameter: {self.args['mirrorDiameterInches']} \"", (center_x-20+top_left_x,center_y-20+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+                        self.draw_text(mask_ret, f"Mirror Focal Length: {self.args['mirrorFocalLengthInches']} \"", (center_x-20+top_left_x,center_y-40+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+                        self.stale_image = False
+                        #============================ do same thing on mask ==============================
+
                     else:
                          print("No zones have matching intensities!")
+                         self.stale_image = True
                     # Check if the image size is smaller than 640x480
                     
                     if cropped_image.shape[0] < 480 or cropped_image.shape[1] < 640:
                         # Fill the boundary
                         cropped_image = self.fill_image_boundary(cropped_image)
                     # Return the cropped image
-                    return cropped_image
+                    # Overlay the mask on the image
+                    result = np.copy(image)
+                    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)  # Convert image to 4 channels (BGR + Alpha)
+
+                    # Blend the mask with the image
+                    alpha = 1.0  # Adjust the alpha blending factor (0.0 - fully transparent, 1.0 - fully opaque)
+                    cv2.addWeighted(mask_ret, alpha, result, 1.0, 0, result)
+
+
+                    return cropped_image, result
 
             else:
                 raise Exception("Image is not valid!")
