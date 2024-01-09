@@ -8,16 +8,19 @@ import matplotlib
 #matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from PIL import Image
+from datetime import datetime
 import os
 import cv2
 import numpy as np
 import argparse
 import pprint
+import csv
 
 
 class FKESABuilder:
     def __init__(self):
         self.args = {
+            'folder': 'fkesa_v2_default',
             'gammaCorrection': 0,
             'minDist': 50,
             'param1': 25,
@@ -30,13 +33,16 @@ class FKESABuilder:
             'mirrorDiameterInches': 6,
             'mirrorFocalLengthInches': 48,
             'gradientIntensityChange': 3,
-            'skipZonesFromCenter': 10
+            'skipZonesFromCenter': 10,
+            'csv_filename': 'fkesa_v2_default.csv',
+            'append_to_csv': False
             # Include default values for other parameters here
         }
         stale_image=False
 
     def with_folder(self, folder_path=''):
         self.args['folder'] = folder_path or self.args['folder']
+        self.create_folder_if_not_exists(folder_path)
         return self
 
     def with_param(self, param_name, value):
@@ -104,6 +110,48 @@ class FKESABuilder:
         return canvas
 
 
+    def current_timestamp(self):
+        now = datetime.now()
+        #milliseconds = round(now.timestamp() * 1000)
+        #timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S") + f".{milliseconds:03d}"
+        microseconds = round(now.microsecond / 1000)  # Convert microseconds to milliseconds
+        timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S") + f".{microseconds:03d}"
+        return timestamp_str
+
+    # data is of format - writer.writerow(['X [pixels], Y [pixels], INTENSITY [0-255]'])
+    def write_csv(self, data):
+            csv_filename = self.args['csv_filename']
+            csv_file = os.path.join(self.args['folder'], csv_filename)
+            is_empty = not os.path.exists(csv_file) or os.path.getsize(csv_file) == 0
+
+            # If the file is empty or doesn't exist, write the header
+            if is_empty:
+                try:
+                    with open(csv_file, mode='w', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow([
+                            'Timestamp',
+                            'Mirror center x coordinate pixels',
+                            'Mirror center y coordinate pixels',
+                            'Mirror radius pixels',
+                            'Total num zones',
+                            'Zone match',
+                            'Zone match pixels',
+                            'Zone match inches',
+                            'Mirror diameter inches',
+                            'Mirror focal length inches'
+                        ])  # Replace with your column names
+                except Exception as e:
+                    print(f"Error writing headers: {e}")
+
+            # Mode is append
+            try:
+                with open(csv_file, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(data)
+            except Exception as e:
+                print(f"Error writing data: {e}")
+
     def build(self, image):
         try:
             cropped_image=None
@@ -165,6 +213,11 @@ class FKESABuilder:
 
                     # Get the center coordinates and radius of the largest circle
                     center_x, center_y, radius = largest_circle
+                    print(f"LARGEST CIRCLE : {center_x},{center_y},{radius}")
+                    # backup copies to be used in csv later
+                    center_x_orig = center_x
+                    center_y_orig = center_y
+                    radius_orig = radius
 
                     # Mark the center of the largest circle on the image
                     cv2.circle(image, (center_x, center_y), 3, (0, 255, 0), -1)
@@ -429,8 +482,7 @@ class FKESABuilder:
                         zones = [zone[0] for zone in deltas]
                         differences = [zone[1] for zone in deltas]
 
-
-                        #============================ do same thing on mask ==============================
+                        #============================ Begin:  do same thing on mask ==============================
                         if null_zone_lhs_possibility == True and null_zone_lhs_possibility == True:
                             color = (255, 255, 255)  # White color in BGR
                             self.draw_text(mask_ret, f"NULL Zones found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 255, 0), thickness=1)
@@ -443,23 +495,45 @@ class FKESABuilder:
                         self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
                         
                         zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
-                        zone_inches = float(float(zone_pixels/radius)*self.args['mirrorDiameterInches'])/2
+                        zone_inches = float(float(zone_pixels/radius_orig)*self.args['mirrorDiameterInches'])/2
                         self.draw_text(mask_ret, f"Radius: {radius} pixels ", (center_x-20+top_left_x,center_y+radius-20+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
                         self.draw_text(mask_ret, f"Zone: {zone_pixels:.0f} pixels or {zone_inches:.4f} \"", (center_x-20+top_left_x,center_y+radius-40+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
                         self.draw_text(mask_ret, f"Zone match: {sorted_deltas[0][0]} zone of total {num_zones} zones", (center_x-20+top_left_x,center_y+radius-60+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
                         self.draw_text(mask_ret, f"Mirror Diameter: {self.args['mirrorDiameterInches']} \"", (center_x-20+top_left_x,center_y-20+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
                         self.draw_text(mask_ret, f"Mirror Focal Length: {self.args['mirrorFocalLengthInches']} \"", (center_x-20+top_left_x,center_y-40+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
+                        self.draw_text(mask_ret, f"{self.current_timestamp()}", (0,0), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.5, color=(255, 255, 255), thickness=1)
                         self.stale_image = False
-                        #============================ do same thing on mask ==============================
+                        #============================ End: do same thing on mask ==============================
+ 
+                        # Append to CSV if set
+                        if self.args['append_to_csv']:
+                            csv_data=[
+                                self.current_timestamp(),
+                                center_x_orig,
+                                center_y_orig,
+                                radius_orig,
+                                num_zones,
+                                int(sorted_deltas[0][0]),
+                                zone_pixels,
+                                round(zone_inches,3),
+                                self.args['mirrorDiameterInches'],
+                                self.args['mirrorFocalLengthInches']
+                            ]
+                            self.write_csv(csv_data)
+                            #self.write_csv(','.join(map(str,csv_data)))
+                            #csv_line = ','.join(str(item).replace('"', '') for item in csv_data)
+                            #self.write_csv(csv_line)
 
                     else:
                          print("No zones have matching intensities!")
                          self.stale_image = True
                     # Check if the image size is smaller than 640x480
                     
+                    """
                     if cropped_image.shape[0] < 480 or cropped_image.shape[1] < 640:
                         # Fill the boundary
                         cropped_image = self.fill_image_boundary(cropped_image)
+                    """
                     # Return the cropped image
                     # Overlay the mask on the image
                     result = np.copy(image)
@@ -469,6 +543,11 @@ class FKESABuilder:
                     alpha = 1.0  # Adjust the alpha blending factor (0.0 - fully transparent, 1.0 - fully opaque)
                     cv2.addWeighted(mask_ret, alpha, result, 1.0, 0, result)
 
+                    #Took measurement - Hence save the image
+                    if self.args['append_to_csv'] and self.stale_image == False:
+                       analyzed_jpg_filename = self.args['csv_filename']+self.current_timestamp()+'.jpg'
+                       analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                       cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
                     return cropped_image, result
 

@@ -9,6 +9,7 @@ import os.path
 import time
 import threading
 from FKESA_v2_core import FKESABuilder  # Replace 'fkesa_builder_module' with your module name
+from datetime import datetime
 
 # Initialize a variable to store image data
 #image_data = None
@@ -20,6 +21,7 @@ cap = None
 exit_event = threading.Event()  # Event to signal thread exit
 is_playing = True
 is_recording = False
+is_measuring = False
 
 mindist_val = 50
 param_a_val = 25 
@@ -35,8 +37,13 @@ gradient_intensity_val = 3
 skip_zones_val = 10
 raw_video = True
 color_video = True
-fkesa_time_delay = 100
+fkesa_time_delay = 300
 current_time = time.time()
+
+# Get the current timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+csv_filename = f"fkesa_v2_{timestamp}.csv"
+output_folder = f"fkesa_v2_{timestamp}_output"
 
 #Define video recording parameters
 # Define the codec and create VideoWriter object
@@ -49,6 +56,24 @@ current_time = time.time()
 fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 #out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,  480))
 out = None
+
+# Create the splash screen layout
+splash_layout = [
+    [sg.Text('Welcome to FKESA GUI Version 2.1', justification='center')],
+    [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>', justification='center')],
+    [sg.Image('fkesa.png')],  
+]
+# Create the splash screen window
+splash_window = sg.Window('Splash Screen', splash_layout, no_titlebar=True, keep_on_top=True)
+# Show splash screen for 3 seconds
+start_time = time.time()
+while time.time() - start_time < 3:
+    event, values = splash_window.read(timeout=100)
+splash_window.close()
+
+def calculate_fps(delay_ms):
+    fps = float(1 / (delay_ms * 0.001))
+    return fps
 
 def author_window():
     layout = [
@@ -119,6 +144,7 @@ lock = threading.Lock()
 processing_frames_running = True
 
 def process_frames():
+    global csv_filename
     global processing_frames_running
     global selected_camera
     global cap
@@ -155,6 +181,7 @@ def process_frames():
                 # For example, convert frame to grayscale
                 #fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+                global output_folder
                 global mindist_val
                 global param_a_val 
                 global param_b_val
@@ -172,6 +199,7 @@ def process_frames():
                 global fkesa_time_delay
                 global is_playing
                 global is_recording
+                global is_measuring
                 preprocess_frame = None
                 # color or grayscale?
                 if color_video == False:
@@ -187,7 +215,7 @@ def process_frames():
                         start_time = time.time()
                         """
                         builder = FKESABuilder()
-                        builder.with_folder('output_folder')
+                        builder.with_folder(output_folder)
                         builder.with_param('minDist', mindist_val)
                         builder.with_param('param1', param_a_val)
                         builder.with_param('param2', param_b_val)
@@ -200,6 +228,8 @@ def process_frames():
                         builder.with_param('mirrorFocalLengthInches', focal_length_val)
                         builder.with_param('gradientIntensityChange', gradient_intensity_val)
                         builder.with_param('skipZonesFromCenter', skip_zones_val)
+                        builder.with_param('csv_filename', csv_filename)
+                        builder.with_param('append_to_csv', is_measuring)
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
@@ -228,6 +258,11 @@ def process_frames():
                    if is_recording == True:
                       if out is not None:
                          print("Continuing Video Recording....")
+                         if raw_video==True:
+                            shared_frame = cv2.resize(shared_frame, (640, 480))
+                         else:
+                            #Video reording writer needs RGB or it silently fails (flaw in OpenCV ver 2)
+                            shared_frame = cv2.cvtColor(shared_frame, cv2.COLOR_BGRA2RGB)
                          out.write(shared_frame)
                    #elif is_recording == False:
                    #   if out is not None:
@@ -290,6 +325,7 @@ try:
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='darkgreen', text_color='white'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
             sg.VerticalSeparator(),  # Separator 
+            sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
             ],
             [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
         ],
@@ -314,7 +350,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                100,
+                300,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -499,6 +535,17 @@ try:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
+        elif event == "-MEASUREMENTS-":
+             if is_measuring == False:
+                print("Starting measurements.....") 
+                window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
+                window['-MEASUREMENTS-'].update(text = ('Stop Measuring'))
+                is_measuring = True
+             elif is_measuring == True:
+                print("Stopping measurements.....") 
+                window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
+                window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
+                is_measuring = False
         elif event == "-RECORD VIDEO-":
              if is_recording == False:
                 print("Starting video recording.....") 
@@ -508,7 +555,12 @@ try:
                 if out is not None:
                    out.release()
                    out = None
-                out = cv2.VideoWriter(video_filename, fourcc, 20.0, (640,  480))
+                if raw_video == True:
+                   out = cv2.VideoWriter(video_filename, fourcc, 20.0, (640,  480))
+                else:
+                   #out = cv2.VideoWriter(video_filename, fourcc, 1.0, (640,  480))
+                   fps = calculate_fps(fkesa_time_delay)
+                   out = cv2.VideoWriter(video_filename, fourcc, float(fps), (640,  480))
                 is_recording = True
              elif is_recording == True:
                 print("Stopping video recording.....") 
@@ -541,9 +593,16 @@ try:
                 thread.start()
         elif event == "-RAW VIDEO SELECT-":
              if values["-RAW VIDEO SELECT-"] == False:
+                window['-MEASUREMENTS-'].update(disabled=False)
                 raw_video = False
              elif values["-RAW VIDEO SELECT-"] == True:
+                window['-MEASUREMENTS-'].update(disabled=True)
                 raw_video = True
+                if is_measuring == True:
+                  window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
+                  window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
+                  is_measuring = False
+
         elif event == "-COLOR VIDEO SELECT-":
              if values["-COLOR VIDEO SELECT-"] == False:
                 color_video = False
