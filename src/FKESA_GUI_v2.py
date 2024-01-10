@@ -64,6 +64,8 @@ splash_layout = [
     [sg.Text('FKESA GUI Version 2.1', justification='center')],
     [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>', justification='center')],
     [sg.Image('fkesa.png')],  
+    [sg.Text('Launching...', justification='center',k='-LAUNCH-')],
+    [sg.ProgressBar(100, orientation='h', s=(60,20), k='-PBAR-')]
 ]
 # Create the splash screen window
 splash_window = sg.Window('Splash Screen', splash_layout, no_titlebar=True, keep_on_top=True)
@@ -71,6 +73,18 @@ splash_window = sg.Window('Splash Screen', splash_layout, no_titlebar=True, keep
 start_time = time.time()
 while time.time() - start_time < 3:
     event, values = splash_window.read(timeout=100)
+    if (time.time() - start_time) < 1:
+        progress = 33
+        splash_window['-PBAR-'].update(progress)
+        splash_window['-LAUNCH-'].update('Launching.', text_color='white')
+    elif (time.time() - start_time) < 2:
+        progress = 66
+        splash_window['-PBAR-'].update(progress)
+        splash_window['-LAUNCH-'].update('Launching..', text_color='white')
+splash_window['-LAUNCH-'].update('Searching Available Camera Devices...Please allow a few seconds...', text_color='white')
+progress = 100
+splash_window['-PBAR-'].update(progress)
+time.sleep(1)
 splash_window.close()
 
 def calculate_fps(delay_ms):
@@ -346,7 +360,7 @@ try:
             sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (0, 255),
+                (1, 255),
                 50,
                 1,
                 orientation="h",
@@ -374,7 +388,7 @@ try:
             sg.Text("PARAMETERS 1 (PIXELS) [DEFAULT: 25]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (0, 255),
+                (1, 255),
                 25,
                 1,
                 orientation="h",
@@ -387,7 +401,7 @@ try:
             sg.Text("PARAMETER 2 (PIXELS) [DEFAULT: 60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (0, 255),
+                (1, 255),
                 60,
                 1,
                 orientation="h",
@@ -402,7 +416,7 @@ try:
             sg.Text("MIN RADIUS (PIXELS) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIN RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (0, 255),
+                (1, 255),
                 20,
                 1,
                 orientation="h",
