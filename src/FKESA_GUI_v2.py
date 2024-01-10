@@ -153,6 +153,8 @@ def process_frames():
     global current_time
     global fourcc
     global out
+    # counter to ease CPU processing with modulo operator
+    counter=0
     if cap is not None:
         cap.release()
     cap = cv2.VideoCapture(selected_camera)  # Open the default camera
@@ -212,6 +214,9 @@ def process_frames():
                 if raw_video == True:
                         fkesa_frame = preprocess_frame
                 else:
+                   if counter % 5 == 0:
+                        if counter > 100:
+                           counter = 0
                         """
                         start_time = time.time()
                         """
@@ -248,6 +253,8 @@ def process_frames():
                         # Sleep for remaining time (5 seconds - time taken for process execution)
                         time.sleep(max(0, fkesa_time_delay - time_diff_seconds))
                         """
+                   else:
+                        fkesa_frame = preprocess_frame
 
                 if fkesa_frame is None:
                    continue
