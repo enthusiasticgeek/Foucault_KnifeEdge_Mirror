@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#Author: Pratik M Tambe
+#Author: Pratik M Tambe <enthusiasticgeek@gmail.com>
 #Date: Dec 18, 2023
 #This method was proposed by Dr. Alin Tolea to me, Guy Brandenburg and Alan Tarica
 #I have attempted to implement this
@@ -131,9 +131,9 @@ class FKESABuilder:
                         writer = csv.writer(file)
                         writer.writerow([
                             '------ Timestamp ------',
-                            'Mirror X',
-                            'Mirror Y',
-                            'Mirror Y',
+                            'Mirror X PX',
+                            'Mirror Y PX',
+                            'Mirror Rad PX',
                             'Zones',
                             'Match',
                             'Match PX',

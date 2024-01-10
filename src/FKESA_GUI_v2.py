@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+#Author: Pratik M Tambe <enthusiasticgeek@gmail.com>
+#Date: Dec 18, 2023
+
 import cv2
 import PySimpleGUI as sg
 #from PIL import Image, ImageTk
@@ -364,7 +367,7 @@ try:
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
             [
-             sg.Text("SELECT CAMERA ↓", size=(15, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred'), 
+             sg.Text("SELECT CAMERA ︾", size=(15, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred'), 
              sg.VerticalSeparator(), 
              sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), 
              sg.VerticalSeparator(), 
@@ -374,7 +377,7 @@ try:
              sg.VerticalSeparator(), 
              sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
-             sg.Button('View Measurement Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
+             sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
             ],
             [sg.HorizontalSeparator()],  # Separator 
@@ -615,13 +618,13 @@ try:
              if not is_another_file_instance_running('measurement_csv'):
                 try:
                     create_lock_file('measurement_csv')  # Create lock file
-                    window['-MEASUREMENTS CSV-'].update(disabled=True, text='Viewing Measurement Data')
+                    window['-MEASUREMENTS CSV-'].update(disabled=True, text='Viewing Measurements Data')
                     subprocess.run(['python', './FKESA_v2_csv.py'])
                 except Exception as e:
                     sg.popup_error(f"Error running another_file.py: {e}")
                 finally:
                     remove_lock_file('measurement_csv')  # Remove lock file
-                    window['-MEASUREMENTS CSV-'].update(disabled=False, text='View Measurement Data')
+                    window['-MEASUREMENTS CSV-'].update(disabled=False, text='View Measurements Data')
         elif event == "-RECORD VIDEO-":
              if is_recording == False:
                 print("Starting video recording.....") 

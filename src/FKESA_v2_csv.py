@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-#Author: Pratik M Tambe
+#Author: Pratik M Tambe <enthusiasticgeek@gmail.com>
 #Date: Jan 10, 2024
 
 import PySimpleGUI as sg
 import csv
 
+#TODO(Pratik) Add exceptions
 # Function to read CSV file
 def read_csv(filename):
     data = []
