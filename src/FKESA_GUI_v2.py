@@ -59,7 +59,8 @@ out = None
 
 # Create the splash screen layout
 splash_layout = [
-    [sg.Text('Welcome to FKESA GUI Version 2.1', justification='center')],
+    [sg.Text('Welcome to Foucault KnifeEdge Shadowgram Analyzer!', justification='center')],
+    [sg.Text('FKESA GUI Version 2.1', justification='center')],
     [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>', justification='center')],
     [sg.Image('fkesa.png')],  
 ]
