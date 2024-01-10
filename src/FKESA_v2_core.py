@@ -134,7 +134,7 @@ class FKESABuilder:
                             'Mirror center x coordinate pixels',
                             'Mirror center y coordinate pixels',
                             'Mirror radius pixels',
-                            'Total num zones',
+                            'Total number of zones',
                             'Zone match',
                             'Zone match pixels',
                             'Zone match inches',
