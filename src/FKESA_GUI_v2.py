@@ -39,6 +39,7 @@ raw_video = True
 color_video = True
 fkesa_time_delay = 300
 current_time = time.time()
+measurement_run_counter = 0
 
 # Get the current timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -185,6 +186,7 @@ def process_frames():
                 #fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
                 global output_folder
+                global measurement_run_counter
                 global mindist_val
                 global param_a_val 
                 global param_b_val
@@ -221,7 +223,7 @@ def process_frames():
                         start_time = time.time()
                         """
                         builder = FKESABuilder()
-                        builder.with_folder(output_folder)
+                        builder.with_folder(output_folder+'_run_'+str(measurement_run_counter))
                         builder.with_param('minDist', mindist_val)
                         builder.with_param('param1', param_a_val)
                         builder.with_param('param2', param_b_val)
@@ -539,7 +541,7 @@ try:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
-        if event == sg.WIN_CLOSED:
+        elif event == sg.WIN_CLOSED:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
@@ -548,6 +550,7 @@ try:
                 print("Starting measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
                 window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
+                measurement_run_counter+=1
                 is_measuring = True
              elif is_measuring == True:
                 print("Stopping measurements.....") 
