@@ -539,12 +539,12 @@ try:
              if is_measuring == False:
                 print("Starting measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
-                window['-MEASUREMENTS-'].update(text = ('Stop Measuring'))
+                window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
                 is_measuring = True
              elif is_measuring == True:
                 print("Stopping measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
-                window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
+                window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
                 is_measuring = False
         elif event == "-RECORD VIDEO-":
              if is_recording == False:
