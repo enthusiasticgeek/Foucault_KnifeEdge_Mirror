@@ -8,8 +8,10 @@ import numpy as np
 import os.path
 import time
 import threading
-from FKESA_v2_core import FKESABuilder  # Replace 'fkesa_builder_module' with your module name
+from FKESA_v2_core import FKESABuilder 
 from datetime import datetime
+import tempfile
+import subprocess
 
 # Initialize a variable to store image data
 #image_data = None
@@ -86,6 +88,23 @@ progress = 100
 splash_window['-PBAR-'].update(progress)
 time.sleep(1)
 splash_window.close()
+
+# Function to check if <another_file>.py is already running
+def is_another_file_instance_running(file_lock):
+    # Check for the existence of a lock file
+    return os.path.exists(os.path.join(tempfile.gettempdir(), file_lock))
+
+# Function to create a lock file
+def create_lock_file(file_lock):
+    lock_file_path = os.path.join(tempfile.gettempdir(), file_lock)
+    with open(lock_file_path, 'w'):
+        pass
+
+# Function to remove the lock file
+def remove_lock_file(file_lock):
+    lock_file_path = os.path.join(tempfile.gettempdir(), file_lock)
+    if os.path.exists(lock_file_path):
+        os.remove(lock_file_path)
 
 def calculate_fps(delay_ms):
     fps = float(1 / (delay_ms * 0.001))
@@ -316,7 +335,7 @@ try:
 
     # First the window layout in 2 columns
     file_list_column = [
-        [sg.Text("SELECT IMAGES FOLDER",font=('Times New Roman', 12, 'bold'), text_color="darkred"),], 
+        [sg.Text("SELECT IMAGES FOLDER",font=('Times New Roman', 10, 'bold'), text_color="darkred"),], 
         [
             #sg.Text("Select Images Folder",font=('Times New Roman', 12, 'bold'), text_color="darkred"), 
             sg.In(size=(30, 1), enable_events=True, key="-FOLDER-"),
@@ -331,7 +350,7 @@ try:
 
     # For now will only show the name of the file that was chosen
     image_viewer_column = [
-        [sg.Text("CLICK TO VIEW AN IMAGE FROM THE LEFT PANE", font=('Times New Roman', 14, 'bold'), text_color="darkred")],
+        [sg.Text("CLICK TO VIEW AN IMAGE FROM THE LEFT PANE", font=('Times New Roman', 10, 'bold'), text_color="darkred")],
         [sg.Text(size=(70, 1), key="-TOUT-")],
         [sg.Image(key="-LOAD IMAGE-",size=(200,200))],
     ]
@@ -339,22 +358,39 @@ try:
 
     # Define the window layout
     layout = [
-        [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="center", font=('Times New Roman', 14, 'bold'),text_color='darkgreen')],
+        [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="left", font=('Times New Roman', 10, 'bold'),text_color='darkgreen')],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
-            [sg.Text("SELECT CAMERA ↓", size=(15, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred'), sg.VerticalSeparator(), sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), sg.VerticalSeparator(), sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , sg.VerticalSeparator(), sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), sg.VerticalSeparator() ],
+            [
+             sg.Text("SELECT CAMERA ↓", size=(15, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred'), 
+             sg.VerticalSeparator(), 
+             sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), 
+             sg.VerticalSeparator(), 
+             sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , 
+             sg.VerticalSeparator(), 
+             sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
+             sg.VerticalSeparator(), 
+             sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('View Measurement Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
+             sg.VerticalSeparator(),  # Separator 
+            ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
-            [sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='darkgreen', text_color='white'), sg.VerticalSeparator(), sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), sg.VerticalSeparator(), sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
-            sg.VerticalSeparator(),  # Separator 
-            sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
+            [
+             sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='green', text_color='white'), 
+             sg.VerticalSeparator(), 
+             sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), 
+             sg.VerticalSeparator(), 
+             sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
+             sg.VerticalSeparator(),  # Separator 
             ],
-            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel')]
+            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred')],
+        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST A-"),
@@ -441,7 +477,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred')],
+        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS A-"),
@@ -500,7 +536,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 12, 'bold'), text_color='darkred')],
+        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("DIAMETER (inches) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
@@ -564,13 +600,28 @@ try:
                 print("Starting measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
                 window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
+                window['-DIAMETER SLIDER-'].update(disabled=True)
+                window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
                 measurement_run_counter+=1
                 is_measuring = True
              elif is_measuring == True:
                 print("Stopping measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                 window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
+                window['-DIAMETER SLIDER-'].update(disabled=False)
+                window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
                 is_measuring = False
+        elif event == "-MEASUREMENTS CSV-":
+             if not is_another_file_instance_running('measurement_csv'):
+                try:
+                    create_lock_file('measurement_csv')  # Create lock file
+                    window['-MEASUREMENTS CSV-'].update(disabled=True, text='Viewing Measurement Data')
+                    subprocess.run(['python', './FKESA_v2_csv.py'])
+                except Exception as e:
+                    sg.popup_error(f"Error running another_file.py: {e}")
+                finally:
+                    remove_lock_file('measurement_csv')  # Remove lock file
+                    window['-MEASUREMENTS CSV-'].update(disabled=False, text='View Measurement Data')
         elif event == "-RECORD VIDEO-":
              if is_recording == False:
                 print("Starting video recording.....") 
@@ -626,8 +677,9 @@ try:
                 if is_measuring == True:
                   window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                   window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
+                  window['-DIAMETER SLIDER-'].update(disabled=False)
+                  window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
                   is_measuring = False
-
         elif event == "-COLOR VIDEO SELECT-":
              if values["-COLOR VIDEO SELECT-"] == False:
                 color_video = False

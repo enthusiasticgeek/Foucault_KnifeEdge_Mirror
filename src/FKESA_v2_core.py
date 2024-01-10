@@ -130,16 +130,16 @@ class FKESABuilder:
                     with open(csv_file, mode='w', newline='') as file:
                         writer = csv.writer(file)
                         writer.writerow([
-                            'Timestamp',
-                            'Mirror center x coordinate pixels',
-                            'Mirror center y coordinate pixels',
-                            'Mirror radius pixels',
-                            'Total number of zones',
-                            'Zone match',
-                            'Zone match pixels',
-                            'Zone match inches',
-                            'Mirror diameter inches',
-                            'Mirror focal length inches'
+                            '------ Timestamp ------',
+                            'Mirror X',
+                            'Mirror Y',
+                            'Mirror Y',
+                            'Zones',
+                            'Match',
+                            'Match PX',
+                            'Match IN',
+                            'Mirror DIA IN',
+                            'Mirror FL IN'
                         ])  # Replace with your column names
                 except Exception as e:
                     print(f"Error writing headers: {e}")
