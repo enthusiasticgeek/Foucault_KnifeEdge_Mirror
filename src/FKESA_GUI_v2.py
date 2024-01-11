@@ -379,6 +379,8 @@ try:
              sg.VerticalSeparator(),  # Separator 
              sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
+             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
+             sg.VerticalSeparator(),  # Separator 
             ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
@@ -621,10 +623,22 @@ try:
                     window['-MEASUREMENTS CSV-'].update(disabled=True, text='Viewing Measurements Data')
                     subprocess.run(['python', './FKESA_v2_csv.py'])
                 except Exception as e:
-                    sg.popup_error(f"Error running another_file.py: {e}")
+                    sg.popup_error(f"Error running /FKESA_v2_csv.py: {e}")
                 finally:
                     remove_lock_file('measurement_csv')  # Remove lock file
                     window['-MEASUREMENTS CSV-'].update(disabled=False, text='View Measurements Data')
+        elif event == "-OPTICS-":
+             if not is_another_file_instance_running('optics'):
+                try:
+                    create_lock_file('optics')  # Create lock file
+                    window['-OPTICS-'].update(disabled=True, text='Optical Ray Diagram')
+                    subprocess.run(['python', './FKESA_v2_optics.py'])
+                except Exception as e:
+                    sg.popup_error(f"Error running /FKESA_v2_optics.py: {e}")
+                finally:
+                    remove_lock_file('optics')  # Remove lock file
+                    window['-OPTICS-'].update(disabled=False, text='Optical Ray Diagram')
+
         elif event == "-RECORD VIDEO-":
              if is_recording == False:
                 print("Starting video recording.....") 
