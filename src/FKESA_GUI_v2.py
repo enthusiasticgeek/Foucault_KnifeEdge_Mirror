@@ -632,7 +632,7 @@ try:
                 try:
                     create_lock_file('optics')  # Create lock file
                     window['-OPTICS-'].update(disabled=True, text='Optical Ray Diagram')
-                    subprocess.run(['python', './FKESA_v2_optics.py'])
+                    subprocess.run(['python', './FKESA_v2_optics.py', '--radius', str(diameter_val/2), '--focal_length', str(focal_length_val)])
                 except Exception as e:
                     sg.popup_error(f"Error running /FKESA_v2_optics.py: {e}")
                 finally:

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 #Author: Pratik M Tambe<enthusiasticgeek@gmail.com>
+#Date: Jan 10, 2024
 import matplotlib
 # On some Linux systems may need to uncomment this.
-matplotlib.use('tkagg')
+#matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 
 import numpy as np
