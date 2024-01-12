@@ -35,7 +35,8 @@ class FKESABuilder:
             'gradientIntensityChange': 3,
             'skipZonesFromCenter': 10,
             'csv_filename': 'fkesa_v2_default.csv',
-            'append_to_csv': False
+            'append_to_csv': False,
+            'step_size': 0.010
             # Include default values for other parameters here
         }
         stale_image=False
@@ -139,7 +140,8 @@ class FKESABuilder:
                             'Match PX',
                             'Match IN',
                             'Mirror DIA IN',
-                            'Mirror FL IN'
+                            'Mirror FL IN',
+                            'Step Size'
                         ])  # Replace with your column names
                 except Exception as e:
                     print(f"Error writing headers: {e}")
@@ -517,7 +519,8 @@ class FKESABuilder:
                                 zone_pixels,
                                 round(zone_inches,3),
                                 self.args['mirrorDiameterInches'],
-                                self.args['mirrorFocalLengthInches']
+                                self.args['mirrorFocalLengthInches'],
+                                self.args['step_size']
                             ]
                             self.write_csv(csv_data)
                             #self.write_csv(','.join(map(str,csv_data)))

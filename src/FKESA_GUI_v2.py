@@ -45,6 +45,7 @@ color_video = True
 fkesa_time_delay = 300
 current_time = time.time()
 measurement_run_counter = 0
+step_size_val = 0.010
 
 # Get the current timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -112,6 +113,24 @@ def remove_lock_file(file_lock):
 def calculate_fps(delay_ms):
     fps = float(1 / (delay_ms * 0.001))
     return fps
+
+def is_valid_number(input_str):
+    try:
+        float(input_str)
+        return True
+    except ValueError:
+        return False
+
+def check_step_size_validity(values):
+        step_size = values['step_size']
+        if is_valid_number(step_size):
+            step_size = format(float(step_size), '.3f')
+            #print(f'Success! Step Size: {step_size}')
+            return True
+        else:
+            return False
+            #sg.popup_error('Invalid input! Please enter a valid integer or floating-point number.')
+
 
 def author_window():
     layout = [
@@ -241,6 +260,7 @@ def process_frames():
                 global is_playing
                 global is_recording
                 global is_measuring
+                global step_size_val
                 preprocess_frame = None
                 # color or grayscale?
                 if color_video == False:
@@ -274,6 +294,7 @@ def process_frames():
                         builder.with_param('skipZonesFromCenter', skip_zones_val)
                         builder.with_param('csv_filename', csv_filename)
                         builder.with_param('append_to_csv', is_measuring)
+                        builder.with_param('step_size', step_size_val)
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
@@ -377,6 +398,9 @@ try:
              sg.VerticalSeparator(), 
              sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
+             sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-STEP SIZE-"),
+             sg.InputText('0.010', key='step_size', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.VerticalSeparator(),  # Separator 
              sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
@@ -408,7 +432,8 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-MINDIST SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
+                # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 100]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
@@ -421,7 +446,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-DELAY SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -436,7 +461,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-PARAM SLIDER A-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("PARAMETER 2 (PIXELS) [DEFAULT: 60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS B-"),
@@ -449,7 +474,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-PARAM SLIDER B-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -464,7 +489,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-RADIUS SLIDER A-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("MAX RADIUS (PIXELS) [DEFAULT: 0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MAX RADIUS-"),
@@ -477,7 +502,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-RADIUS SLIDER B-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -495,7 +520,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-BRIGHTNESS SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("NUMBER OF ZONES [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS B-"),
@@ -508,7 +533,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-ZONES SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -523,7 +548,7 @@ try:
                 size=(50, 15),
                 enable_events=True,
                 key="-ANGLE SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("SKIP ZONES FROM THE MIRROR CENTER [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-SKIP ZONES-"),
@@ -536,7 +561,7 @@ try:
                 size=(50, 15),
                 enable_events=True,
                 key="-SKIP ZONES SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -544,7 +569,7 @@ try:
         [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("DIAMETER (inches) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
+            sg.Text("DIAMETER (INCHES) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -554,10 +579,10 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-DIAMETER SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("FOCAL LENGTH (inches) [DEFAULT: 48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS B-"),
+            sg.Text("FOCAL LENGTH (INCHES) [DEFAULT: 48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -567,7 +592,7 @@ try:
                 enable_events=True,
                 size=(50, 15),
                 key="-FOCAL LENGTH SLIDER-",
-                font=('Times New Roman', 10, 'bold'),
+                font=('Times New Roman', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -601,20 +626,27 @@ try:
               exit_event.set()  # Signal the processing_frames thread to exit
               break
         elif event == "-MEASUREMENTS-":
+            with lock:
              if is_measuring == False:
-                print("Starting measurements.....") 
-                window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
-                window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
-                window['-DIAMETER SLIDER-'].update(disabled=True)
-                window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
-                measurement_run_counter+=1
-                is_measuring = True
+                if check_step_size_validity(values) == True:
+                   print("Starting measurements.....") 
+                   window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
+                   window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
+                   window['-DIAMETER SLIDER-'].update(disabled=True)
+                   window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
+                   step_size_val = float(values['step_size'])
+                   window['step_size'].update(disabled=True)
+                   measurement_run_counter+=1
+                   is_measuring = True
+                else:
+                   sg.popup_error('Invalid input! Please enter a valid integer or floating-point number.')
              elif is_measuring == True:
                 print("Stopping measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                 window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
                 window['-DIAMETER SLIDER-'].update(disabled=False)
                 window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                window['step_size'].update(disabled=False)
                 is_measuring = False
         elif event == "-MEASUREMENTS CSV-":
              if not is_another_file_instance_running('measurement_csv'):
@@ -696,6 +728,7 @@ try:
                   window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
                   window['-DIAMETER SLIDER-'].update(disabled=False)
                   window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                  window['step_size'].update(disabled=False)
                   is_measuring = False
         elif event == "-COLOR VIDEO SELECT-":
              if values["-COLOR VIDEO SELECT-"] == False:
@@ -711,17 +744,18 @@ try:
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
              or event == "-ANGLE SLIDER-" or event == "-SKIP ZONES SLIDER-" \
              or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
-            mindist_val = int(values["-MINDIST SLIDER-"])
-            param_a_val = int(values["-PARAM SLIDER A-"])
-            param_b_val = int(values["-PARAM SLIDER B-"])
-            radius_a_val = int(values["-RADIUS SLIDER A-"])
-            radius_b_val = int(values["-RADIUS SLIDER B-"])
-            brightness_tolerance_val = int(values["-BRIGHTNESS SLIDER-"])
-            zones_val = int(values["-ZONES SLIDER-"])
-            angle_val = int(values["-ANGLE SLIDER-"])
-            diameter_val = float(values["-DIAMETER SLIDER-"])
-            focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
-            skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
+            with lock:
+              mindist_val = int(values["-MINDIST SLIDER-"])
+              param_a_val = int(values["-PARAM SLIDER A-"])
+              param_b_val = int(values["-PARAM SLIDER B-"])
+              radius_a_val = int(values["-RADIUS SLIDER A-"])
+              radius_b_val = int(values["-RADIUS SLIDER B-"])
+              brightness_tolerance_val = int(values["-BRIGHTNESS SLIDER-"])
+              zones_val = int(values["-ZONES SLIDER-"])
+              angle_val = int(values["-ANGLE SLIDER-"])
+              diameter_val = float(values["-DIAMETER SLIDER-"])
+              focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
+              skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
         elif event == 'Save Image':
             with lock:
               if shared_frame is not None:
@@ -801,7 +835,10 @@ try:
             if shared_frame is not None and window is not None:
                imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
                window['-IMAGE-'].update(data=imgbytes)
-       
+        # Update the input background color based on validity
+        input_background_color = 'white' if is_valid_number(values['step_size']) else 'pink'
+        window['step_size'].update(background_color=input_background_color)
+ 
 
     # Wait for the processing thread to complete before closing the window
     if thread.is_alive():
