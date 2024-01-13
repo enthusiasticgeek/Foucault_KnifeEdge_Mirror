@@ -15,6 +15,19 @@ from FKESA_v2_core import FKESABuilder
 from datetime import datetime
 import tempfile
 import subprocess
+import platform
+
+import tkinter as tk
+
+# Create a hidden tkinter root window
+root = tk.Tk()
+root.withdraw()
+
+# Get screen width and height
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+scale_window = False
+
 
 # Initialize a variable to store image data
 #image_data = None
@@ -92,6 +105,32 @@ progress = 100
 splash_window['-PBAR-'].update(progress)
 time.sleep(1)
 splash_window.close()
+
+# -------------------------------------------------------------------------
+# ------------ Scaling ------------
+def get_scaling():
+    # called before window created
+    root = sg.tk.Tk()
+    scaling = root.winfo_fpixels('1i')/72
+    root.destroy()
+    return scaling
+
+# Find the number in original screen when GUI designed.
+my_scaling = 1.334646962233169      # call get_scaling()
+my_width, my_height = 1920, 1080     # call sg.Window.get_screen_size()
+
+# Get the number for new screen
+scaling_old = get_scaling()
+width, height = sg.Window.get_screen_size()
+
+scaling = scaling_old * min(my_width / width, my_height / height)
+#scaling = scaling_old * 0.75
+
+if scale_window == True:
+   sg.set_options(scaling=scaling)
+# -------------------------------------------------------------------------
+
+
 
 # Function to check if <another_file>.py is already running
 def is_another_file_instance_running(file_lock):
@@ -171,8 +210,12 @@ def list_available_cameras():
     dev_port = 0
     working_ports = []
     available_ports = []
+    camera = None
     while len(non_working_ports) < 2: # if there are more than 2 non working ports stop the testing. 
-        camera = cv2.VideoCapture(dev_port)
+        if platform.system() == "Linux":
+           camera = cv2.VideoCapture(dev_port)
+        elif platform.system() == "Windows":
+           camera = cv2.VideoCapture(dev_port, cv2.CAP_DSHOW)
         if not camera.isOpened():
             non_working_ports.append(dev_port)
             if CAM_DEBUG==True:
@@ -213,7 +256,11 @@ def process_frames():
     counter=0
     if cap is not None:
         cap.release()
-    cap = cv2.VideoCapture(selected_camera)  # Open the default camera
+    if platform.system() == "Linux":
+       cap = cv2.VideoCapture(selected_camera)
+    elif platform.system() == "Windows":
+       cap = cv2.VideoCapture(selected_camera, cv2.CAP_DSHOW)
+    #cap = cv2.VideoCapture(selected_camera)  # Open the default camera
     # Setting the desired resolution (640x480)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -388,8 +435,6 @@ try:
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
         [
             [
-             sg.Text("SELECT CAMERA ︾", size=(15, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred'), 
-             sg.VerticalSeparator(), 
              sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), 
              sg.VerticalSeparator(), 
              sg.Button('Pause Video', key='-PAUSE PLAY VIDEO-',button_color = ('white','green')) , 
@@ -410,13 +455,14 @@ try:
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [
              sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='green', text_color='white'), 
+             sg.Button('SELECT CAMERA'), 
              sg.VerticalSeparator(), 
              sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), 
              sg.VerticalSeparator(), 
              sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
              sg.VerticalSeparator(),  # Separator 
             ],
-            [sg.Button('OK'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
+            #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
@@ -430,7 +476,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-MINDIST SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
                 # text_color=('darkgreen') # experimental
@@ -444,7 +490,7 @@ try:
                 100,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-DELAY SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -459,7 +505,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-PARAM SLIDER A-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -472,7 +518,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-PARAM SLIDER B-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -487,7 +533,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-RADIUS SLIDER A-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -500,7 +546,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-RADIUS SLIDER B-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -518,7 +564,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-BRIGHTNESS SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -531,7 +577,7 @@ try:
                 1,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-ZONES SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -545,7 +591,7 @@ try:
                 10,
                 1,
                 orientation="h",
-                size=(50, 15),
+                size=(50, 10),
                 enable_events=True,
                 key="-ANGLE SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
@@ -558,7 +604,7 @@ try:
                 10,
                 1,
                 orientation="h",
-                size=(50, 15),
+                size=(50, 10),
                 enable_events=True,
                 key="-SKIP ZONES SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
@@ -577,7 +623,7 @@ try:
                 0.25,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-DIAMETER SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -590,7 +636,7 @@ try:
                 0.25,
                 orientation="h",
                 enable_events=True,
-                size=(50, 15),
+                size=(50, 10),
                 key="-FOCAL LENGTH SLIDER-",
                 font=('Times New Roman', 10, 'normal'),
             ),
@@ -601,7 +647,8 @@ try:
 
 
     # Create the window
-    window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(1640, 1040))
+    #window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(1640, 1040))
+    window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(screen_width, screen_height))
 
     # Start the thread for processing frames
     thread = threading.Thread(target=process_frames)
@@ -805,7 +852,7 @@ try:
         elif event == 'About':
             #window.hide()  # Hide the main window
             author_window()  # Open the author information window
-        elif event == 'OK':
+        elif event == 'SELECT CAMERA':
             selected_camera = values['-CAMERA SELECT-']
             print(f"Camera selected: {selected_camera}")
             print("Stopping the worker thread...")
