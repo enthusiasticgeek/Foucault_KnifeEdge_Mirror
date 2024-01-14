@@ -647,8 +647,8 @@ try:
 
 
     # Create the window
-    #window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(1640, 1040))
-    window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(screen_width, screen_height))
+    #window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(1640, 1040), resizable=True)
+    window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(screen_width, screen_height), resizable=True)
 
     # Start the thread for processing frames
     thread = threading.Thread(target=process_frames)
