@@ -155,6 +155,40 @@ class FKESAHelper:
 
         # Return None if an error occurs
         return None
+
+    def post_data_to_url(self, url, data, timeout_seconds=5):
+        """
+        Sends an HTTP POST request to the specified URL with the given data.
+
+        Parameters:
+        - url (str): The URL to send the POST request to.
+        - data (dict): The data to be sent in the POST request.
+        - timeout_seconds (int): Timeout for the HTTP request in seconds. Default is 5 seconds.
+
+        Returns:
+        - requests.Response or None: The response object obtained from the POST request.
+          Returns None in case of an error.
+        """
+        try:
+            # Send POST request to the server with a specified timeout
+            response = requests.post(url, data=data, timeout=timeout_seconds)
+
+            # Check if the request was successful (status code 200)
+            if response.status_code == 200:
+                return response
+            else:
+                print(f"Error: Unable to post data. Status Code: {response.status_code}")
+
+        except requests.ConnectionError:
+            print("Error: Connection to the server failed.")
+        except requests.RequestException as e:
+            print(f"Error: {e}")
+        except requests.Timeout:
+            print(f"Error: Request timed out after {timeout_seconds} seconds.")
+
+        # Return None if an error occurs
+        return None
+
 """
 # Example usage:
 url_boolean = "http://192.168.4.1/handleReachedBeginX"
@@ -184,4 +218,18 @@ if result_string is not None:
 result_float = helper.get_float_value_from_url(url_float)
 if result_float is not None:
     print("Received float value:", result_float)
+
+
+# Example usage:
+url_post = "http://192.168.4.1/button2"
+data_post = {"textbox2": "500"}
+
+# Call the post_data method on the instance
+response_post = helper.post_data_to_url(url_post, data_post)
+if response_post is not None:
+    print("POST Request Response:")
+    print(response_post.text)
+    print("Headers:")
+    print(response_post.headers)
+
 """
