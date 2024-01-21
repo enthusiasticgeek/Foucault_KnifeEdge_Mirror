@@ -13,6 +13,8 @@ import time
 import threading
 from FKESA_v2_core import FKESABuilder 
 from FKESA_v2_helper import FKESAHelper 
+#Helper function is to be used with the following MCU code
+#https://github.com/enthusiasticgeek/esp32_wroom_wifiap_stepper_webserver/blob/main/esp32_webserver_wifiap_stepper_control_pushbuttons_isr_xy_end_switches.ino
 from datetime import datetime
 import tempfile
 import subprocess
@@ -65,6 +67,16 @@ step_size_val = 0.010
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 csv_filename = f"fkesa_v2_{timestamp}.csv"
 output_folder = f"fkesa_v2_{timestamp}_output"
+
+
+# Get the user's home directory
+home_dir = os.path.expanduser("~")
+#Example Specify the relative path from the home directory
+#image_path = os.path.join(home_dir, 'Desktop', 'fkesa_v2.bmp')
+# Perform the image write operation
+#if not cv2.imwrite(image_path, img2):
+#    raise Exception("Could not write image")
+
 
 #Define video recording parameters
 # Define the codec and create VideoWriter object
@@ -160,6 +172,14 @@ def is_valid_number(input_str):
         return True
     except ValueError:
         return False
+
+def is_valid_integer(input_str):
+    try:
+        int(input_str)
+        return True
+    except ValueError:
+        return False
+
 
 def check_step_size_validity(values):
         step_size = values['step_size']
@@ -391,6 +411,120 @@ def process_frames():
     cap.release()
     cv2.destroyAllWindows()
 
+#================= Auto-Foucault process ================
+
+def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
+        #Default IP 192.168.4.1
+        helper = FKESAHelper()
+        #helper_attempts = 0
+        #max_attempts = 10
+        found_start_x = False
+        found_end_x = False
+        try:
+                # Steps
+                url_post = f"http://{device_ip}/button1"
+                data_post = {"textbox1": "500"}
+                # Call the post_data method on the instance
+                response_post = helper.post_data_to_url(url_post, data_post)
+                if response_post is not None:
+                    print("POST Request Response:")
+                    print(response_post.text)
+                    print("Headers:")
+                    print(response_post.headers)
+                else:
+                    print("no response!")
+                    return False
+                # Microsecs
+                url_post = f"http://{device_ip}/button2"
+                data_post = {"textbox2": "50"}
+                # Call the post_data method on the instance
+                response_post = helper.post_data_to_url(url_post, data_post)
+                if response_post is not None:
+                    print("POST Request Response:")
+                    print(response_post.text)
+                    print("Headers:")
+                    print(response_post.headers)
+                else:
+                    print("no response!")
+                    return False
+                for num in range(0, max_attempts):
+                        url_boolean = f"http://{device_ip}/reached_begin_x"
+                        # Call the boolean method on the instance
+                        result_boolean = helper.get_boolean_value_from_url(url_boolean)
+                        if result_boolean is not None:
+                            print("Received boolean value:", result_boolean)
+                            if result_boolean == "true":
+                               found_start_x = True
+                               break
+                            elif result_boolean == "false":
+                                # CCW X
+                                url_post = f"http://{device_ip}/button4"
+                                data_post = None
+                                # Call the post_data method on the instance
+                                response_post = helper.post_data_to_url(url_post, data_post)
+                                if response_post is not None:
+                                    print("POST Request Response:")
+                                    print(response_post.text)
+                                    print("Headers:")
+                                    print(response_post.headers)
+                                else:
+                                    print("no response!")
+                                    return False
+                        time.sleep(1)
+                if not found_start_x:
+                   #raise ValueError('ERROR: Could not find start reference!')
+                   print('ERROR: Max attempts reached! Could not find start reference [Auto-Foucault]!')
+                   return False
+
+                # Reset Counters
+                url_string = f"http://{device_ip}/reset"
+                result_string = helper.get_string_value_from_url(url_string)
+                if result_string is not None:
+                   print("Received string value:", result_string)
+                else:
+                   print("no response!")
+                   return False
+
+                # FKESA v2 process
+
+
+                for num in range(0, max_attempts):
+                        url_boolean = f"http://{device_ip}/reached_end_x"
+                        # Call the boolean method on the instance
+                        result_boolean = helper.get_boolean_value_from_url(url_boolean)
+                        if result_boolean is not None:
+                            print("Received boolean value:", result_boolean)
+                            if result_boolean == "true":
+                               found_end_x = True
+                               break
+                            elif result_boolean == "false":
+                                # CW X
+                                url_post = f"http://{device_ip}/button3"
+                                data_post = None
+                                # Call the post_data method on the instance
+                                response_post = helper.post_data_to_url(url_post, data_post)
+                                if response_post is not None:
+                                    print("POST Request Response:")
+                                    print(response_post.text)
+                                    print("Headers:")
+                                    print(response_post.headers)
+                                else:
+                                    print("no response!")
+                                    return False
+                        time.sleep(1)
+                if not found_end_x:
+                   #raise ValueError('ERROR: Could not find end reference!')
+                   print('ERROR: Max attempts reached! Could not find end reference [Auto-Foucault]!')
+                   return False
+        except Exception as e:
+               print(str(e))
+        return True
+
+#process_fkesa_v2("192.168.4.1",10)
+
+#=========== main ==========
+
+
 try:
 
     sg.theme("LightBlue")
@@ -442,10 +576,15 @@ try:
              sg.VerticalSeparator(), 
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
-             sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
-             sg.VerticalSeparator(),  # Separator 
              sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-STEP SIZE-"),
              sg.InputText('0.010', key='step_size', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Text("STEP DELAY (μSECS)", size=(20, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PULSE DELAY-"),
+             sg.InputText('50', key='step_delay', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('Auto Foucault', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
@@ -809,7 +948,14 @@ try:
               if shared_frame is not None:
                 # Use OpenCV to write the image data to a file
                 filename = f"fkesa_v2_{int(time.time())}.png"  # Generate a filename (you can adjust this)
-                cv2.imwrite(filename, shared_frame)
+
+                if platform.system() == "Linux":
+                   if not cv2.imwrite(filename, shared_frame):
+                      raise Exception("Could not write/save image")
+                elif platform.system() == "Windows":
+                   image_path = os.path.join(home_dir, 'Desktop', filename)
+                   if not cv2.imwrite(image_path, shared_frame):
+                      raise Exception("Could not write/save image")
                 #with open(filename, 'wb') as f:
                 #    f.write(shared_frame)
                 sg.popup(f"Image saved as: {filename}")
@@ -854,28 +1000,32 @@ try:
             #window.hide()  # Hide the main window
             author_window()  # Open the author information window
         elif event == 'SELECT CAMERA':
-            selected_camera = values['-CAMERA SELECT-']
-            print(f"Camera selected: {selected_camera}")
-            print("Stopping the worker thread...")
-            is_playing = False
-            is_recording = False
-            exit_event.set()  # Set the exit event to stop the loop
-            # Wait for the processing thread to complete before closing the window
-            if thread.is_alive():
-               thread.join()
-            #Some time to stop and resume
-            time.sleep(1)
-            # Resume the worker thread
-            print("Resuming the worker thread...")
-            exit_event.clear()  # Clear the exit event to allow the loop to continue
-            #Get to the initial state of boolean values
-            is_playing = True
-            is_recording = False
-            # Start the thread for processing frames
-            thread = threading.Thread(target=process_frames)
-            thread.daemon = True
-            thread.start()
-
+            if is_measuring == True:
+                    sg.popup_ok("Please stop all measurements before switching cameras. Click OK to continue.") 
+            elif is_measuring == False:
+                    selected_camera = values['-CAMERA SELECT-']
+                    print(f"Camera selected: {selected_camera}")
+                    print("Stopping the worker thread...")
+                    is_playing = False
+                    is_recording = False
+                    is_measuring = False
+                    exit_event.set()  # Set the exit event to stop the loop
+                    # Wait for the processing thread to complete before closing the window
+                    if thread.is_alive():
+                       thread.join()
+                    #Some time to stop and resume
+                    time.sleep(1)
+                    # Resume the worker thread
+                    print("Resuming the worker thread...")
+                    exit_event.clear()  # Clear the exit event to allow the loop to continue
+                    #Get to the initial state of boolean values
+                    is_playing = True
+                    is_recording = False
+                    is_measuring = False
+                    # Start the thread for processing frames
+                    thread = threading.Thread(target=process_frames)
+                    thread.daemon = True
+                    thread.start()
         
         with lock:
           # Update the GUI from the main thread
@@ -886,6 +1036,8 @@ try:
         # Update the input background color based on validity
         input_background_color = 'white' if is_valid_number(values['step_size']) else 'pink'
         window['step_size'].update(background_color=input_background_color)
+        input_background_color = 'white' if is_valid_integer(values['step_delay']) else 'pink'
+        window['step_delay'].update(background_color=input_background_color)
  
 
     # Wait for the processing thread to complete before closing the window

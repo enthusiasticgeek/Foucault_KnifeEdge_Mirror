@@ -15,6 +15,16 @@ import numpy as np
 import argparse
 import pprint
 import csv
+import platform
+
+# Get the user's home directory
+home_dir = os.path.expanduser("~")
+#Example Specify the relative path from the home directory
+#image_path = os.path.join(home_dir, 'Desktop', 'fkesa_v2.bmp')
+# Perform the image write operation
+#if not cv2.imwrite(image_path, img2):
+#    raise Exception("Could not write image")
+
 
 
 class FKESABuilder:
@@ -549,8 +559,16 @@ class FKESABuilder:
                     #Took measurement - Hence save the image
                     if self.args['append_to_csv'] and self.stale_image == False:
                        analyzed_jpg_filename = self.args['csv_filename']+self.current_timestamp()+'.jpg'
-                       analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
-                       cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                       #analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                       #cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                       if platform.system() == "Linux":
+                           analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                           if not cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100]):
+                              raise Exception("Could not write/save image")
+                       elif platform.system() == "Windows":
+                           image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
+                           if not cv2.imwrite(image_path, result):
+                              raise Exception("Could not write/save image")
 
                     return cropped_image, result
 
