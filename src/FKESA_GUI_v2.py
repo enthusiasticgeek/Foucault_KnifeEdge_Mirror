@@ -2,6 +2,7 @@
 #Author: Pratik M Tambe <enthusiasticgeek@gmail.com>
 #Date: Dec 18, 2023
 
+import math
 import cv2
 import PySimpleGUI as sg
 #from PIL import Image, ImageTk
@@ -43,6 +44,7 @@ exit_event = threading.Event()  # Event to signal thread exit
 is_playing = True
 is_recording = False
 is_measuring = False
+is_auto = False
 
 mindist_val = 50
 param_a_val = 25 
@@ -62,6 +64,9 @@ fkesa_time_delay = 300
 current_time = time.time()
 measurement_run_counter = 0
 step_size_val = 0.010
+step_delay_val = 50 #microsec
+stepper_microsteps = 128
+stepper_steps_per_revolution = 200
 
 # Get the current timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -328,7 +333,9 @@ def process_frames():
                 global is_playing
                 global is_recording
                 global is_measuring
+                global is_auto
                 global step_size_val
+                global step_delay_val
                 preprocess_frame = None
                 # color or grayscale?
                 if color_video == False:
@@ -361,7 +368,7 @@ def process_frames():
                         builder.with_param('gradientIntensityChange', gradient_intensity_val)
                         builder.with_param('skipZonesFromCenter', skip_zones_val)
                         builder.with_param('csv_filename', csv_filename)
-                        builder.with_param('append_to_csv', is_measuring)
+                        builder.with_param('append_to_csv', is_measuring or is_auto)
                         builder.with_param('step_size', step_size_val)
                         # ... Include other parameters as needed
 
@@ -388,6 +395,8 @@ def process_frames():
 
                 global shared_frame
                 if fkesa_frame is not None:
+                   if is_auto:
+                      is_auto=False
                    shared_frame = fkesa_frame.copy()
                    #Record if flag set
                    if is_recording == True:
@@ -411,19 +420,50 @@ def process_frames():
     cap.release()
     cv2.destroyAllWindows()
 
+
+#================= Stepper motor distance conversion ================
+def inches_to_steps(distance_inches, steps_per_revolution, microsteps=1):
+    # Calculate steps based on inches, steps per revolution, and microsteps
+    steps = distance_inches * steps_per_revolution * microsteps / (1.8 * math.pi)  # 1.8 is the stepper motor's step angle in degrees
+    return int(steps)  # Return the number of steps as an integer
+
+"""
+# Example usage:
+steps_per_revolution = 200  # Replace with your stepper motor's steps per revolution
+microsteps = 100  # Replace with your microstepping value
+distance_inches = 0.010  # Replace with the distance in inches you want to convert
+
+result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
+print(f"{distance_inches} inches is approximately {result_steps} steps.")
+"""
+#================= Stepper motor distance conversion ================
+
 #================= Auto-Foucault process ================
 
-def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
+autofoucault_error_lut = {
+    1: "Cannot set CW steps (X)",
+    2: "Cannot set CW delay (X)",
+    3: "Cannot find start position - limit switch (X) ",
+    4: "Max attempts to find start position - limit switch reached (X)",
+    5: "Cannot reset counters",
+    6: "Cannot find end position - limit switch (X) ",
+    7: "Max attempts to find end position - limit switch reached (X)"
+}
+
+def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=10):
+        global exit_event
         #Default IP 192.168.4.1
         helper = FKESAHelper()
         #helper_attempts = 0
         #max_attempts = 10
         found_start_x = False
         found_end_x = False
+
+        #result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
         try:
                 # Steps
                 url_post = f"http://{device_ip}/button1"
-                data_post = {"textbox1": "500"}
+                data_post = {"textbox1": f"{result_steps}"}
                 # Call the post_data method on the instance
                 response_post = helper.post_data_to_url(url_post, data_post)
                 if response_post is not None:
@@ -433,10 +473,10 @@ def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
                     print(response_post.headers)
                 else:
                     print("no response!")
-                    return False
+                    return False, 1
                 # Microsecs
                 url_post = f"http://{device_ip}/button2"
-                data_post = {"textbox2": "50"}
+                data_post = {"textbox2": f"{result_delay_usec}"}
                 # Call the post_data method on the instance
                 response_post = helper.post_data_to_url(url_post, data_post)
                 if response_post is not None:
@@ -446,7 +486,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
                     print(response_post.headers)
                 else:
                     print("no response!")
-                    return False
+                    return False, 2
                 for num in range(0, max_attempts):
                         url_boolean = f"http://{device_ip}/reached_begin_x"
                         # Call the boolean method on the instance
@@ -469,12 +509,13 @@ def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
                                     print(response_post.headers)
                                 else:
                                     print("no response!")
-                                    return False
+                                    return False, 3
+                        #Allow some time for carriage to move along the stepper motor rail
                         time.sleep(1)
                 if not found_start_x:
                    #raise ValueError('ERROR: Could not find start reference!')
                    print('ERROR: Max attempts reached! Could not find start reference [Auto-Foucault]!')
-                   return False
+                   return False, 4
 
                 # Reset Counters
                 url_string = f"http://{device_ip}/reset"
@@ -483,10 +524,9 @@ def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
                    print("Received string value:", result_string)
                 else:
                    print("no response!")
-                   return False
+                   return False, 5
 
-                # FKESA v2 process
-
+                # FKESA v2 process begins below now we have carriage at the start of the rails.
 
                 for num in range(0, max_attempts):
                         url_boolean = f"http://{device_ip}/reached_end_x"
@@ -510,17 +550,52 @@ def process_fkesa_v2(device_ip="192.168.4.1", max_attempts=10):
                                     print(response_post.headers)
                                 else:
                                     print("no response!")
-                                    return False
+                                    return False, 6
+                            # ====== FKESA v2 process iteration begin =========
+                            with lock:
+                                    global is_playing
+                                    global is_recording
+                                    global is_measuring
+                                    global is_auto
+                                    is_playing = False
+                                    is_recording = False
+                                    is_measuring = False
+                                    is_auto = False
+                                    exit_event.set()  # Set the exit event to stop the loop
+                            # Wait for the processing thread to complete before closing the window
+                            if thread.is_alive():
+                               thread.join()
+                            #Some time to stop and resume
+                            time.sleep(1)
+                            # Resume the worker thread
+                            print("Resuming the worker thread...")
+                            exit_event.clear()  # Clear the exit event to allow the loop to continue
+                            #Get to the initial state of boolean values
+                            with lock:
+                                    #global is_playing
+                                    #global is_recording
+                                    #global is_measuring
+                                    #global is_auto
+                                    is_playing = True
+                                    is_recording = False
+                                    is_measuring = False
+                                    is_auto = True
+                            # Start the thread for processing frames
+                            thread = threading.Thread(target=process_frames)
+                            thread.daemon = True
+                            thread.start()
+                            # ====== FKESA v2 process iteration end =========
+                        #Allow some time for carriage to move along the stepper motor rail
                         time.sleep(1)
                 if not found_end_x:
                    #raise ValueError('ERROR: Could not find end reference!')
                    print('ERROR: Max attempts reached! Could not find end reference [Auto-Foucault]!')
-                   return False
+                   return False, 7
         except Exception as e:
                print(str(e))
         return True
 
-#process_fkesa_v2("192.168.4.1",10)
+#process_fkesa_v2("192.168.4.1",50,100,10)
 
 #=========== main ==========
 
@@ -788,7 +863,7 @@ try:
 
     # Create the window
     #window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(1640, 1040), resizable=True)
-    window = sg.Window("FKESA v2 GUI [LIVE]", layout, size=(screen_width, screen_height), resizable=True)
+    window = sg.Window("FKESA v2 GUI", layout, size=(screen_width, screen_height), resizable=True)
 
     # Start the thread for processing frames
     thread = threading.Thread(target=process_frames)
@@ -812,6 +887,52 @@ try:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
+        elif event == "-AUTOFOUCAULT-":
+           confirm_proceed = sg.popup_yes_no("Is your Foucault setup ready? Are you sure you want to proceed with AutoFoucault?\n\nNote that this test may take a few minutes to complete. You will not be able to use other widgets on this GUI during this operation.")
+           if confirm_proceed == "Yes":
+              with lock:
+                      # First stop any ongoing measurements
+                      if is_measuring == True:
+                        print("Stopping measurements.....") 
+                        window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
+                        window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
+                        window['-DIAMETER SLIDER-'].update(disabled=False)
+                        window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                        window['step_size'].update(disabled=False)
+                        window['step_delay'].update(disabled=False)
+                        is_measuring = False
+                      # Disable all Widgets temporarily
+                      window['-DIAMETER SLIDER-'].update(disabled=True)
+                      window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
+                      window['-MEASUREMENTS-'].update(disabled=True)
+                      window['-MEASUREMENTS CSV-'].update(disabled=True)
+                      window['step_size'].update(disabled=True)
+                      window['step_delay'].update(disabled=True)
+                      window['-PAUSE PLAY VIDEO-'].update(disabled=True)
+                      window['-RECORD VIDEO-'].update(disabled=True)
+                      window['-RAW VIDEO SELECT-'].update(disabled=True)
+                      window['-COLOR VIDEO SELECT-'].update(disabled=True)
+                      window['-CAMERA SELECT-'].update(disabled=True)
+
+              distance_inches=float(values['step_size'])
+              result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
+              result_delay_usec = values['step_delay']
+              success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=10)
+              if not success:
+                    sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {error} -> \"{autofoucault_error_lut[error]}\". Click OK to continue.") 
+              with lock:
+                      # Re-enable all Widgets
+                      window['-DIAMETER SLIDER-'].update(disabled=False)
+                      window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                      window['-MEASUREMENTS-'].update(disabled=False)
+                      window['-MEASUREMENTS CSV-'].update(disabled=False)
+                      window['step_size'].update(disabled=False)
+                      window['step_delay'].update(disabled=False)
+                      window['-PAUSE PLAY VIDEO-'].update(disabled=False)
+                      window['-RECORD VIDEO-'].update(disabled=False)
+                      window['-RAW VIDEO SELECT-'].update(disabled=False)
+                      window['-COLOR VIDEO SELECT-'].update(disabled=False)
+                      window['-CAMERA SELECT-'].update(disabled=False)
         elif event == "-MEASUREMENTS-":
             with lock:
              if is_measuring == False:
@@ -821,8 +942,11 @@ try:
                    window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
                    window['-DIAMETER SLIDER-'].update(disabled=True)
                    window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
+                   window['-AUTOFOUCAULT-'].update(disabled=True)
                    step_size_val = float(values['step_size'])
+                   step_delay_val = float(values['step_delay'])
                    window['step_size'].update(disabled=True)
+                   window['step_delay'].update(disabled=True)
                    measurement_run_counter+=1
                    is_measuring = True
                 else:
@@ -833,7 +957,9 @@ try:
                 window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
                 window['-DIAMETER SLIDER-'].update(disabled=False)
                 window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                window['-AUTOFOUCAULT-'].update(disabled=False)
                 window['step_size'].update(disabled=False)
+                window['step_delay'].update(disabled=False)
                 is_measuring = False
         elif event == "-MEASUREMENTS CSV-":
              if not is_another_file_instance_running('measurement_csv'):
@@ -906,9 +1032,11 @@ try:
         elif event == "-RAW VIDEO SELECT-":
              if values["-RAW VIDEO SELECT-"] == False:
                 window['-MEASUREMENTS-'].update(disabled=False)
+                window['-AUTOFOUCAULT-'].update(disabled=False)
                 raw_video = False
              elif values["-RAW VIDEO SELECT-"] == True:
                 window['-MEASUREMENTS-'].update(disabled=True)
+                window['-AUTOFOUCAULT-'].update(disabled=True)
                 raw_video = True
                 if is_measuring == True:
                   window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
@@ -916,6 +1044,7 @@ try:
                   window['-DIAMETER SLIDER-'].update(disabled=False)
                   window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
                   window['step_size'].update(disabled=False)
+                  window['step_delay'].update(disabled=False)
                   is_measuring = False
         elif event == "-COLOR VIDEO SELECT-":
              if values["-COLOR VIDEO SELECT-"] == False:
@@ -1006,9 +1135,11 @@ try:
                     selected_camera = values['-CAMERA SELECT-']
                     print(f"Camera selected: {selected_camera}")
                     print("Stopping the worker thread...")
-                    is_playing = False
-                    is_recording = False
-                    is_measuring = False
+                    with lock:
+                            is_playing = False
+                            is_recording = False
+                            is_measuring = False
+                            is_auto = False
                     exit_event.set()  # Set the exit event to stop the loop
                     # Wait for the processing thread to complete before closing the window
                     if thread.is_alive():
@@ -1018,10 +1149,12 @@ try:
                     # Resume the worker thread
                     print("Resuming the worker thread...")
                     exit_event.clear()  # Clear the exit event to allow the loop to continue
+                    with lock:
                     #Get to the initial state of boolean values
-                    is_playing = True
-                    is_recording = False
-                    is_measuring = False
+                            is_playing = True
+                            is_recording = False
+                            is_measuring = False
+                            is_auto = False
                     # Start the thread for processing frames
                     thread = threading.Thread(target=process_frames)
                     thread.daemon = True
