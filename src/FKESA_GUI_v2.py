@@ -63,7 +63,7 @@ color_video = True
 fkesa_time_delay = 300
 current_time = time.time()
 measurement_run_counter = 0
-step_size_val = 0.010
+step_size_val = 0.10
 step_delay_val = 50 #microsec
 stepper_microsteps = 128
 stepper_steps_per_revolution = 200
@@ -446,7 +446,7 @@ def distance_to_steps(distance_mm, steps_per_rev, microstepping_factor, ball_scr
 # Example usage:
 steps_per_revolution = 200  # Replace with your stepper motor's steps per revolution
 microsteps = 100  # Replace with your microstepping value
-distance_inches = 0.010  # Replace with the distance in inches you want to convert
+distance_inches = 0.10  # Replace with the distance in inches you want to convert
 
 result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
 print(f"{distance_inches} inches is approximately {result_steps} steps.")
@@ -680,7 +680,7 @@ try:
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
              sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-STEP SIZE-"),
-             sg.InputText('0.010', key='step_size', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.InputText('0.10', key='step_size', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Text("STEP DELAY (μSECS)", size=(20, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PULSE DELAY-"),
              sg.InputText('50', key='step_delay', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
