@@ -185,6 +185,11 @@ def is_valid_integer(input_str):
     except ValueError:
         return False
 
+def mm_to_inches(mm):
+    return mm / 25.4
+
+def inches_to_mm(inches):
+    return inches * 25.4
 
 def check_step_size_validity(values):
         step_size = values['step_size']
@@ -427,6 +432,16 @@ def inches_to_steps(distance_inches, steps_per_revolution, microsteps=1):
     steps = distance_inches * steps_per_revolution * microsteps / (1.8 * math.pi)  # 1.8 is the stepper motor's step angle in degrees
     return int(steps)  # Return the number of steps as an integer
 
+def distance_to_steps(distance_mm, steps_per_rev, microstepping_factor, ball_screw_pitch_mm):
+    # Calculate the total number of steps per revolution, considering microstepping
+    total_steps_per_rev = steps_per_rev * microstepping_factor
+    # Calculate the distance traveled in one revolution of the ball screw
+    distance_per_rev = ball_screw_pitch_mm
+    # Calculate the total number of steps needed to move the specified distance
+    steps = int((distance_mm / distance_per_rev) * total_steps_per_rev)
+    return steps
+
+
 """
 # Example usage:
 steps_per_revolution = 200  # Replace with your stepper motor's steps per revolution
@@ -435,6 +450,18 @@ distance_inches = 0.010  # Replace with the distance in inches you want to conve
 
 result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
 print(f"{distance_inches} inches is approximately {result_steps} steps.")
+
+# Example usage:
+distance_to_travel = 100  # Specify the distance in mm
+steps_per_revolution = 200  # Specify the number of steps per revolution of your stepper motor
+microstepping_factor = 32  # Specify the microstepping factor of your stepper driver
+ball_screw_pitch = 5  # Specify the pitch of the ball screw in mm
+
+steps_needed = distance_to_steps(distance_to_travel, steps_per_revolution, microstepping_factor, ball_screw_pitch)
+print(f"Distance to travel: {distance_to_travel} mm")
+print(f"Steps needed: {steps_needed} steps")
+
+
 """
 #================= Stepper motor distance conversion ================
 
@@ -916,7 +943,10 @@ try:
                       window['-CAMERA SELECT-'].update(disabled=True)
 
               distance_inches=float(values['step_size'])
-              result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
+              #result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
+              ball_screw_pitch_mm = 5
+              distance_mm = inches_to_mm(distance_inches)
+              result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
               result_delay_usec = values['step_delay']
               success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
               if not success:
