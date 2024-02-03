@@ -450,12 +450,13 @@ autofoucault_error_lut = {
     7: "Max attempts to find end position - limit switch reached (X)"
 }
 
-def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=10):
+def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
         global exit_event
+        global thread
         #Default IP 192.168.4.1
         helper = FKESAHelper()
         #helper_attempts = 0
-        #max_attempts = 10
+        #max_attempts = 50
         found_start_x = False
         found_end_x = False
 
@@ -493,10 +494,10 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                         result_boolean = helper.get_boolean_value_from_url(url_boolean)
                         if result_boolean is not None:
                             print("Received boolean value:", result_boolean)
-                            if result_boolean == "true":
+                            if result_boolean:
                                found_start_x = True
                                break
-                            elif result_boolean == "false":
+                            elif not result_boolean:
                                 # CCW X
                                 url_post = f"http://{device_ip}/button4"
                                 data_post = None
@@ -534,10 +535,10 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                         result_boolean = helper.get_boolean_value_from_url(url_boolean)
                         if result_boolean is not None:
                             print("Received boolean value:", result_boolean)
-                            if result_boolean == "true":
+                            if result_boolean:
                                found_end_x = True
                                break
-                            elif result_boolean == "false":
+                            elif not result_boolean:
                                 # CW X
                                 url_post = f"http://{device_ip}/button3"
                                 data_post = None
@@ -917,7 +918,7 @@ try:
               distance_inches=float(values['step_size'])
               result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
               result_delay_usec = values['step_delay']
-              success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=10)
+              success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
               if not success:
                     sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {error} -> \"{autofoucault_error_lut[error]}\". Click OK to continue.") 
               with lock:

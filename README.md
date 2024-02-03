@@ -22,7 +22,7 @@ https://stellafane.org/tm/atm/test/shadowgrams.html
 2. Install Git 64-bit version via https://git-scm.com/download/win
 3. Open a new Windows command prompt.
 
-	`pip3 install opencv-python scipy matplotlib PySimpleGUI Pillow`
+	`pip3 install opencv-python scipy matplotlib PySimpleGUI Pillow requests`
 
 4. `cd <user dir path>\Downloads`
 5. `git clone https://github.com/enthusiasticgeek/Foucault_KnifeEdge_Mirror.git`
@@ -50,11 +50,11 @@ Tested on Ubuntu 18.04/20.04 LTS
 
 and execute
 
-	pip3 install numpy opencv-python scipy matplotlib PySimpleGUI Pillow
+	pip3 install numpy opencv-python scipy matplotlib PySimpleGUI Pillow requests
 
 or optionally with `-m` flag turned on https://stackoverflow.com/questions/50821312/what-is-the-effect-of-using-python-m-pip-instead-of-just-pip
 
-        python -m pip install numpy opencv-python scipy matplotlib PySimpleGUI Pillow
+        python -m pip install numpy opencv-python scipy matplotlib PySimpleGUI Pillow requests
 	
 On Ubuntu20.04 LTS, one may have to execute the following as well.
 
