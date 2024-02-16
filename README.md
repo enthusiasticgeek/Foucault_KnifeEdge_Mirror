@@ -50,6 +50,8 @@ Tested on Ubuntu 18.04/20.04 LTS
 
 and execute
 
+	sudo apt-get install python3-tk
+
 	pip3 install numpy opencv-python scipy matplotlib PySimpleGUI Pillow requests
 
 or optionally with `-m` flag turned on https://stackoverflow.com/questions/50821312/what-is-the-effect-of-using-python-m-pip-instead-of-just-pip
