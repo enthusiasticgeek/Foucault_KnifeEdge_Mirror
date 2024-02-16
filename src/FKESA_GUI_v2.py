@@ -60,7 +60,7 @@ gradient_intensity_val = 3
 skip_zones_val = 10
 raw_video = True
 color_video = True
-fkesa_time_delay = 300
+fkesa_time_delay = 1000
 current_time = time.time()
 measurement_run_counter = 0
 step_size_val = 0.10
@@ -708,7 +708,7 @@ try:
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(60, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
+        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(80, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST A-"),
@@ -725,11 +725,11 @@ try:
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 100]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                300,
+                1000,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -796,7 +796,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
+        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(80, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS A-"),
@@ -855,7 +855,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(60, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
+        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(80, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("DIAMETER (INCHES) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
