@@ -32,7 +32,6 @@ screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 scale_window = False
 
-
 # Initialize a variable to store image data
 #image_data = None
 process_fkesa = False
@@ -144,7 +143,7 @@ width, height = sg.Window.get_screen_size()
 scaling = scaling_old * min(my_width / width, my_height / height)
 #scaling = scaling_old * 0.75
 
-if scale_window == True:
+if scale_window:
    sg.set_options(scaling=scaling)
 # -------------------------------------------------------------------------
 
@@ -249,18 +248,18 @@ def list_available_cameras():
            camera = cv2.VideoCapture(dev_port, cv2.CAP_DSHOW)
         if not camera.isOpened():
             non_working_ports.append(dev_port)
-            if CAM_DEBUG==True:
+            if CAM_DEBUG:
                print("Port %s is not working." %dev_port)
         else:
             is_reading, img = camera.read()
             w = camera.get(3)
             h = camera.get(4)
             if is_reading:
-                if CAM_DEBUG==True:
+                if CAM_DEBUG:
                    print("Port %s is working and reads images (%s x %s)" %(dev_port,h,w))
                 working_ports.append(dev_port)
             else:
-                if CAM_DEBUG==True:
+                if CAM_DEBUG:
                    print("Port %s for camera ( %s x %s) is present but does not reads." %(dev_port,h,w))
                 available_ports.append(dev_port)
         dev_port +=1
@@ -343,13 +342,13 @@ def process_frames():
                 global step_delay_val
                 preprocess_frame = None
                 # color or grayscale?
-                if color_video == False:
+                if not color_video:
                         preprocess_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 else:
                         preprocess_frame = frame
 
                 # color or grayscale?
-                if raw_video == True:
+                if raw_video:
                         fkesa_frame = preprocess_frame
                 else:
                    if counter % 5 == 0:
@@ -404,16 +403,16 @@ def process_frames():
                       is_auto=False
                    shared_frame = fkesa_frame.copy()
                    #Record if flag set
-                   if is_recording == True:
+                   if is_recording:
                       if out is not None:
                          print("Continuing Video Recording....")
-                         if raw_video==True:
+                         if raw_video:
                             shared_frame = cv2.resize(shared_frame, (640, 480))
                          else:
                             #Video reording writer needs RGB or it silently fails (flaw in OpenCV ver 2)
                             shared_frame = cv2.cvtColor(shared_frame, cv2.COLOR_BGRA2RGB)
                          out.write(shared_frame)
-                   #elif is_recording == False:
+                   #elif not is_recording:
                    #   if out is not None:
                    #      print("Stopping Video Recording....")
                    #      out.release()
@@ -920,7 +919,7 @@ try:
            if confirm_proceed == "Yes":
               with lock:
                       # First stop any ongoing measurements
-                      if is_measuring == True:
+                      if is_measuring:
                         print("Stopping measurements.....") 
                         window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                         window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
@@ -966,8 +965,8 @@ try:
                       window['-CAMERA SELECT-'].update(disabled=False)
         elif event == "-MEASUREMENTS-":
             with lock:
-             if is_measuring == False:
-                if check_step_size_validity(values) == True:
+             if not is_measuring:
+                if check_step_size_validity(values):
                    print("Starting measurements.....") 
                    window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
                    window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
@@ -982,7 +981,7 @@ try:
                    is_measuring = True
                 else:
                    sg.popup_error('Invalid input! Please enter a valid integer or floating-point number.')
-             elif is_measuring == True:
+             elif is_measuring:
                 print("Stopping measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                 window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
@@ -1016,7 +1015,7 @@ try:
                     window['-OPTICS-'].update(disabled=False, text='Optical Ray Diagram')
 
         elif event == "-RECORD VIDEO-":
-             if is_recording == False:
+             if not is_recording:
                 print("Starting video recording.....") 
                 window['-RECORD VIDEO-'].update(button_color = ('black','yellow'))
                 window['-RECORD VIDEO-'].update(text = ('Stop Recording'))
@@ -1024,14 +1023,14 @@ try:
                 if out is not None:
                    out.release()
                    out = None
-                if raw_video == True:
+                if raw_video:
                    out = cv2.VideoWriter(video_filename, fourcc, 20.0, (640,  480))
                 else:
                    #out = cv2.VideoWriter(video_filename, fourcc, 1.0, (640,  480))
                    fps = calculate_fps(fkesa_time_delay)
                    out = cv2.VideoWriter(video_filename, fourcc, float(fps), (640,  480))
                 is_recording = True
-             elif is_recording == True:
+             elif is_recording:
                 print("Stopping video recording.....") 
                 window['-RECORD VIDEO-'].update(button_color = ('white','red'))
                 window['-RECORD VIDEO-'].update(text = ('Start Recording'))
@@ -1040,7 +1039,7 @@ try:
                    out = None
                 is_recording = False
         elif event == "-PAUSE PLAY VIDEO-":
-             if is_playing == True:
+             if is_playing:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('black','yellow'))
                 window['-PAUSE PLAY VIDEO-'].update(text = ('Play Video'))
                 is_playing = False
@@ -1049,7 +1048,7 @@ try:
                 # Wait for the processing thread to complete before closing the window
                 if thread.is_alive():
                    thread.join()
-             elif is_playing == False:
+             elif not is_playing:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('white','green'))
                 window['-PAUSE PLAY VIDEO-'].update(text = ('Pause Video'))
                 is_playing = True
@@ -1061,15 +1060,15 @@ try:
                 thread.daemon = True
                 thread.start()
         elif event == "-RAW VIDEO SELECT-":
-             if values["-RAW VIDEO SELECT-"] == False:
+             if not values["-RAW VIDEO SELECT-"]:
                 window['-MEASUREMENTS-'].update(disabled=False)
                 window['-AUTOFOUCAULT-'].update(disabled=False)
                 raw_video = False
-             elif values["-RAW VIDEO SELECT-"] == True:
+             elif values["-RAW VIDEO SELECT-"]:
                 window['-MEASUREMENTS-'].update(disabled=True)
                 window['-AUTOFOUCAULT-'].update(disabled=True)
                 raw_video = True
-                if is_measuring == True:
+                if is_measuring:
                   window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                   window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
                   window['-DIAMETER SLIDER-'].update(disabled=False)
@@ -1078,9 +1077,9 @@ try:
                   window['step_delay'].update(disabled=False)
                   is_measuring = False
         elif event == "-COLOR VIDEO SELECT-":
-             if values["-COLOR VIDEO SELECT-"] == False:
+             if not values["-COLOR VIDEO SELECT-"]:
                 color_video = False
-             elif values["-COLOR VIDEO SELECT-"] == True:
+             elif values["-COLOR VIDEO SELECT-"]:
                 color_video = True
         elif event == "-DELAY SLIDER-":
              fkesa_time_delay = int(values["-DELAY SLIDER-"])
@@ -1160,9 +1159,9 @@ try:
             #window.hide()  # Hide the main window
             author_window()  # Open the author information window
         elif event == 'SELECT CAMERA':
-            if is_measuring == True:
+            if is_measuring:
                     sg.popup_ok("Please stop all measurements before switching cameras. Click OK to continue.") 
-            elif is_measuring == False:
+            elif not is_measuring:
                     selected_camera = values['-CAMERA SELECT-']
                     print(f"Camera selected: {selected_camera}")
                     print("Stopping the worker thread...")
