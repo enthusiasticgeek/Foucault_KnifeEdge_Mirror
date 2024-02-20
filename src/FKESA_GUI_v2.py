@@ -620,7 +620,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                    return False, 7
         except Exception as e:
                print(str(e))
-        return True
+        return True, 0
 
 #process_fkesa_v2("192.168.4.1",50,100,10)
 
