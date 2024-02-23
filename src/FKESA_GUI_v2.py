@@ -351,9 +351,9 @@ def process_frames():
                 if raw_video:
                         fkesa_frame = preprocess_frame
                 else:
-                   if counter % 5 == 0:
-                        if counter > 100:
-                           counter = 0
+                   #if counter % 5 == 0:
+                   #     if counter > 100:
+                   #        counter = 0
                         """
                         start_time = time.time()
                         """
@@ -391,16 +391,16 @@ def process_frames():
                         # Sleep for remaining time (5 seconds - time taken for process execution)
                         time.sleep(max(0, fkesa_time_delay - time_diff_seconds))
                         """
-                   else:
-                        fkesa_frame = preprocess_frame
+                   #else:
+                   #     fkesa_frame = preprocess_frame
 
                 if fkesa_frame is None:
                    continue
 
                 global shared_frame
                 if fkesa_frame is not None:
-                   if is_auto:
-                      is_auto=False
+                   #if is_auto:
+                   #   is_auto=False
                    shared_frame = fkesa_frame.copy()
                    #Record if flag set
                    if is_recording:
@@ -424,6 +424,22 @@ def process_frames():
     cap.release()
     cv2.destroyAllWindows()
 
+
+def generate_please_wait_image():
+    # Create a blank white image
+    image = np.ones((640, 480, 3), dtype=np.uint8) * 255
+
+    # Add "Please Wait" text
+    text = "Please Wait..."
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_thickness = 2
+    text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+    text_x = (image.shape[1] - text_size[0]) // 2
+    text_y = (image.shape[0] + text_size[1]) // 2
+    cv2.putText(image, text, (text_x, text_y), font, font_scale, (0, 0, 0), font_thickness)
+
+    return image
 
 #================= Stepper motor distance conversion ================
 def inches_to_steps(distance_inches, steps_per_revolution, microsteps=1):
@@ -475,6 +491,61 @@ autofoucault_error_lut = {
     6: "Cannot find end position - limit switch (X) ",
     7: "Max attempts to find end position - limit switch reached (X)"
 }
+
+def process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
+        global exit_event
+        global thread
+        #Default IP 192.168.4.1
+        helper = FKESAHelper()
+        #helper_attempts = 0
+        #max_attempts = 50
+        found_start_x = False
+        found_end_x = False
+
+        #result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
+        try:
+            for num in range(0, max_attempts):
+                # ====== FKESA v2 process iteration begin =========
+                with lock:
+                        global is_playing
+                        global is_recording
+                        global is_measuring
+                        global is_auto
+                        is_playing = False
+                        is_recording = False
+                        is_measuring = False
+                        is_auto = False
+                        exit_event.set()  # Set the exit event to stop the loop
+                # Wait for the processing thread to complete before closing the window
+                if thread.is_alive():
+                   thread.join()
+                #Some time to stop and resume
+                time.sleep(1)
+                # Resume the worker thread
+                print("Resuming the worker thread...")
+                exit_event.clear()  # Clear the exit event to allow the loop to continue
+                #Get to the initial state of boolean values
+                with lock:
+                        #global is_playing
+                        #global is_recording
+                        #global is_measuring
+                        #global is_auto
+                        is_playing = True
+                        is_recording = False
+                        is_measuring = False
+                        is_auto = True
+                # Start the thread for processing frames
+                thread = threading.Thread(target=process_frames)
+                thread.daemon = True
+                thread.start()
+                # ====== FKESA v2 process iteration end =========
+                #Allow some time for carriage to move along the stepper motor rail
+                time.sleep(1)
+        except Exception as e:
+               print(str(e))
+        return True, 0
+
+#process_fkesa_v2("192.168.4.1",50,100,10)
 
 def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
         global exit_event
@@ -622,8 +693,6 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                print(str(e))
         return True, 0
 
-#process_fkesa_v2("192.168.4.1",50,100,10)
-
 #=========== main ==========
 
 
@@ -666,7 +735,7 @@ try:
 
     # Define the window layout
     layout = [
-        [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="left", font=('Times New Roman', 10, 'bold'),text_color='darkgreen')],
+            [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="left", font=('Times New Roman', 10, 'bold'),text_color='darkgreen'),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Times New Roman', 10, 'bold'),text_color='red')],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
@@ -915,9 +984,12 @@ try:
               exit_event.set()  # Signal the processing_frames thread to exit
               break
         elif event == "-AUTOFOUCAULT-":
+           window['-MESSAGE-'].update('[AUTOFOUCAULT COMMENCED...PLEASE WAIT A FEW SECONDS FOR THE OPERATION TO COMPLETE (VIDEO WILL PAUSE)...]')
            confirm_proceed = sg.popup_yes_no("Is your Foucault setup ready? Are you sure you want to proceed with AutoFoucault?\n\nNote that this test may take a few minutes to complete. You will not be able to use other widgets on this GUI during this operation.")
            if confirm_proceed == "Yes":
+              #window['-MESSAGE-'].update('[Autofoucault ongoing....Please wait...]')
               with lock:
+                      #window['-MESSAGE-'].update('[Autofoucault ongoing....Please wait...]')
                       # First stop any ongoing measurements
                       if is_measuring:
                         print("Stopping measurements.....") 
@@ -941,6 +1013,7 @@ try:
                       window['-COLOR VIDEO SELECT-'].update(disabled=True)
                       window['-CAMERA SELECT-'].update(disabled=True)
 
+
               distance_inches=float(values['step_size'])
               #result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
               ball_screw_pitch_mm = 5
@@ -948,8 +1021,10 @@ try:
               result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
               result_delay_usec = values['step_delay']
               success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
+              #success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
               if not success:
                     sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {error} -> \"{autofoucault_error_lut[error]}\". Click OK to continue.") 
+                    window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
               with lock:
                       # Re-enable all Widgets
                       window['-DIAMETER SLIDER-'].update(disabled=False)
@@ -963,6 +1038,10 @@ try:
                       window['-RAW VIDEO SELECT-'].update(disabled=False)
                       window['-COLOR VIDEO SELECT-'].update(disabled=False)
                       window['-CAMERA SELECT-'].update(disabled=False)
+                      window['-MESSAGE-'].update('[]')
+
+           else:
+               window['-MESSAGE-'].update('[]')
         elif event == "-MEASUREMENTS-":
             with lock:
              if not is_measuring:
@@ -1189,13 +1268,25 @@ try:
                     thread = threading.Thread(target=process_frames)
                     thread.daemon = True
                     thread.start()
-        
+        #if is_auto:
+        #    # Create a green image
+        #    green_image = np.zeros((480, 640, 3), dtype=np.uint8)
+        #    green_image[:, :, 1] = 255  # Set the green channel to maximum intensity
+        #    # Update the GUI window with the green image
+        #    imgbytes = cv2.imencode('.png', green_image)[1].tobytes()
+        #    window['-IMAGE-'].update(data=imgbytes)
+
+        # Update the GUI from the main thread
         with lock:
-          # Update the GUI from the main thread
           if 'shared_frame' in globals():
             if shared_frame is not None and window is not None:
                imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
                window['-IMAGE-'].update(data=imgbytes)
+            #else:
+            #   # Generate "please wait" image
+            #   please_wait_image = generate_please_wait_image()
+            #   imgbytes = cv2.imencode('.png', please_wait_image)[1].tobytes()
+            #   window['-IMAGE-'].update(data=imgbytes)
         # Update the input background color based on validity
         input_background_color = 'white' if is_valid_number(values['step_size']) else 'pink'
         window['step_size'].update(background_color=input_background_color)
