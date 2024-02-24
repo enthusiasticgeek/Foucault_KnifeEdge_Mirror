@@ -20,6 +20,7 @@ from datetime import datetime
 import tempfile
 import subprocess
 import platform
+import sys
 
 import tkinter as tk
 
@@ -64,7 +65,7 @@ current_time = time.time()
 measurement_run_counter = 0
 step_size_val = 0.10
 step_delay_val = 50 #microsec
-stepper_microsteps = 128
+stepper_microsteps = 32
 stepper_steps_per_revolution = 200
 
 # Get the current timestamp
@@ -75,6 +76,8 @@ output_folder = f"fkesa_v2_{timestamp}_output"
 
 # Get the user's home directory
 home_dir = os.path.expanduser("~")
+print(home_dir)
+#sys.exit(1)
 #Example Specify the relative path from the home directory
 #image_path = os.path.join(home_dir, 'Desktop', 'fkesa_v2.bmp')
 # Perform the image write operation
@@ -646,43 +649,44 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                                     print(response_post.text)
                                     print("Headers:")
                                     print(response_post.headers)
+                                    # ====== FKESA v2 process iteration begin =========
+                                    with lock:
+                                            global is_playing
+                                            global is_recording
+                                            global is_measuring
+                                            global is_auto
+                                            is_playing = False
+                                            is_recording = False
+                                            is_measuring = False
+                                            is_auto = False
+                                            exit_event.set()  # Set the exit event to stop the loop
+                                    # Wait for the processing thread to complete before closing the window
+                                    if thread.is_alive():
+                                       thread.join()
+                                    #Some time to stop and resume
+                                    time.sleep(1)
+                                    # Resume the worker thread
+                                    print("Resuming the worker thread...")
+                                    exit_event.clear()  # Clear the exit event to allow the loop to continue
+                                    #Get to the initial state of boolean values
+                                    with lock:
+                                            #global is_playing
+                                            #global is_recording
+                                            #global is_measuring
+                                            #global is_auto
+                                            is_playing = True
+                                            is_recording = False
+                                            is_measuring = False
+                                            is_auto = True
+                                    # Start the thread for processing frames
+                                    thread = threading.Thread(target=process_frames)
+                                    thread.daemon = True
+                                    thread.start()
+                                    # ====== FKESA v2 process iteration end =========
+
                                 else:
                                     print("no response!")
                                     return False, 6
-                            # ====== FKESA v2 process iteration begin =========
-                            with lock:
-                                    global is_playing
-                                    global is_recording
-                                    global is_measuring
-                                    global is_auto
-                                    is_playing = False
-                                    is_recording = False
-                                    is_measuring = False
-                                    is_auto = False
-                                    exit_event.set()  # Set the exit event to stop the loop
-                            # Wait for the processing thread to complete before closing the window
-                            if thread.is_alive():
-                               thread.join()
-                            #Some time to stop and resume
-                            time.sleep(1)
-                            # Resume the worker thread
-                            print("Resuming the worker thread...")
-                            exit_event.clear()  # Clear the exit event to allow the loop to continue
-                            #Get to the initial state of boolean values
-                            with lock:
-                                    #global is_playing
-                                    #global is_recording
-                                    #global is_measuring
-                                    #global is_auto
-                                    is_playing = True
-                                    is_recording = False
-                                    is_measuring = False
-                                    is_auto = True
-                            # Start the thread for processing frames
-                            thread = threading.Thread(target=process_frames)
-                            thread.daemon = True
-                            thread.start()
-                            # ====== FKESA v2 process iteration end =========
                         #Allow some time for carriage to move along the stepper motor rail
                         time.sleep(1)
                 if not found_end_x:
@@ -1020,8 +1024,8 @@ try:
               distance_mm = inches_to_mm(distance_inches)
               result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
               result_delay_usec = values['step_delay']
-              success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
-              #success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
+              #success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
+              success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
               if not success:
                     sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {error} -> \"{autofoucault_error_lut[error]}\". Click OK to continue.") 
                     window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
@@ -1039,6 +1043,7 @@ try:
                       window['-COLOR VIDEO SELECT-'].update(disabled=False)
                       window['-CAMERA SELECT-'].update(disabled=False)
                       window['-MESSAGE-'].update('[]')
+                      sg.popup_ok(f"FKESA AUTOFOUCAULT process Finished. Click OK to continue.") 
 
            else:
                window['-MESSAGE-'].update('[]')
@@ -1191,7 +1196,12 @@ try:
                    if not cv2.imwrite(filename, shared_frame):
                       raise Exception("Could not write/save image")
                 elif platform.system() == "Windows":
-                   image_path = os.path.join(home_dir, 'Desktop', filename)
+                   save_directory = os.path.join(home_dir, 'FKESAv2Images')
+                   os.makedirs(save_directory, exist_ok=True)
+                   image_path = os.path.join(save_directory, filename)
+                   #image_path = os.path.join(home_dir, 'Desktop', filename)
+                   print(image_path)
+                   #sys.exit(1)
                    if not cv2.imwrite(image_path, shared_frame):
                       raise Exception("Could not write/save image")
                 #with open(filename, 'wb') as f:

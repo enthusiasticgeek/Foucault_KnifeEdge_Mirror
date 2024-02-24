@@ -16,6 +16,8 @@ import argparse
 import pprint
 import csv
 import platform
+import sys
+import time
 
 # Get the user's home directory
 home_dir = os.path.expanduser("~")
@@ -566,7 +568,16 @@ class FKESABuilder:
                            if not cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100]):
                               raise Exception("Could not write/save image")
                        elif platform.system() == "Windows":
-                           image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
+                           save_directory = os.path.join(home_dir, 'FKESAv2Images')
+                           os.makedirs(save_directory, exist_ok=True)
+                           timestamp = int(time.time())  # Get the current timestamp
+                           filename = f"FKESA_v2_{timestamp}.jpg"  # Generate a filename with the timestamp
+                           image_path = os.path.join(save_directory,filename)
+                           print("********************************************************************")
+                           print(image_path)                           
+                           print("********************************************************************")
+                           #sys.exit(1)
+                           #image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
                            if not cv2.imwrite(image_path, result):
                               raise Exception("Could not write/save image")
 
