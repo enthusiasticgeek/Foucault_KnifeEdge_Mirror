@@ -187,6 +187,17 @@ def is_valid_integer(input_str):
     except ValueError:
         return False
 
+def is_valid_mirror_params(value):
+    output = is_valid_number(value)
+    if output:
+       if float(value) < 1.0 or float(value) > 255.0:
+          return False
+       else:
+          return True
+    return False
+    
+
+
 def mm_to_inches(mm):
     return mm / 25.4
 
@@ -208,16 +219,16 @@ def author_window():
     layout = [
 
         [sg.Image(filename='fkesa.ico.png'),],
-        [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA) Version 2", size=(60, 1), justification="center", font=('Times New Roman', 10, 'bold'), key="-APP-")],
+        [sg.Text("Foucault KnifeEdge Shadowgram Analyzer (FKESA) Version 2", size=(60, 1), justification="center", font=('Verdana', 10, 'bold'), key="-APP-")],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Author: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-"),sg.Text('Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
-        [sg.Text("FKESA: ", size=(8, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-VERSION-"),sg.Text(' Version 2.1')],
-        [sg.Text("Release Date: ", size=(14, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-RELEASE DATE-"),sg.Text('December 25, 2023')],
-        [sg.Text("Credits/Feedback: ", size=(18, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-")],
+        [sg.Text("Author: ", size=(8, 1), justification="left", font=('Verdana', 10, 'bold'), key="-AUTHOR-"),sg.Text('Pratik M. Tambe <enthusiasticgeek@gmail.com>')],
+        [sg.Text("FKESA: ", size=(8, 1), justification="left", font=('Verdana', 10, 'bold'), key="-VERSION-"),sg.Text(' Version 2.1')],
+        [sg.Text("Release Date: ", size=(14, 1), justification="left", font=('Verdana', 10, 'bold'), key="-RELEASE DATE-"),sg.Text('December 25, 2023')],
+        [sg.Text("Credits/Feedback: ", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-AUTHOR-")],
         [sg.Text('Guy Brandenburg, Alan Tarica - National Capital Astronomers (NCA)')],
         [sg.Text('Amateur Telescope Making (ATM) workshop')],
         [sg.Text('Washington D.C., U.S.A.')],
-        [sg.Text("Suggestions/Feedback: ", size=(25, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-AUTHOR-")],
+        [sg.Text("Suggestions/Feedback: ", size=(25, 1), justification="left", font=('Verdana', 10, 'bold'), key="-AUTHOR-")],
         [sg.Text('Alin Tolea, PhD - System Engineer, NASA Goddard Space Flight Center')],
         [sg.Button('Close')]
     ]
@@ -716,9 +727,9 @@ try:
 
     # First the window layout in 2 columns
     file_list_column = [
-        [sg.Text("SELECT IMAGES FOLDER",font=('Times New Roman', 10, 'bold'), text_color="darkred"),], 
+        [sg.Text("SELECT IMAGES FOLDER",font=('Verdana', 10, 'bold'), text_color="darkred"),], 
         [
-            #sg.Text("Select Images Folder",font=('Times New Roman', 12, 'bold'), text_color="darkred"), 
+            #sg.Text("Select Images Folder",font=('Verdana', 12, 'bold'), text_color="darkred"), 
             sg.In(size=(30, 1), enable_events=True, key="-FOLDER-"),
             sg.FolderBrowse(),
         ],
@@ -731,7 +742,7 @@ try:
 
     # For now will only show the name of the file that was chosen
     image_viewer_column = [
-        [sg.Text("CLICK TO VIEW AN IMAGE FROM THE LEFT PANE", font=('Times New Roman', 10, 'bold'), text_color="darkred")],
+        [sg.Text("CLICK TO VIEW AN IMAGE FROM THE LEFT PANE", font=('Verdana', 10, 'bold'), text_color="darkred")],
         [sg.Text(size=(70, 1), key="-TOUT-")],
         [sg.Image(key="-LOAD IMAGE-",size=(200,200))],
     ]
@@ -739,7 +750,7 @@ try:
 
     # Define the window layout
     layout = [
-            [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="left", font=('Times New Roman', 10, 'bold'),text_color='darkgreen'),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Times New Roman', 10, 'bold'),text_color='red')],
+            [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red')],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
@@ -751,10 +762,10 @@ try:
              sg.VerticalSeparator(), 
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
-             sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-STEP SIZE-"),
+             sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE-"),
              sg.InputText('0.10', key='step_size', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Text("STEP DELAY (μSECS)", size=(20, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PULSE DELAY-"),
+             sg.Text("STEP DELAY (μSECS)", size=(20, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PULSE DELAY-"),
              sg.InputText('50', key='step_delay', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Auto Foucault', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
@@ -772,18 +783,23 @@ try:
              sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='green', text_color='white'), 
              sg.Button('SELECT CAMERA'), 
              sg.VerticalSeparator(), 
-             sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Times New Roman', 10, 'bold')), 
+             sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(), 
-             sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Times New Roman', 10, 'bold')), 
+             sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(),  # Separator 
+             sg.Text("DIAMETER (INCHES) [DEFAULT: 6]", size=(30, 1), justification="left", font=('Verdana', 10, 'bold'), key="-DIAMETER TEXT-"),
+             sg.InputText('6.0', key='-DIA TEXT-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Text("FOCAL LENGTH (INCHES) [DEFAULT: 48]", size=(35, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
+             sg.InputText('48.0', key='-FL TEXT-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
             ],
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(80, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
+        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST A-"),
+            sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -793,11 +809,11 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-MINDIST SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 1000]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 1000]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
@@ -807,12 +823,12 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-DELAY SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("PARAMETERS 1 (PIXELS) [DEFAULT: 25]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS A-"),
+            sg.Text("PARAMETERS 1 (PIXELS) [DEFAULT: 25]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -822,10 +838,10 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-PARAM SLIDER A-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PARAMETER 2 (PIXELS) [DEFAULT: 60]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-PARAMS B-"),
+            sg.Text("PARAMETER 2 (PIXELS) [DEFAULT: 60]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -835,12 +851,12 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-PARAM SLIDER B-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("MIN RADIUS (PIXELS) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIN RADIUS-"),
+            sg.Text("MIN RADIUS (PIXELS) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MIN RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -850,10 +866,10 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-RADIUS SLIDER A-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("MAX RADIUS (PIXELS) [DEFAULT: 0]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MAX RADIUS-"),
+            sg.Text("MAX RADIUS (PIXELS) [DEFAULT: 0]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -863,15 +879,15 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-RADIUS SLIDER B-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(80, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
+        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS A-"),
+            sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 50),
@@ -881,10 +897,10 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-BRIGHTNESS SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("NUMBER OF ZONES [DEFAULT: 50]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-INTENSITY PARAMS B-"),
+            sg.Text("NUMBER OF ZONES [DEFAULT: 50]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (30, 50),
@@ -894,12 +910,12 @@ try:
                 enable_events=True,
                 size=(50, 10),
                 key="-ZONES SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("ANGLE (SLICE OR PIE) (DEGREES) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-ANGLE-"),
+            sg.Text("ANGLE (SLICE OR PIE) (DEGREES) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-ANGLE-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (10, 90),
@@ -909,10 +925,10 @@ try:
                 size=(50, 10),
                 enable_events=True,
                 key="-ANGLE SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("SKIP ZONES FROM THE MIRROR CENTER [DEFAULT: 10]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-SKIP ZONES-"),
+            sg.Text("SKIP ZONES FROM THE MIRROR CENTER [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-SKIP ZONES-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 20),
@@ -922,41 +938,11 @@ try:
                 size=(50, 10),
                 enable_events=True,
                 key="-SKIP ZONES SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
+                font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("PRIMARY MIRROR PARAMETERS [PARABOLIC MIRROR or K = -1]", size=(80, 1), justification="left", font=('Times New Roman', 10, 'bold'), text_color='darkred')],
-        [sg.HorizontalSeparator()],  # Separator 
-        [
-            sg.Text("DIAMETER (INCHES) [DEFAULT: 6]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS A-"),
-            sg.VerticalSeparator(),  # Separator 
-            sg.Slider(
-                (1, 255),
-                6,
-                0.25,
-                orientation="h",
-                enable_events=True,
-                size=(50, 10),
-                key="-DIAMETER SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
-            ),
-            sg.VerticalSeparator(),  # Separator 
-            sg.Text("FOCAL LENGTH (INCHES) [DEFAULT: 48]", size=(50, 1), justification="left", font=('Times New Roman', 10, 'bold'), key="-MIRROR PARAMS B-"),
-            sg.VerticalSeparator(),  # Separator 
-            sg.Slider(
-                (1, 255),
-                48,
-                0.25,
-                orientation="h",
-                enable_events=True,
-                size=(50, 10),
-                key="-FOCAL LENGTH SLIDER-",
-                font=('Times New Roman', 10, 'normal'),
-            ),
-            sg.VerticalSeparator(),  # Separator 
-        ],
         [sg.Button("Exit", size=(10, 1), button_color=('white','darkred')), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), ],
     ]
 
@@ -999,14 +985,14 @@ try:
                         print("Stopping measurements.....") 
                         window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                         window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
-                        window['-DIAMETER SLIDER-'].update(disabled=False)
-                        window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                        window['-DIA TEXT-'].update(disabled=False)
+                        window['-FL TEXT-'].update(disabled=False)
                         window['step_size'].update(disabled=False)
                         window['step_delay'].update(disabled=False)
                         is_measuring = False
                       # Disable all Widgets temporarily
-                      window['-DIAMETER SLIDER-'].update(disabled=True)
-                      window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
+                      window['-DIA TEXT-'].update(disabled=True)
+                      window['-FL TEXT-'].update(disabled=True)
                       window['-MEASUREMENTS-'].update(disabled=True)
                       window['-MEASUREMENTS CSV-'].update(disabled=True)
                       window['step_size'].update(disabled=True)
@@ -1031,8 +1017,8 @@ try:
                     window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
               with lock:
                       # Re-enable all Widgets
-                      window['-DIAMETER SLIDER-'].update(disabled=False)
-                      window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                      window['-DIA TEXT-'].update(disabled=False)
+                      window['-FL TEXT-'].update(disabled=False)
                       window['-MEASUREMENTS-'].update(disabled=False)
                       window['-MEASUREMENTS CSV-'].update(disabled=False)
                       window['step_size'].update(disabled=False)
@@ -1054,8 +1040,8 @@ try:
                    print("Starting measurements.....") 
                    window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
                    window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
-                   window['-DIAMETER SLIDER-'].update(disabled=True)
-                   window['-FOCAL LENGTH SLIDER-'].update(disabled=True)
+                   window['-DIA TEXT-'].update(disabled=True)
+                   window['-FL TEXT-'].update(disabled=True)
                    window['-AUTOFOUCAULT-'].update(disabled=True)
                    step_size_val = float(values['step_size'])
                    step_delay_val = float(values['step_delay'])
@@ -1069,8 +1055,8 @@ try:
                 print("Stopping measurements.....") 
                 window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                 window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
-                window['-DIAMETER SLIDER-'].update(disabled=False)
-                window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                window['-DIA TEXT-'].update(disabled=False)
+                window['-FL TEXT-'].update(disabled=False)
                 window['-AUTOFOUCAULT-'].update(disabled=False)
                 window['step_size'].update(disabled=False)
                 window['step_delay'].update(disabled=False)
@@ -1080,7 +1066,8 @@ try:
                 try:
                     create_lock_file('measurement_csv')  # Create lock file
                     window['-MEASUREMENTS CSV-'].update(disabled=True, text='Viewing Measurements Data')
-                    subprocess.run(['python', './FKESA_v2_csv.py'])
+                    python_executable = sys.executable
+                    subprocess.run([python_executable, './FKESA_v2_csv.py'])
                 except Exception as e:
                     sg.popup_error(f"Error running /FKESA_v2_csv.py: {e}")
                 finally:
@@ -1091,7 +1078,8 @@ try:
                 try:
                     create_lock_file('optics')  # Create lock file
                     window['-OPTICS-'].update(disabled=True, text='Optical Ray Diagram')
-                    subprocess.run(['python', './FKESA_v2_optics.py', '--radius', str(diameter_val/2), '--focal_length', str(focal_length_val)])
+                    python_executable = sys.executable
+                    subprocess.run([python_executable, './FKESA_v2_optics.py', '--radius', str(diameter_val/2), '--focal_length', str(focal_length_val)])
                 except Exception as e:
                     sg.popup_error(f"Error running /FKESA_v2_optics.py: {e}")
                 finally:
@@ -1155,8 +1143,8 @@ try:
                 if is_measuring:
                   window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
                   window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
-                  window['-DIAMETER SLIDER-'].update(disabled=False)
-                  window['-FOCAL LENGTH SLIDER-'].update(disabled=False)
+                  window['-DIA TEXT-'].update(disabled=False)
+                  window['-FL TEXT-'].update(disabled=False)
                   window['step_size'].update(disabled=False)
                   window['step_delay'].update(disabled=False)
                   is_measuring = False
@@ -1173,7 +1161,7 @@ try:
              or event == "-RADIUS SLIDER A-" or event == "-RADIUS SLIDER B-" \
              or event == "-BRIGHTNESS SLIDER-" or event == "-ZONES SLIDER-" \
              or event == "-ANGLE SLIDER-" or event == "-SKIP ZONES SLIDER-" \
-             or event == "-DIAMETER SLIDER-" or event == "-FOCAL LENGTH SLIDER-" :
+             or event == "-DIA TEXT-" or event == "-FL TEXT-" :
             with lock:
               mindist_val = int(values["-MINDIST SLIDER-"])
               param_a_val = int(values["-PARAM SLIDER A-"])
@@ -1183,8 +1171,8 @@ try:
               brightness_tolerance_val = int(values["-BRIGHTNESS SLIDER-"])
               zones_val = int(values["-ZONES SLIDER-"])
               angle_val = int(values["-ANGLE SLIDER-"])
-              diameter_val = float(values["-DIAMETER SLIDER-"])
-              focal_length_val = float(values["-FOCAL LENGTH SLIDER-"])
+              diameter_val = float(values["-DIA TEXT-"])
+              focal_length_val = float(values["-FL TEXT-"])
               skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
         elif event == 'Save Image':
             with lock:
@@ -1302,7 +1290,10 @@ try:
         window['step_size'].update(background_color=input_background_color)
         input_background_color = 'white' if is_valid_integer(values['step_delay']) else 'pink'
         window['step_delay'].update(background_color=input_background_color)
- 
+        input_background_color = 'white' if is_valid_mirror_params(values['-DIA TEXT-']) else 'pink'
+        window['-DIA TEXT-'].update(background_color=input_background_color)
+        input_background_color = 'white' if is_valid_mirror_params(values['-FL TEXT-']) else 'pink'
+        window['-FL TEXT-'].update(background_color=input_background_color)
 
     # Wait for the processing thread to complete before closing the window
     if thread.is_alive():
