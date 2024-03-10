@@ -423,8 +423,8 @@ def process_frames():
 
                 global shared_frame
                 if fkesa_frame is not None:
-                   #if is_auto:
-                   #   is_auto=False
+                   if is_auto:
+                      is_auto=False
                    shared_frame = fkesa_frame.copy()
                    #Record if flag set
                    if is_recording:
@@ -521,6 +521,7 @@ def enable_all_autofoucault_widgets(window):
         window[widget_key].update(disabled=False)
 
 autofoucault_error_lut = {
+    0: "No error",
     1: "Cannot set CW steps (X)",
     2: "Cannot set CW delay (X)",
     3: "Cannot find start position - limit switch (X) ",
@@ -628,14 +629,15 @@ def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=
                             print("Headers:")
                             print(response_post.headers)
                             # ====== FKESA v2 process iteration begin =========
-                            is_auto = True
+                            with lock:
+                               is_auto = True
                             # ====== FKESA v2 process iteration end =========
                         else:
                             print("no response!")
                             return False, 7
                 #Allow some time for carriage to move along the stepper motor rail
                 time.sleep(1)
-                is_auto = False
+                #is_auto = False
         return True, 0
 
 def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
@@ -653,14 +655,15 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
                         print("Headers:")
                         print(response_post.headers)
                         # ====== FKESA v2 process iteration begin =========
-                        is_auto = True
+                        with lock:
+                             is_auto = True
                         # ====== FKESA v2 process iteration end =========
                     else:
                         print("no response!")
                         return False, 8
                     #Allow some time for carriage to move along the stepper motor rail
                     time.sleep(1)
-                    is_auto = False
+                    #is_auto = False
         return True, 0
 
    
@@ -681,8 +684,6 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
         try:
                 with lock:
                      process_fkesa = True
-                #Commenting since Guy mentioned he doesn't want limit switches
-                """
                 # Steps
                 ret,_ = autofoucault_set_steps(helper,device_ip, result_steps)
                 if not ret:
@@ -691,7 +692,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                             is_auto=False
                             auto_return = False
                             auto_error = 1
-                   return False, 1
+                   #return False, 1
                 # Microsecs
                 ret,_ = autofoucault_set_delay(helper,device_ip, result_delay_usec)
                 if not ret:
@@ -700,7 +701,9 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                             is_auto=False
                             auto_return = False
                             auto_error = 2
-                   return False, 2
+                   #return False, 2
+                #Commenting since Guy mentioned he doesn't want limit switches
+                """
                 ret,_=autofoucault_goto_limit_begin_x(helper,device_ip, max_attempts)
                 if not ret:
                    #raise ValueError('ERROR: Could not find start reference!')
@@ -709,7 +712,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                             is_auto=False
                             auto_return = False
                             auto_error = 3
-                   return auto, 3
+                   #return auto, 3
                 #Commenting since Guy mentioned he doesn't want limit switches
                 """
                 # Reset Counters
@@ -721,7 +724,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                             is_auto=False
                             auto_return = False
                             auto_error = 5
-                   return False, 5
+                   #return False, 5
                 # FKESA v2 process begins below now we have carriage at the start of the rails.
                 # Assuming limit switches hardware
                 #ret,_=autofoucault_goto_limit_end_x(helper,device_ip, max_attempts)
@@ -734,15 +737,67 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                             is_auto=False
                             auto_return = False
                             auto_error = 8
-                   return False, 8
+                   #return False, 8
         except Exception as e:
                print(str(e))
-        is_auto=False
-        auto_return = False
-        auto_error = 0
-        return True, 0
+        with lock:
+           is_auto=False
+           auto_return = False
+           auto_error = 0
+        #return True, 0
 
 #process_fkesa_v2("192.168.4.1",50,100,10)
+
+def autofoucault_no_uc(helper, device_ip="192.168.4.1", max_attempts=50):
+        global is_auto
+        found_end_x = False
+        for num in range(0, max_attempts):
+                    # ====== FKESA v2 process iteration begin =========
+                    with lock:
+                         is_auto = True
+                    # ====== FKESA v2 process iteration end =========
+                    #Allow some time for carriage to move along the stepper motor rail
+                    time.sleep(1)
+                    #is_auto = False
+        return True, 0
+
+
+def process_fkesa_v2_quick_test(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
+        global exit_event
+        global thread
+        global auto_thread
+        global auto_return
+        global auto_error
+        global is_auto
+        global process_fkesa
+        with lock:
+                 is_auto=True
+        #Default IP 192.168.4.1
+        helper = FKESAHelper()
+        #result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
+        try:
+                with lock:
+                     process_fkesa = True
+                # Assuming no limit switches hardware
+                ret,_=autofoucault_no_uc(helper,device_ip, max_attempts)
+                if not ret:
+                   #raise ValueError('ERROR: Could not find end reference!')
+                   print('ERROR: Max attempts reached! Could not find end reference [Auto-Foucault]!')
+                   with lock:
+                            is_auto=False
+                            auto_return = False
+                            auto_error = 8
+                   #return False, 8
+        except Exception as e:
+               print(str(e))
+        with lock:
+            is_auto=False
+            auto_return = False
+            auto_error = 0
+        #return True, 0
+
+#process_fkesa_v2("192.168.4.1",50,100,10)
+
 
 
 #=========== main ==========
@@ -1040,7 +1095,8 @@ try:
               #print(success,error)
               # Start the thread function when the "Start Thread" button is pressed
 
-              auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 50})
+              #auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 50})
+              auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 3})
               auto_thread.daemon = True
               auto_thread.start()
               """
@@ -1319,16 +1375,17 @@ try:
         window['-FL TEXT-'].update(background_color=input_background_color)
 
         #Error
-        if process_fkesa and auto_error >= 0:
-                sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {auto_error} -> \"{autofoucault_error_lut[auto_error]}\". Click OK to continue.") 
-                window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
-                with lock:
-                  process_fkesa = False
-                  auto_error = -1
-                  # Re-enable all Widgets
-                  enable_all_autofoucault_widgets(window)
-                  window['-MESSAGE-'].update('[]')
-                  sg.popup_ok(f"FKESA AUTOFOUCAULT process Finished. Click OK to continue.") 
+        with lock:
+           if process_fkesa and auto_error >= 0:
+                if auto_error > 0:
+                   sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {auto_error} -> \"{autofoucault_error_lut[auto_error]}\". Click OK to continue.") 
+                   window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
+                process_fkesa = False
+                auto_error = -1
+                # Re-enable all Widgets
+                enable_all_autofoucault_widgets(window)
+                window['-MESSAGE-'].update('[]')
+                sg.popup_ok(f"FKESA AUTOFOUCAULT process Finished. Click OK to continue.") 
 
 
     # Wait for the autofoucault processing thread to complete before closing the window
