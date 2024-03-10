@@ -45,6 +45,8 @@ is_playing = True
 is_recording = False
 is_measuring = False
 is_auto = False
+auto_return = False
+auto_error = -1
 
 mindist_val = 50
 param_a_val = 25 
@@ -73,6 +75,14 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 csv_filename = f"fkesa_v2_{timestamp}.csv"
 output_folder = f"fkesa_v2_{timestamp}_output"
 
+distance_inches=0.0
+ball_screw_pitch_mm=5
+distance_mm = 10
+result_steps = 50
+result_delay_usec = 50
+
+#thread
+auto_thread = None
 
 # Get the user's home directory
 home_dir = os.path.expanduser("~")
@@ -496,6 +506,20 @@ print(f"Steps needed: {steps_needed} steps")
 
 #================= Auto-Foucault process ================
 
+# Function to disable all widgets in the window
+def disable_all_autofoucault_widgets(window):
+    widgets_to_disable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-MEASUREMENTS-', '-MEASUREMENTS CSV-', 'step_size', 'step_delay',
+                          '-PAUSE PLAY VIDEO-', '-RECORD VIDEO-', '-RAW VIDEO SELECT-', '-COLOR VIDEO SELECT-', '-CAMERA SELECT-']
+    for widget_key in widgets_to_disable:
+        window[widget_key].update(disabled=True)
+
+# Function to re-enable all widgets in the window
+def enable_all_autofoucault_widgets(window):
+    widgets_to_enable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-MEASUREMENTS-', '-MEASUREMENTS CSV-', 'step_size', 'step_delay',
+                         '-PAUSE PLAY VIDEO-', '-RECORD VIDEO-', '-RAW VIDEO SELECT-', '-COLOR VIDEO SELECT-', '-CAMERA SELECT-']
+    for widget_key in widgets_to_enable:
+        window[widget_key].update(disabled=False)
+
 autofoucault_error_lut = {
     1: "Cannot set CW steps (X)",
     2: "Cannot set CW delay (X)",
@@ -506,207 +530,189 @@ autofoucault_error_lut = {
     7: "Max attempts to find end position - limit switch reached (X)"
 }
 
-def process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
-        global exit_event
-        global thread
-        #Default IP 192.168.4.1
-        helper = FKESAHelper()
-        #helper_attempts = 0
-        #max_attempts = 50
-        found_start_x = False
-        found_end_x = False
-
-        #result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
-        try:
-            for num in range(0, max_attempts):
-                # ====== FKESA v2 process iteration begin =========
-                with lock:
-                        global is_playing
-                        global is_recording
-                        global is_measuring
-                        global is_auto
-                        is_playing = False
-                        is_recording = False
-                        is_measuring = False
-                        is_auto = False
-                        exit_event.set()  # Set the exit event to stop the loop
-                # Wait for the processing thread to complete before closing the window
-                if thread.is_alive():
-                   thread.join()
-                #Some time to stop and resume
-                time.sleep(1)
-                # Resume the worker thread
-                print("Resuming the worker thread...")
-                exit_event.clear()  # Clear the exit event to allow the loop to continue
-                #Get to the initial state of boolean values
-                with lock:
-                        #global is_playing
-                        #global is_recording
-                        #global is_measuring
-                        #global is_auto
-                        is_playing = True
-                        is_recording = False
-                        is_measuring = False
-                        is_auto = True
-                # Start the thread for processing frames
-                thread = threading.Thread(target=process_frames)
-                thread.daemon = True
-                thread.start()
-                # ====== FKESA v2 process iteration end =========
-                #Allow some time for carriage to move along the stepper motor rail
-                time.sleep(1)
-        except Exception as e:
-               print(str(e))
+def autofoucault_set_steps(helper, device_ip="192.168.4.1", result_steps=500):
+        # Steps
+        url_post = f"http://{device_ip}/button1"
+        data_post = {"textbox1": f"{result_steps}"}
+        # Call the post_data method on the instance
+        response_post = helper.post_data_to_url(url_post, data_post)
+        if response_post is not None:
+            print("POST Request Response:")
+            print(response_post.text)
+            print("Headers:")
+            print(response_post.headers)
+        else:
+            print("no response!")
+            return False, 1
         return True, 0
 
-#process_fkesa_v2("192.168.4.1",50,100,10)
+def autofoucault_set_delay(helper, device_ip="192.168.4.1", result_delay_usec=50):
+        # Microsecs
+        url_post = f"http://{device_ip}/button2"
+        data_post = {"textbox2": f"{result_delay_usec}"}
+        # Call the post_data method on the instance
+        response_post = helper.post_data_to_url(url_post, data_post)
+        if response_post is not None:
+            print("POST Request Response:")
+            print(response_post.text)
+            print("Headers:")
+            print(response_post.headers)
+        else:
+            print("no response!")
+            return False, 2
+        return True, 0
+
+def autofoucault_goto_limit_begin_x(helper, device_ip="192.168.4.1", max_attempts=50):
+        found_start_x = False
+        for num in range(0, max_attempts):
+                url_boolean = f"http://{device_ip}/reached_begin_x"
+                # Call the boolean method on the instance
+                result_boolean = helper.get_boolean_value_from_url(url_boolean)
+                if result_boolean is not None:
+                    print("Received boolean value:", result_boolean)
+                    if result_boolean:
+                       found_start_x = True
+                       break
+                    elif not result_boolean:
+                        # CCW X
+                        url_post = f"http://{device_ip}/button4"
+                        data_post = None
+                        # Call the post_data method on the instance
+                        response_post = helper.post_data_to_url(url_post, data_post)
+                        if response_post is not None:
+                            print("POST Request Response:")
+                            print(response_post.text)
+                            print("Headers:")
+                            print(response_post.headers)
+                        else:
+                            print("no response!")
+                            return False, 3
+                #Allow some time for carriage to move along the stepper motor rail
+                time.sleep(1)
+        return True, 0
+
+def autofoucault_reset_counters(helper, device_ip="192.168.4.1"):
+        # Reset Counters
+        url_string = f"http://{device_ip}/reset"
+        result_string = helper.get_string_value_from_url(url_string)
+        if result_string is not None:
+           print("Received string value:", result_string)
+        else:
+           print("no response!")
+           return False, 4
+        return True, 0
+
+
+def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=50):
+        global is_auto
+        found_end_x = False
+        for num in range(0, max_attempts):
+                url_boolean = f"http://{device_ip}/reached_end_x"
+                # Call the boolean method on the instance
+                result_boolean = helper.get_boolean_value_from_url(url_boolean)
+                if result_boolean is not None:
+                    print("Received boolean value:", result_boolean)
+                    if result_boolean:
+                       found_end_x = True
+                       break
+                    elif not result_boolean:
+                        # CW X
+                        url_post = f"http://{device_ip}/button3"
+                        data_post = None
+                        # Call the post_data method on the instance
+                        response_post = helper.post_data_to_url(url_post, data_post)
+                        if response_post is not None:
+                            print("POST Request Response:")
+                            print(response_post.text)
+                            print("Headers:")
+                            print(response_post.headers)
+                            # ====== FKESA v2 process iteration begin =========
+                            is_auto = True
+                            # ====== FKESA v2 process iteration end =========
+                        else:
+                            print("no response!")
+                            return False, 5
+                #Allow some time for carriage to move along the stepper motor rail
+                time.sleep(1)
+                is_auto = False
+        return True, 0
 
 def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
         global exit_event
         global thread
+        global auto_thread
+        global auto_return
+        global auto_error
+        global is_auto
+        global process_fkesa
+        with lock:
+                 is_auto=True
         #Default IP 192.168.4.1
         helper = FKESAHelper()
-        #helper_attempts = 0
-        #max_attempts = 50
-        found_start_x = False
-        found_end_x = False
-
         #result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
         try:
+                with lock:
+                     process_fkesa = True
+                #Commenting since Guy mentioned he doesn't want limit switches
+                """
                 # Steps
-                url_post = f"http://{device_ip}/button1"
-                data_post = {"textbox1": f"{result_steps}"}
-                # Call the post_data method on the instance
-                response_post = helper.post_data_to_url(url_post, data_post)
-                if response_post is not None:
-                    print("POST Request Response:")
-                    print(response_post.text)
-                    print("Headers:")
-                    print(response_post.headers)
-                else:
-                    print("no response!")
-                    return False, 1
+                ret,_ = autofoucault_set_steps(helper,device_ip, result_steps)
+                if not ret:
+                   print("no response!")
+                   with lock:
+                            is_auto=False
+                            auto_return = False
+                            auto_error = 1
+                   return False, 1
                 # Microsecs
-                url_post = f"http://{device_ip}/button2"
-                data_post = {"textbox2": f"{result_delay_usec}"}
-                # Call the post_data method on the instance
-                response_post = helper.post_data_to_url(url_post, data_post)
-                if response_post is not None:
-                    print("POST Request Response:")
-                    print(response_post.text)
-                    print("Headers:")
-                    print(response_post.headers)
-                else:
-                    print("no response!")
-                    return False, 2
-                for num in range(0, max_attempts):
-                        url_boolean = f"http://{device_ip}/reached_begin_x"
-                        # Call the boolean method on the instance
-                        result_boolean = helper.get_boolean_value_from_url(url_boolean)
-                        if result_boolean is not None:
-                            print("Received boolean value:", result_boolean)
-                            if result_boolean:
-                               found_start_x = True
-                               break
-                            elif not result_boolean:
-                                # CCW X
-                                url_post = f"http://{device_ip}/button4"
-                                data_post = None
-                                # Call the post_data method on the instance
-                                response_post = helper.post_data_to_url(url_post, data_post)
-                                if response_post is not None:
-                                    print("POST Request Response:")
-                                    print(response_post.text)
-                                    print("Headers:")
-                                    print(response_post.headers)
-                                else:
-                                    print("no response!")
-                                    return False, 3
-                        #Allow some time for carriage to move along the stepper motor rail
-                        time.sleep(1)
-                if not found_start_x:
+                ret,_ = autofoucault_set_delay(helper,device_ip, result_delay_usec)
+                if not ret:
+                   print("no response!")
+                   with lock:
+                            is_auto=False
+                            auto_return = False
+                            auto_error = 2
+                   return False, 2
+                ret,_=autofoucault_goto_limit_begin_x(helper,device_ip, max_attempts)
+                if not ret:
                    #raise ValueError('ERROR: Could not find start reference!')
                    print('ERROR: Max attempts reached! Could not find start reference [Auto-Foucault]!')
-                   return False, 4
-
+                   with lock:
+                            is_auto=False
+                            auto_return = False
+                            auto_error = 3
+                   return auto, 3
+                #Commenting since Guy mentioned he doesn't want limit switches
+                """
                 # Reset Counters
-                url_string = f"http://{device_ip}/reset"
-                result_string = helper.get_string_value_from_url(url_string)
-                if result_string is not None:
-                   print("Received string value:", result_string)
-                else:
+                # Microsecs
+                ret,_ = autofoucault_reset_counters(helper,device_ip)
+                if not ret:
                    print("no response!")
-                   return False, 5
-
+                   with lock:
+                            is_auto=False
+                            auto_return = False
+                            auto_error = 4
+                   return False, 4
                 # FKESA v2 process begins below now we have carriage at the start of the rails.
-
-                for num in range(0, max_attempts):
-                        url_boolean = f"http://{device_ip}/reached_end_x"
-                        # Call the boolean method on the instance
-                        result_boolean = helper.get_boolean_value_from_url(url_boolean)
-                        if result_boolean is not None:
-                            print("Received boolean value:", result_boolean)
-                            if result_boolean:
-                               found_end_x = True
-                               break
-                            elif not result_boolean:
-                                # CW X
-                                url_post = f"http://{device_ip}/button3"
-                                data_post = None
-                                # Call the post_data method on the instance
-                                response_post = helper.post_data_to_url(url_post, data_post)
-                                if response_post is not None:
-                                    print("POST Request Response:")
-                                    print(response_post.text)
-                                    print("Headers:")
-                                    print(response_post.headers)
-                                    # ====== FKESA v2 process iteration begin =========
-                                    with lock:
-                                            global is_playing
-                                            global is_recording
-                                            global is_measuring
-                                            global is_auto
-                                            is_playing = False
-                                            is_recording = False
-                                            is_measuring = False
-                                            is_auto = False
-                                            exit_event.set()  # Set the exit event to stop the loop
-                                    # Wait for the processing thread to complete before closing the window
-                                    if thread.is_alive():
-                                       thread.join()
-                                    #Some time to stop and resume
-                                    time.sleep(1)
-                                    # Resume the worker thread
-                                    print("Resuming the worker thread...")
-                                    exit_event.clear()  # Clear the exit event to allow the loop to continue
-                                    #Get to the initial state of boolean values
-                                    with lock:
-                                            #global is_playing
-                                            #global is_recording
-                                            #global is_measuring
-                                            #global is_auto
-                                            is_playing = True
-                                            is_recording = False
-                                            is_measuring = False
-                                            is_auto = True
-                                    # Start the thread for processing frames
-                                    thread = threading.Thread(target=process_frames)
-                                    thread.daemon = True
-                                    thread.start()
-                                    # ====== FKESA v2 process iteration end =========
-
-                                else:
-                                    print("no response!")
-                                    return False, 6
-                        #Allow some time for carriage to move along the stepper motor rail
-                        time.sleep(1)
-                if not found_end_x:
+                ret,_=autofoucault_goto_limit_end_x(helper,device_ip, max_attempts)
+                if not ret:
                    #raise ValueError('ERROR: Could not find end reference!')
                    print('ERROR: Max attempts reached! Could not find end reference [Auto-Foucault]!')
-                   return False, 7
+                   with lock:
+                            is_auto=False
+                            auto_return = False
+                            auto_error = 5
+                   return False, 5
         except Exception as e:
                print(str(e))
+        is_auto=False
+        auto_return = False
+        auto_error = 0
         return True, 0
+
+#process_fkesa_v2("192.168.4.1",50,100,10)
+
 
 #=========== main ==========
 
@@ -990,20 +996,8 @@ try:
                         window['step_size'].update(disabled=False)
                         window['step_delay'].update(disabled=False)
                         is_measuring = False
-                      # Disable all Widgets temporarily
-                      window['-DIA TEXT-'].update(disabled=True)
-                      window['-FL TEXT-'].update(disabled=True)
-                      window['-MEASUREMENTS-'].update(disabled=True)
-                      window['-MEASUREMENTS CSV-'].update(disabled=True)
-                      window['step_size'].update(disabled=True)
-                      window['step_delay'].update(disabled=True)
-                      window['-PAUSE PLAY VIDEO-'].update(disabled=True)
-                      window['-RECORD VIDEO-'].update(disabled=True)
-                      window['-RAW VIDEO SELECT-'].update(disabled=True)
-                      window['-COLOR VIDEO SELECT-'].update(disabled=True)
-                      window['-CAMERA SELECT-'].update(disabled=True)
-
-
+              # Disable all Widgets temporarily
+              disable_all_autofoucault_widgets(window)
               distance_inches=float(values['step_size'])
               #result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
               ball_screw_pitch_mm = 5
@@ -1011,28 +1005,26 @@ try:
               result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
               result_delay_usec = values['step_delay']
               #success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
-              success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
+              #success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
+              #print(success,error)
+              # Start the thread function when the "Start Thread" button is pressed
+
+              auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 50})
+              auto_thread.daemon = True
+              auto_thread.start()
+              """
               if not success:
                     sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {error} -> \"{autofoucault_error_lut[error]}\". Click OK to continue.") 
                     window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
               with lock:
                       # Re-enable all Widgets
-                      window['-DIA TEXT-'].update(disabled=False)
-                      window['-FL TEXT-'].update(disabled=False)
-                      window['-MEASUREMENTS-'].update(disabled=False)
-                      window['-MEASUREMENTS CSV-'].update(disabled=False)
-                      window['step_size'].update(disabled=False)
-                      window['step_delay'].update(disabled=False)
-                      window['-PAUSE PLAY VIDEO-'].update(disabled=False)
-                      window['-RECORD VIDEO-'].update(disabled=False)
-                      window['-RAW VIDEO SELECT-'].update(disabled=False)
-                      window['-COLOR VIDEO SELECT-'].update(disabled=False)
-                      window['-CAMERA SELECT-'].update(disabled=False)
+                      enable_all_autofoucault_widgets(window)
                       window['-MESSAGE-'].update('[]')
                       sg.popup_ok(f"FKESA AUTOFOUCAULT process Finished. Click OK to continue.") 
-
+              """
            else:
                window['-MESSAGE-'].update('[]')
+           #sys.exit()
         elif event == "-MEASUREMENTS-":
             with lock:
              if not is_measuring:
@@ -1118,7 +1110,7 @@ try:
                 print("Pausing the worker thread...")
                 exit_event.set()  # Set the exit event to stop the loop
                 # Wait for the processing thread to complete before closing the window
-                if thread.is_alive():
+                if thread is not None and thread.is_alive():
                    thread.join()
              elif not is_playing:
                 window['-PAUSE PLAY VIDEO-'].update(button_color = ('white','green'))
@@ -1249,7 +1241,7 @@ try:
                             is_auto = False
                     exit_event.set()  # Set the exit event to stop the loop
                     # Wait for the processing thread to complete before closing the window
-                    if thread.is_alive():
+                    if thread is not None and thread.is_alive():
                        thread.join()
                     #Some time to stop and resume
                     time.sleep(1)
@@ -1295,8 +1287,25 @@ try:
         input_background_color = 'white' if is_valid_mirror_params(values['-FL TEXT-']) else 'pink'
         window['-FL TEXT-'].update(background_color=input_background_color)
 
+        #Error
+        if process_fkesa and auto_error >= 0:
+                sg.popup_ok(f"FKESA AUTOFOUCAULT Failed with an error # {auto_error} -> \"{autofoucault_error_lut[auto_error]}\". Click OK to continue.") 
+                window['-MESSAGE-'].update('[*AN ERROR OCCURRED*: AUTOFOUCAULT FAILED!!!]')
+                with lock:
+                  process_fkesa = False
+                  auto_error = -1
+                  # Re-enable all Widgets
+                  enable_all_autofoucault_widgets(window)
+                  window['-MESSAGE-'].update('[]')
+                  sg.popup_ok(f"FKESA AUTOFOUCAULT process Finished. Click OK to continue.") 
+
+
+    # Wait for the autofoucault processing thread to complete before closing the window
+    if auto_thread is not None and auto_thread.is_alive():
+       auto_thread.join()
+
     # Wait for the processing thread to complete before closing the window
-    if thread.is_alive():
+    if thread is not None and thread.is_alive():
        thread.join()
 
     if cap is not None:
