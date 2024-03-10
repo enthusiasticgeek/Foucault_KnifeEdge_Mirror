@@ -527,7 +527,8 @@ autofoucault_error_lut = {
     4: "Max attempts to find start position - limit switch reached (X)",
     5: "Cannot reset counters",
     6: "Cannot find end position - limit switch (X) ",
-    7: "Max attempts to find end position - limit switch reached (X)"
+    7: "Max attempts to find end position - limit switch reached (X)",
+    8: "Autofoucault failed!"
 }
 
 def autofoucault_set_steps(helper, device_ip="192.168.4.1", result_steps=500):
@@ -599,7 +600,7 @@ def autofoucault_reset_counters(helper, device_ip="192.168.4.1"):
            print("Received string value:", result_string)
         else:
            print("no response!")
-           return False, 4
+           return False, 5
         return True, 0
 
 
@@ -631,11 +632,38 @@ def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=
                             # ====== FKESA v2 process iteration end =========
                         else:
                             print("no response!")
-                            return False, 5
+                            return False, 7
                 #Allow some time for carriage to move along the stepper motor rail
                 time.sleep(1)
                 is_auto = False
         return True, 0
+
+def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
+        global is_auto
+        found_end_x = False
+        for num in range(0, max_attempts):
+                    # CW X
+                    url_post = f"http://{device_ip}/button3"
+                    data_post = None
+                    # Call the post_data method on the instance
+                    response_post = helper.post_data_to_url(url_post, data_post)
+                    if response_post is not None:
+                        print("POST Request Response:")
+                        print(response_post.text)
+                        print("Headers:")
+                        print(response_post.headers)
+                        # ====== FKESA v2 process iteration begin =========
+                        is_auto = True
+                        # ====== FKESA v2 process iteration end =========
+                    else:
+                        print("no response!")
+                        return False, 8
+                    #Allow some time for carriage to move along the stepper motor rail
+                    time.sleep(1)
+                    is_auto = False
+        return True, 0
+
+   
 
 def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
         global exit_event
@@ -692,18 +720,21 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
                    with lock:
                             is_auto=False
                             auto_return = False
-                            auto_error = 4
-                   return False, 4
+                            auto_error = 5
+                   return False, 5
                 # FKESA v2 process begins below now we have carriage at the start of the rails.
-                ret,_=autofoucault_goto_limit_end_x(helper,device_ip, max_attempts)
+                # Assuming limit switches hardware
+                #ret,_=autofoucault_goto_limit_end_x(helper,device_ip, max_attempts)
+                # Assuming no limit switches hardware
+                ret,_=autofoucault_start(helper,device_ip, max_attempts)
                 if not ret:
                    #raise ValueError('ERROR: Could not find end reference!')
                    print('ERROR: Max attempts reached! Could not find end reference [Auto-Foucault]!')
                    with lock:
                             is_auto=False
                             auto_return = False
-                            auto_error = 5
-                   return False, 5
+                            auto_error = 8
+                   return False, 8
         except Exception as e:
                print(str(e))
         is_auto=False
