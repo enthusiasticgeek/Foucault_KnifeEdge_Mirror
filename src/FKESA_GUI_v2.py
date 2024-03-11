@@ -34,6 +34,7 @@ screen_height = root.winfo_screenheight()
 scale_window = False
 
 # Initialize a variable to store image data
+autofoucault_simple_simulation=False
 #image_data = None
 process_fkesa = False
 selected_camera=0
@@ -1152,8 +1153,10 @@ try:
               #print(success,error)
               # Start the thread function when the "Start Thread" button is pressed
 
-              #auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
-              auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
+              if not autofoucault_simple_simulation:
+                 auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
+              else:   
+                 auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
               #auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 5})
               auto_thread.daemon = True
               auto_thread.start()
