@@ -384,6 +384,7 @@ def process_frames():
                    #if counter % 5 == 0:
                    #     if counter > 100:
                    #        counter = 0
+                        step_user_text = f"Step {step_counter}"
                         """
                         start_time = time.time()
                         """
@@ -404,6 +405,7 @@ def process_frames():
                         builder.with_param('csv_filename', csv_filename)
                         builder.with_param('append_to_csv', is_measuring or is_auto)
                         builder.with_param('-STEP SIZE-', step_size_val)
+                        builder.with_param('user_text', step_user_text)
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
@@ -1131,16 +1133,19 @@ try:
               ball_screw_pitch_mm = 5
               distance_mm = inches_to_mm(distance_inches)
               result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
-              result_delay_usec = values['-STEP DELAY-']
-              result_max_attempts = values['-MAX ATTEMPTS-']
+              #TODO - add exception
+              result_delay_usec = int(values['-STEP DELAY-'])
+              result_max_attempts = int(values['-MAX ATTEMPTS-'])
+              #Add 1 to max attempts
+              result_max_attempts += 1
               print(result_max_attempts)
               #success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
               #success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
               #print(success,error)
               # Start the thread function when the "Start Thread" button is pressed
 
-              #auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
-              auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 5})
+              auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
+              #auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 5})
               #auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
               auto_thread.daemon = True
               auto_thread.start()
