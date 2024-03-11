@@ -80,6 +80,7 @@ csv_filename = f"fkesa_v2_{timestamp}.csv"
 output_folder = f"fkesa_v2_{timestamp}_output"
 
 distance_inches=0.0
+#This is the pitch of stepper assembly - e.g. 1 full rotation of stepper (e.g. 200 steps) moves the carriage distance of Foucault Assembly by 5 mm.
 ball_screw_pitch_mm=5
 distance_mm = 10
 result_steps = 50
@@ -512,6 +513,19 @@ print(f"Steps needed: {steps_needed} steps")
 
 """
 #================= Stepper motor distance conversion ================
+#Function to re-enable or disable measurement widgets
+
+def disable_all_measurements_widgets(window):
+    window['-MEASUREMENTS-'].update(button_color=('orange', 'black'), text='Stop Measurements')
+    widgets_to_disable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-STEP SIZE-', '-STEP DELAY-', '-MAX ATTEMPTS-']
+    for widget_key in widgets_to_disable:
+        window[widget_key].update(disabled=True)
+        
+def enable_all_measurements_widgets(window):
+    window['-MEASUREMENTS-'].update(button_color=('black', 'orange'), text='Start Measurements')
+    widgets_to_enable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-STEP SIZE-', '-STEP DELAY-', '-MAX ATTEMPTS-']
+    for widget_key in widgets_to_enable:
+        window[widget_key].update(disabled=False)
 
 #================= Auto-Foucault process ================
 
@@ -1118,19 +1132,13 @@ try:
                       # First stop any ongoing measurements
                       if is_measuring:
                         print("Stopping measurements.....") 
-                        window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
-                        window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
-                        window['-DIA TEXT-'].update(disabled=False)
-                        window['-FL TEXT-'].update(disabled=False)
-                        window['-STEP SIZE-'].update(disabled=False)
-                        window['-STEP DELAY-'].update(disabled=False)
-                        window['-MAX ATTEMPTS-'].update(disabled=False)
+                        enable_all_measurements_widgets(window)
                         is_measuring = False
               # Disable all Widgets temporarily
               disable_all_autofoucault_widgets(window)
               distance_inches=float(values['-STEP SIZE-'])
               #result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
-              ball_screw_pitch_mm = 5
+              #ball_screw_pitch_mm = 5
               distance_mm = inches_to_mm(distance_inches)
               result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
               #TODO - add exception
@@ -1144,9 +1152,9 @@ try:
               #print(success,error)
               # Start the thread function when the "Start Thread" button is pressed
 
-              auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
+              #auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
+              auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
               #auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 5})
-              #auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
               auto_thread.daemon = True
               auto_thread.start()
               """
@@ -1168,31 +1176,17 @@ try:
              if not is_measuring:
                 if check_step_size_validity(values):
                    print("Starting measurements.....") 
-                   window['-MEASUREMENTS-'].update(button_color = ('orange','black'))
-                   window['-MEASUREMENTS-'].update(text = ('Stop Measurements'))
-                   window['-DIA TEXT-'].update(disabled=True)
-                   window['-FL TEXT-'].update(disabled=True)
-                   window['-AUTOFOUCAULT-'].update(disabled=True)
                    step_size_val = float(values['-STEP SIZE-'])
                    step_delay_val = float(values['-STEP DELAY-'])
                    max_attempts_val = int(values['-MAX ATTEMPTS-'])
-                   window['-STEP SIZE-'].update(disabled=True)
-                   window['-STEP DELAY-'].update(disabled=True)
-                   window['-MAX ATTEMPTS-'].update(disabled=True)
+                   disable_all_measurements_widgets(window)
                    measurement_run_counter+=1
                    is_measuring = True
                 else:
                    sg.popup_error('Invalid input! Please enter a valid integer or floating-point number.')
              elif is_measuring:
                 print("Stopping measurements.....") 
-                window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
-                window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
-                window['-DIA TEXT-'].update(disabled=False)
-                window['-FL TEXT-'].update(disabled=False)
-                window['-AUTOFOUCAULT-'].update(disabled=False)
-                window['-STEP SIZE-'].update(disabled=False)
-                window['-STEP DELAY-'].update(disabled=False)
-                window['-MAX ATTEMPTS-'].update(disabled=False)
+                enable_all_measurements_widgets(window)
                 is_measuring = False
         elif event == "-MEASUREMENTS CSV-":
              if not is_another_file_instance_running('measurement_csv'):
@@ -1274,13 +1268,7 @@ try:
                 window['-AUTOFOUCAULT-'].update(disabled=True)
                 raw_video = True
                 if is_measuring:
-                  window['-MEASUREMENTS-'].update(button_color = ('black','orange'))
-                  window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
-                  window['-DIA TEXT-'].update(disabled=False)
-                  window['-FL TEXT-'].update(disabled=False)
-                  window['-STEP SIZE-'].update(disabled=False)
-                  window['-STEP DELAY-'].update(disabled=False)
-                  window['-MAX ATTEMPTS-'].update(disabled=False)
+                  enable_all_measurements_widgets(window)
                   is_measuring = False
         elif event == "-COLOR VIDEO SELECT-":
              if not values["-COLOR VIDEO SELECT-"]:
