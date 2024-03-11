@@ -49,10 +49,20 @@ class FKESABuilder:
             'csv_filename': 'fkesa_v2_default.csv',
             'append_to_csv': False,
             'step_size': 0.010,
-            'user_text': ''
+            'user_text': '',
+            'debug': False
             # Include default values for other parameters here
         }
         stale_image=False
+
+    def debug_print(self, *args):
+        if self.args['debug']:
+            for arg in args:
+                if isinstance(arg, str):
+                    print(arg)
+                else:
+                    # If arg is not a string, print it as an exception
+                    print("An exception occurred:", arg)
 
     def with_folder(self, folder_path=''):
         self.args['folder'] = folder_path or self.args['folder']
@@ -66,9 +76,9 @@ class FKESABuilder:
     def create_folder_if_not_exists(self, folder_path):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-            print(f"Folder '{folder_path}' created successfully.")
+            self.debug_print(f"Folder '{folder_path}' created successfully.")
         else:
-            print(f"Folder '{folder_path}' already exists.")
+            self.debug_print(f"Folder '{folder_path}' already exists.")
         return self
 
     def resize_image(self, image, max_width=640):
@@ -200,9 +210,9 @@ class FKESABuilder:
                     self.args['param1'] = max(10, self.args['param1'])
                     self.args['param2'] = max(20, self.args['param2'])
 
-                    print(f"Trying adaptive mirror detection with Hough Transform "
+                    self.debug_print(f"Trying adaptive mirror detection with Hough Transform "
                           f"param1 {self.args['param1']} and param2 {self.args['param2']} and {adjustment}")
-                    print(f"min distance ->>> {self.args['minDist']} , {self.args['param1']} , {self.args['param2']}, {self.args['minRadius']}, {self.args['maxRadius']}")
+                    self.debug_print(f"min distance ->>> {self.args['minDist']} , {self.args['param1']} , {self.args['param2']}, {self.args['minRadius']}, {self.args['maxRadius']}")
 
                     circles = cv2.HoughCircles(
                         blurred,
@@ -211,7 +221,7 @@ class FKESABuilder:
                     )
 
                     if circles is not None:
-                        print("Mirror found in retry attempt!")
+                        self.debug_print("Mirror found in retry attempt!")
                         break  # Exit the loop if circles are found with any parameter set
 
                 if circles is None:
@@ -228,7 +238,7 @@ class FKESABuilder:
 
                     # Get the center coordinates and radius of the largest circle
                     center_x, center_y, radius = largest_circle
-                    print(f"LARGEST CIRCLE : {center_x},{center_y},{radius}")
+                    self.debug_print(f"LARGEST CIRCLE : {center_x},{center_y},{radius}")
                     # backup copies to be used in csv later
                     center_x_orig = center_x
                     center_y_orig = center_y
@@ -296,10 +306,10 @@ class FKESABuilder:
                     num_zones = self.args['zones']
 
                     if num_zones > 50:
-                        print("WARNING!!! - Number of zones exceed 50. Limiting to 50.")
+                        self.debug_print("WARNING!!! - Number of zones exceed 50. Limiting to 50.")
                         num_zones = 50
                     elif num_zones < 30:
-                        print("WARNING!!! - Number of zones are less than 30. Limiting to 30.")
+                        self.debug_print("WARNING!!! - Number of zones are less than 30. Limiting to 30.")
                         num_zones = 30
 
                     # Create a blank mask
@@ -307,12 +317,12 @@ class FKESABuilder:
 
                     #pixels per zone
                     pixels_per_zone = float(radius / num_zones)
-                    print("pixels per zone are ", pixels_per_zone)
+                    #print("pixels per zone are ", pixels_per_zone)
 
                     # List to store average intensities in each zone
                     average_intensities_rhs = []
                     average_intensities_lhs = []
-                    print("----RHS of mirror center zones and intensities----")
+                    self.debug_print("----RHS of mirror center zones and intensities----")
                     # Iterate through each zone - R.H.S of the center of the mirror
                     for zone in range(num_zones):
                         # Reset the mask for each zone
@@ -346,14 +356,14 @@ class FKESABuilder:
                         #average_intensity_rhs = np.mean(roi)
 
                         average_intensities_rhs.append(average_intensity_rhs)
-                        print(f"Zone {zone + 1}: Average Intensity RHS = {average_intensity_rhs}")
+                        self.debug_print(f"Zone {zone + 1}: Average Intensity RHS = {average_intensity_rhs}")
 
                         # Display the result (optional)
                         #cv2.imshow('Image with Custom ROI', roi)
                         #cv2.waitKey(args.displayWindowPeriodZones)
 
 
-                    print("----LHS of mirror center zones and intensities----")
+                    self.debug_print("----LHS of mirror center zones and intensities----")
                     # Iterate through each zone - L.H.S of the center of the mirror
                     for zone in range(num_zones):
 
@@ -388,7 +398,7 @@ class FKESABuilder:
                         #average_intensity_lhs = np.mean(roi)
 
                         average_intensities_lhs.append(average_intensity_lhs)
-                        print(f"Zone {zone + 1}: Average Intensity LHS = {average_intensity_lhs}")
+                        self.debug_print(f"Zone {zone + 1}: Average Intensity LHS = {average_intensity_lhs}")
 
                         # Display the result (optional)
                         #cv2.imshow('Image with Custom ROI', roi)
@@ -402,7 +412,7 @@ class FKESABuilder:
                         diff = round(average_intensities_rhs[i + 1] - average_intensities_rhs[i], 2)
                         zonal_intensity_deltas_rhs.append(diff)
 
-                    print(f"Zonal intensity difference between consecutive elements rhs: {zonal_intensity_deltas_rhs} and {len(zonal_intensity_deltas_rhs)}")
+                    self.debug_print(f"Zonal intensity difference between consecutive elements rhs: {zonal_intensity_deltas_rhs} and {len(zonal_intensity_deltas_rhs)}")
 
                    # Initialize an empty list to store the zonal_intensity_deltas
                     zonal_intensity_deltas_lhs = []
@@ -412,21 +422,21 @@ class FKESABuilder:
                         diff = round(average_intensities_lhs[i + 1] - average_intensities_lhs[i], 2)
                         zonal_intensity_deltas_lhs.append(diff)
 
-                    print(f"Zonal intensity difference between consecutive elements lhs: {zonal_intensity_deltas_lhs} and {len(zonal_intensity_deltas_lhs)}")
+                    self.debug_print(f"Zonal intensity difference between consecutive elements lhs: {zonal_intensity_deltas_lhs} and {len(zonal_intensity_deltas_lhs)}")
 
                     null_zone_rhs_possibility = False
                     for diff in zonal_intensity_deltas_rhs:
                         if abs(diff) > self.args['gradientIntensityChange']:
                             null_zone_rhs_possibility = True
                             break  # No need to continue checking if one element meets the condition
-                    print("Null Zone RHS Possibility:", null_zone_rhs_possibility)
+                    self.debug_print("Null Zone RHS Possibility:", null_zone_rhs_possibility)
 
                     null_zone_lhs_possibility = False
                     for diff in zonal_intensity_deltas_lhs:
                         if abs(diff) > self.args['gradientIntensityChange']:
                             null_zone_lhs_possibility = True
                             break  # No need to continue checking if one element meets the condition
-                    print("Null Zone LHS Possibility:", null_zone_lhs_possibility)
+                    self.debug_print("Null Zone LHS Possibility:", null_zone_lhs_possibility)
 
                     #"""
                     deltas=[]
@@ -434,7 +444,7 @@ class FKESABuilder:
                     for zone in range(num_zones):
                         #print(f"{zone}")
                         if abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]) <= self.args['brightnessTolerance'] and zone > self.args['skipZonesFromCenter']:
-                           print(f"{zone} intensity matches with difference {abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]):.4f}" )
+                           self.debug_print(f"{zone} intensity matches with difference {abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]):.4f}" )
                            difference = abs(average_intensities_rhs[zone] - average_intensities_lhs[zone])
                            deltas.append((zone,difference))
                     if deltas:
@@ -456,7 +466,7 @@ class FKESABuilder:
                         #)
 
                         sorted_deltas = sorted(deltas, key=lambda x: x[1])
-                        pprint.pprint(f"Zone match: {sorted_deltas[0][0]}")
+                        #pprint.pprint(f"Zone match: {sorted_deltas[0][0]}")
 
                         line_mark1 = 0 + (int(sorted_deltas[0][0]) * radius // num_zones)
                         #line_mark2 = 0 + ((int(sorted_deltas[0][0])+1) * radius // num_zones)
@@ -541,7 +551,7 @@ class FKESABuilder:
                             #self.write_csv(csv_line)
 
                     else:
-                         print("No zones have matching intensities!")
+                         self.debug_print("No zones have matching intensities!")
                          self.stale_image = True
                     # Check if the image size is smaller than 640x480
                     
@@ -580,9 +590,9 @@ class FKESABuilder:
                            timestamp = int(time.time())  # Get the current timestamp
                            filename = f"FKESA_v2_{timestamp}.jpg"  # Generate a filename with the timestamp
                            image_path = os.path.join(save_directory,filename)
-                           print("********************************************************************")
-                           print(image_path)                           
-                           print("********************************************************************")
+                           self.debug_print("********************************************************************")
+                           self.debug_print(image_path)                           
+                           self.debug_print("********************************************************************")
                            #sys.exit(1)
                            #image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
                            if not cv2.imwrite(image_path, result):

@@ -33,8 +33,9 @@ screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 scale_window = False
 
+is_debugging = False
+autofoucault_simple_simulation = True
 # Initialize a variable to store image data
-autofoucault_simple_simulation=False
 #image_data = None
 process_fkesa = False
 selected_camera=0
@@ -386,7 +387,10 @@ def process_frames():
                    #if counter % 5 == 0:
                    #     if counter > 100:
                    #        counter = 0
-                        step_user_text = f"Step {step_counter}"
+                        if process_fkesa:
+                           step_user_text = f"Step {step_counter}"
+                        else:
+                           step_user_text = ""
                         """
                         start_time = time.time()
                         """
@@ -408,6 +412,7 @@ def process_frames():
                         builder.with_param('append_to_csv', is_measuring or is_auto)
                         builder.with_param('-STEP SIZE-', step_size_val)
                         builder.with_param('user_text', step_user_text)
+                        builder.with_param('debug', is_debugging)
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
@@ -642,7 +647,7 @@ def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=
                 # Call the boolean method on the instance
                 result_boolean = helper.get_boolean_value_from_url(url_boolean)
                 if result_boolean is not None:
-                    print("Received boolean value:", result_boolean)
+                    #print("Received boolean value:", result_boolean)
                     if result_boolean:
                        found_end_x = True
                        break
@@ -866,7 +871,7 @@ try:
 
     # First the window layout in 2 columns
     file_list_column = [
-        [sg.Text("SELECT IMAGES FOLDER",font=('Verdana', 10, 'bold'), text_color="darkred"),], 
+        [sg.Text("Select Images Folder",font=('Verdana', 10, 'bold'), text_color="darkred"),], 
         [
             #sg.Text("Select Images Folder",font=('Verdana', 12, 'bold'), text_color="darkred"), 
             sg.In(size=(30, 1), enable_events=True, key="-FOLDER-"),
@@ -881,7 +886,7 @@ try:
 
     # For now will only show the name of the file that was chosen
     image_viewer_column = [
-        [sg.Text("CLICK TO VIEW AN IMAGE FROM THE LEFT PANE", font=('Verdana', 10, 'bold'), text_color="darkred")],
+        [sg.Text("Click To View An Image From The Left Pane", font=('Verdana', 10, 'bold'), text_color="darkred")],
         [sg.Text(size=(70, 1), key="-TOUT-")],
         [sg.Image(key="-LOAD IMAGE-",size=(200,200))],
     ]
@@ -889,7 +894,7 @@ try:
 
     # Define the window layout
     layout = [
-            [sg.Image(filename='fkesa.ico.png'), sg.VerticalSeparator(), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(61, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'), sg.VerticalSeparator(),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), sg.VerticalSeparator()],
+            [sg.Image(filename='fkesa.ico.png'), sg.VerticalSeparator(), sg.Text("Foucault Knife-Edge Shadogram Analyzer (FKESA) Version 2", size=(61, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'), sg.VerticalSeparator(),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), sg.VerticalSeparator()],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
@@ -901,14 +906,14 @@ try:
              sg.VerticalSeparator(), 
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
-             sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE INCHES-"),
-             sg.InputText('0.10', key='-STEP SIZE-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.Text("Step Size (Inches)", size=(15, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE INCHES-"),
+             sg.InputText('0.10', key='-STEP SIZE-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Text("STEP DELAY (μSECS)", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PULSE DELAY-"),
-             sg.InputText('50', key='-STEP DELAY-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
+             sg.Text("Step Delay (μsecs)", size=(16, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PULSE DELAY-"),
+             sg.InputText('50', key='-STEP DELAY-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Text("MAX STEPS", size=(10, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX STEPS-"),
-             sg.InputText('10', key='-MAX ATTEMPTS-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
+             sg.Text("Max Steps", size=(9, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX STEPS-"),
+             sg.InputText('10', key='-MAX ATTEMPTS-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Auto Foucault', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
@@ -921,17 +926,17 @@ try:
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [
              sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='green', text_color='white'), 
-             sg.Button('SELECT CAMERA'), 
+             sg.Button('Select Camera'), 
              sg.VerticalSeparator(), 
-             sg.Checkbox('RAW VIDEO', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Verdana', 10, 'bold')), 
+             sg.Checkbox('Raw Video', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(), 
-             sg.Checkbox('COLORED RAW VIDEO', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Verdana', 10, 'bold')), 
+             sg.Checkbox('Colored Raw Video', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(),  # Separator 
-             sg.Text("DIAMETER (INCHES) [DEFAULT: 6]", size=(30, 1), justification="left", font=('Verdana', 10, 'bold'), key="-DIAMETER TEXT-"),
-             sg.InputText('6.0', key='-DIA TEXT-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.Text("Diameter (Inches) [Default: 6]", size=(25, 1), justification="left", font=('Verdana', 10, 'bold'), key="-DIAMETER TEXT-"),
+             sg.InputText('6.0', key='-DIA TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Text("FOCAL LENGTH (INCHES) [DEFAULT: 48]", size=(35, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
-             sg.InputText('48.0', key='-FL TEXT-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.Text("Focal Length (Inches) [Default: 48]", size=(30, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
+             sg.InputText('48.0', key='-FL TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
@@ -939,10 +944,10 @@ try:
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("CIRCULAR HOUGH TRANSFORM PARAMETERS [MIRROR DETECTION]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
+        [sg.Text("Circular Hough Transform Parameters [Mirror Detection]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("MIN DIST (PIXELS) [DEFAULT: 50]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST A-"),
+            sg.Text("Minimum Distance (Pixels) [Default: 50]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -956,11 +961,11 @@ try:
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 500]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("Processing Delay Milliseconds [Default: 200]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                500,
+                200,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -971,7 +976,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("PARAMETERS 1 (PIXELS) [DEFAULT: 25]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS A-"),
+            sg.Text("Parameter 1 (Pixels) [Default: 25]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -984,7 +989,7 @@ try:
                 font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PARAMETER 2 (PIXELS) [DEFAULT: 60]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS B-"),
+            sg.Text("Parameter 2 (Pixels) [Default: 60]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -999,7 +1004,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("MIN RADIUS (PIXELS) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MIN RADIUS-"),
+            sg.Text("Minimum Radius (Pixels) [Default: 10]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MIN RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 255),
@@ -1012,7 +1017,7 @@ try:
                 font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("MAX RADIUS (PIXELS) [DEFAULT: 0]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX RADIUS-"),
+            sg.Text("Maximum Radius (Pixels) [Default: 0]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX RADIUS-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 255),
@@ -1027,10 +1032,10 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("INTENSITY PARAMETERS [NULL ZONES IDENTIFICATION]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
+        [sg.Text("Intensity Parameters [Null Zones Identification]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("BRIGHTNESS TOLERANCE [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS A-"),
+            sg.Text("Brightness Tolerance [Default: 10]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 50),
@@ -1043,7 +1048,7 @@ try:
                 font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("NUMBER OF ZONES [DEFAULT: 50]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
+            sg.Text("Number Of Zones [Default: 50]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (30, 50),
@@ -1058,7 +1063,7 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [
-            sg.Text("ANGLE (SLICE OR PIE) (DEGREES) [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-ANGLE-"),
+            sg.Text("Angel (Slice Or Pie) (Degrees) [Default: 10]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-ANGLE-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (10, 90),
@@ -1071,7 +1076,7 @@ try:
                 font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("SKIP ZONES FROM THE MIRROR CENTER [DEFAULT: 10]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-SKIP ZONES-"),
+            sg.Text("Skip Zones From The Center [Default: 10]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-SKIP ZONES-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (1, 20),
