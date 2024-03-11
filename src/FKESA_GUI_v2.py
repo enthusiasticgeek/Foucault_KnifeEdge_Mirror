@@ -34,7 +34,7 @@ screen_height = root.winfo_screenheight()
 scale_window = False
 
 is_debugging = False
-autofoucault_simple_simulation = True
+autofoucault_simple_simulation = False
 # Initialize a variable to store image data
 #image_data = None
 process_fkesa = False
