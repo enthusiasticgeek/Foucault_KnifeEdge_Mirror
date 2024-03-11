@@ -67,8 +67,12 @@ current_time = time.time()
 measurement_run_counter = 0
 step_size_val = 0.10
 step_delay_val = 50 #microsec
+max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
 stepper_steps_per_revolution = 200
+
+step_counter = 0
+prev_step_counter = 0
 
 # Get the current timestamp
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -215,7 +219,7 @@ def inches_to_mm(inches):
     return inches * 25.4
 
 def check_step_size_validity(values):
-        step_size = values['step_size']
+        step_size = values['-STEP SIZE-']
         if is_valid_number(step_size):
             step_size = format(float(step_size), '.3f')
             #print(f'Success! Step Size: {step_size}')
@@ -364,6 +368,8 @@ def process_frames():
                 global is_auto
                 global step_size_val
                 global step_delay_val
+                global step_counter
+                global prev_step_counter
                 preprocess_frame = None
                 # color or grayscale?
                 if not color_video:
@@ -397,7 +403,7 @@ def process_frames():
                         builder.with_param('skipZonesFromCenter', skip_zones_val)
                         builder.with_param('csv_filename', csv_filename)
                         builder.with_param('append_to_csv', is_measuring or is_auto)
-                        builder.with_param('step_size', step_size_val)
+                        builder.with_param('-STEP SIZE-', step_size_val)
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
@@ -424,6 +430,7 @@ def process_frames():
                 global shared_frame
                 if fkesa_frame is not None:
                    if is_auto:
+                      step_counter += 1
                       is_auto=False
                    shared_frame = fkesa_frame.copy()
                    #Record if flag set
@@ -508,14 +515,14 @@ print(f"Steps needed: {steps_needed} steps")
 
 # Function to disable all widgets in the window
 def disable_all_autofoucault_widgets(window):
-    widgets_to_disable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-MEASUREMENTS-', '-MEASUREMENTS CSV-', 'step_size', 'step_delay',
+    widgets_to_disable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-MEASUREMENTS-', '-MEASUREMENTS CSV-', '-STEP SIZE-', '-STEP DELAY-', '-MAX ATTEMPTS-',
                           '-PAUSE PLAY VIDEO-', '-RECORD VIDEO-', '-RAW VIDEO SELECT-', '-COLOR VIDEO SELECT-', '-CAMERA SELECT-']
     for widget_key in widgets_to_disable:
         window[widget_key].update(disabled=True)
 
 # Function to re-enable all widgets in the window
 def enable_all_autofoucault_widgets(window):
-    widgets_to_enable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-MEASUREMENTS-', '-MEASUREMENTS CSV-', 'step_size', 'step_delay',
+    widgets_to_enable = ['-DIA TEXT-', '-FL TEXT-', '-AUTOFOUCAULT-', '-MEASUREMENTS-', '-MEASUREMENTS CSV-', '-STEP SIZE-', '-STEP DELAY-', '-MAX ATTEMPTS-',
                          '-PAUSE PLAY VIDEO-', '-RECORD VIDEO-', '-RAW VIDEO SELECT-', '-COLOR VIDEO SELECT-', '-CAMERA SELECT-']
     for widget_key in widgets_to_enable:
         window[widget_key].update(disabled=False)
@@ -607,6 +614,11 @@ def autofoucault_reset_counters(helper, device_ip="192.168.4.1"):
 
 def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=50):
         global is_auto
+        global step_counter
+        global prev_step_counter
+        with lock:
+             step_counter=0
+             prev_step_counter=0
         found_end_x = False
         for num in range(0, max_attempts):
                 url_boolean = f"http://{device_ip}/reached_end_x"
@@ -631,6 +643,10 @@ def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=
                             # ====== FKESA v2 process iteration begin =========
                             with lock:
                                is_auto = True
+                            while True:
+                                  if step_counter > prev_step_counter:
+                                     prev_step_counter = step_counter
+                                     break
                             # ====== FKESA v2 process iteration end =========
                         else:
                             print("no response!")
@@ -642,6 +658,11 @@ def autofoucault_goto_limit_end_x(helper, device_ip="192.168.4.1", max_attempts=
 
 def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
         global is_auto
+        global step_counter
+        global prev_step_counter
+        with lock:
+             step_counter=0
+             prev_step_counter=0
         found_end_x = False
         for num in range(0, max_attempts):
                     # CW X
@@ -657,6 +678,10 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
                         # ====== FKESA v2 process iteration begin =========
                         with lock:
                              is_auto = True
+                        while True:
+                              if step_counter > prev_step_counter:
+                                 prev_step_counter = step_counter
+                                 break
                         # ====== FKESA v2 process iteration end =========
                     else:
                         print("no response!")
@@ -676,8 +701,8 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
         global auto_error
         global is_auto
         global process_fkesa
-        with lock:
-                 is_auto=True
+        #with lock:
+        #         is_auto=True
         #Default IP 192.168.4.1
         helper = FKESAHelper()
         #result_steps = inches_to_steps(distance_inches, steps_per_revolution, microsteps)
@@ -750,17 +775,25 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
 
 def autofoucault_no_uc(helper, device_ip="192.168.4.1", max_attempts=50):
         global is_auto
+        global step_counter
+        global prev_step_counter
+        with lock:
+             step_counter=0
+             prev_step_counter=0
         found_end_x = False
         for num in range(0, max_attempts):
                     # ====== FKESA v2 process iteration begin =========
                     with lock:
                          is_auto = True
+                    while True:
+                          if step_counter > prev_step_counter:
+                             prev_step_counter = step_counter
+                             break
                     # ====== FKESA v2 process iteration end =========
                     #Allow some time for carriage to move along the stepper motor rail
                     time.sleep(1)
                     #is_auto = False
         return True, 0
-
 
 def process_fkesa_v2_quick_test(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
         global exit_event
@@ -798,10 +831,7 @@ def process_fkesa_v2_quick_test(device_ip="192.168.4.1", result_delay_usec=50, r
 
 #process_fkesa_v2("192.168.4.1",50,100,10)
 
-
-
 #=========== main ==========
-
 
 try:
 
@@ -842,7 +872,7 @@ try:
 
     # Define the window layout
     layout = [
-            [sg.Image(filename='fkesa.ico.png'), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(100, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red')],
+            [sg.Image(filename='fkesa.ico.png'), sg.VerticalSeparator(), sg.Text("FOUCAULT KNIFE-EDGE SHADOWGRAM ANALYZER (FKESA) VERSION 2", size=(61, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'), sg.VerticalSeparator(),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), sg.VerticalSeparator()],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
@@ -854,19 +884,20 @@ try:
              sg.VerticalSeparator(), 
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
-             sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE-"),
-             sg.InputText('0.10', key='step_size', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.Text("STEP SIZE (INCHES)", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE INCHES-"),
+             sg.InputText('0.10', key='-STEP SIZE-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Text("STEP DELAY (μSECS)", size=(20, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PULSE DELAY-"),
-             sg.InputText('50', key='step_delay', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
+             sg.Text("STEP DELAY (μSECS)", size=(18, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PULSE DELAY-"),
+             sg.InputText('50', key='-STEP DELAY-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Text("MAX STEPS", size=(10, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX STEPS-"),
+             sg.InputText('10', key='-MAX ATTEMPTS-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Auto Foucault', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
-             sg.VerticalSeparator(),  # Separator 
-             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
             ],
             [sg.HorizontalSeparator()],  # Separator 
@@ -884,6 +915,9 @@ try:
              sg.VerticalSeparator(),  # Separator 
              sg.Text("FOCAL LENGTH (INCHES) [DEFAULT: 48]", size=(35, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
              sg.InputText('48.0', key='-FL TEXT-', size=(10, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
+             sg.VerticalSeparator(),  # Separator 
             ],
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
@@ -905,11 +939,11 @@ try:
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 1000]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("PROCESSING DELAY MILLISECONDS [DEFAULT: 500]", size=(50, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                1000,
+                500,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -1066,9 +1100,16 @@ try:
               exit_event.set()  # Signal the processing_frames thread to exit
               break
         elif event == "-AUTOFOUCAULT-":
-           window['-MESSAGE-'].update('[AUTOFOUCAULT COMMENCED...PLEASE WAIT A FEW SECONDS FOR THE OPERATION TO COMPLETE (VIDEO WILL PAUSE)...]')
+           window['-MESSAGE-'].update('[AUTOFOUCAULT COMMENCED...PLEASE WAIT A FEW SECONDS/MINUTES FOR THE OPERATION TO COMPLETE...]')
            confirm_proceed = sg.popup_yes_no("Is your Foucault setup ready? Are you sure you want to proceed with AutoFoucault?\n\nNote that this test may take a few minutes to complete. You will not be able to use other widgets on this GUI during this operation.")
-           if confirm_proceed == "Yes":
+           if confirm_proceed == "Yes" and \
+              is_valid_number(values['-STEP SIZE-']) and \
+              is_valid_integer(values['-STEP DELAY-']) and \
+              is_valid_integer(values['-MAX ATTEMPTS-']) and \
+              is_valid_mirror_params(values['-DIA TEXT-']) and \
+              is_valid_mirror_params(values['-FL TEXT-']):
+              #proceed
+
               #window['-MESSAGE-'].update('[Autofoucault ongoing....Please wait...]')
               with lock:
                       #window['-MESSAGE-'].update('[Autofoucault ongoing....Please wait...]')
@@ -1079,24 +1120,28 @@ try:
                         window['-MEASUREMENTS-'].update(text = ('Start Measurements'))
                         window['-DIA TEXT-'].update(disabled=False)
                         window['-FL TEXT-'].update(disabled=False)
-                        window['step_size'].update(disabled=False)
-                        window['step_delay'].update(disabled=False)
+                        window['-STEP SIZE-'].update(disabled=False)
+                        window['-STEP DELAY-'].update(disabled=False)
+                        window['-MAX ATTEMPTS-'].update(disabled=False)
                         is_measuring = False
               # Disable all Widgets temporarily
               disable_all_autofoucault_widgets(window)
-              distance_inches=float(values['step_size'])
+              distance_inches=float(values['-STEP SIZE-'])
               #result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
               ball_screw_pitch_mm = 5
               distance_mm = inches_to_mm(distance_inches)
               result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
-              result_delay_usec = values['step_delay']
+              result_delay_usec = values['-STEP DELAY-']
+              result_max_attempts = values['-MAX ATTEMPTS-']
+              print(result_max_attempts)
               #success, error = process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=50)
               #success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
               #print(success,error)
               # Start the thread function when the "Start Thread" button is pressed
 
-              #auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 50})
-              auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 3})
+              #auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
+              auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": 5})
+              #auto_thread = threading.Thread(target=process_fkesa_v2_quick_test, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
               auto_thread.daemon = True
               auto_thread.start()
               """
@@ -1111,6 +1156,7 @@ try:
               """
            else:
                window['-MESSAGE-'].update('[]')
+               sg.popup_ok(f"FKESA AUTOFOUCAULT process cannot be started. Please check and enter valid values for step size, step delay, max steps, focal length and diameter. Click OK to continue.") 
            #sys.exit()
         elif event == "-MEASUREMENTS-":
             with lock:
@@ -1122,10 +1168,12 @@ try:
                    window['-DIA TEXT-'].update(disabled=True)
                    window['-FL TEXT-'].update(disabled=True)
                    window['-AUTOFOUCAULT-'].update(disabled=True)
-                   step_size_val = float(values['step_size'])
-                   step_delay_val = float(values['step_delay'])
-                   window['step_size'].update(disabled=True)
-                   window['step_delay'].update(disabled=True)
+                   step_size_val = float(values['-STEP SIZE-'])
+                   step_delay_val = float(values['-STEP DELAY-'])
+                   max_attempts_val = int(values['-MAX ATTEMPTS-'])
+                   window['-STEP SIZE-'].update(disabled=True)
+                   window['-STEP DELAY-'].update(disabled=True)
+                   window['-MAX ATTEMPTS-'].update(disabled=True)
                    measurement_run_counter+=1
                    is_measuring = True
                 else:
@@ -1137,8 +1185,9 @@ try:
                 window['-DIA TEXT-'].update(disabled=False)
                 window['-FL TEXT-'].update(disabled=False)
                 window['-AUTOFOUCAULT-'].update(disabled=False)
-                window['step_size'].update(disabled=False)
-                window['step_delay'].update(disabled=False)
+                window['-STEP SIZE-'].update(disabled=False)
+                window['-STEP DELAY-'].update(disabled=False)
+                window['-MAX ATTEMPTS-'].update(disabled=False)
                 is_measuring = False
         elif event == "-MEASUREMENTS CSV-":
              if not is_another_file_instance_running('measurement_csv'):
@@ -1224,8 +1273,9 @@ try:
                   window['-MEASUREMENTS-'].update(text = ('Start Measuring'))
                   window['-DIA TEXT-'].update(disabled=False)
                   window['-FL TEXT-'].update(disabled=False)
-                  window['step_size'].update(disabled=False)
-                  window['step_delay'].update(disabled=False)
+                  window['-STEP SIZE-'].update(disabled=False)
+                  window['-STEP DELAY-'].update(disabled=False)
+                  window['-MAX ATTEMPTS-'].update(disabled=False)
                   is_measuring = False
         elif event == "-COLOR VIDEO SELECT-":
              if not values["-COLOR VIDEO SELECT-"]:
@@ -1365,10 +1415,12 @@ try:
             #   imgbytes = cv2.imencode('.png', please_wait_image)[1].tobytes()
             #   window['-IMAGE-'].update(data=imgbytes)
         # Update the input background color based on validity
-        input_background_color = 'white' if is_valid_number(values['step_size']) else 'pink'
-        window['step_size'].update(background_color=input_background_color)
-        input_background_color = 'white' if is_valid_integer(values['step_delay']) else 'pink'
-        window['step_delay'].update(background_color=input_background_color)
+        input_background_color = 'white' if is_valid_number(values['-STEP SIZE-']) else 'pink'
+        window['-STEP SIZE-'].update(background_color=input_background_color)
+        input_background_color = 'white' if is_valid_integer(values['-STEP DELAY-']) else 'pink'
+        window['-STEP DELAY-'].update(background_color=input_background_color)
+        input_background_color = 'white' if is_valid_integer(values['-MAX ATTEMPTS-']) else 'pink'
+        window['-MAX ATTEMPTS-'].update(background_color=input_background_color)
         input_background_color = 'white' if is_valid_mirror_params(values['-DIA TEXT-']) else 'pink'
         window['-DIA TEXT-'].update(background_color=input_background_color)
         input_background_color = 'white' if is_valid_mirror_params(values['-FL TEXT-']) else 'pink'
