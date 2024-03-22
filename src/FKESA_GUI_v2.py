@@ -47,8 +47,20 @@ is_playing = True
 is_recording = False
 is_measuring = False
 is_auto = False
+grids = False
 auto_return = False
 auto_error = -1
+
+have_splash_screen=False
+
+#Draw box
+start_point = None
+end_point = None
+
+#3 point
+point1 = None
+point2 = None
+point3 = None
 
 mindist_val = 50
 param_a_val = 25 
@@ -72,6 +84,9 @@ step_delay_val = 50 #microsec
 max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
 stepper_steps_per_revolution = 200
+
+#To use or not use circular hough transform
+use_circular_hough_transform = True
 
 step_counter = 0
 prev_step_counter = 0
@@ -115,33 +130,34 @@ fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 out = None
 
 # Create the splash screen layout
-splash_layout = [
-    [sg.Text('Welcome to Foucault KnifeEdge Shadowgram Analyzer!', justification='center')],
-    [sg.Text('FKESA GUI Version 2.1', justification='center')],
-    [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>', justification='center')],
-    [sg.Image('fkesa.png')],  
-    [sg.Text('Launching...', justification='center',k='-LAUNCH-')],
-    [sg.ProgressBar(100, orientation='h', s=(60,20), k='-PBAR-')]
-]
-# Create the splash screen window
-splash_window = sg.Window('Splash Screen', splash_layout, no_titlebar=True, keep_on_top=True)
-# Show splash screen for 3 seconds
-start_time = time.time()
-while time.time() - start_time < 3:
-    event, values = splash_window.read(timeout=100)
-    if (time.time() - start_time) < 1:
-        progress = 33
-        splash_window['-PBAR-'].update(progress)
-        splash_window['-LAUNCH-'].update('Launching.', text_color='white')
-    elif (time.time() - start_time) < 2:
-        progress = 66
-        splash_window['-PBAR-'].update(progress)
-        splash_window['-LAUNCH-'].update('Launching..', text_color='white')
-splash_window['-LAUNCH-'].update('Searching Available Camera Devices...Please allow a few seconds...', text_color='white')
-progress = 100
-splash_window['-PBAR-'].update(progress)
-time.sleep(1)
-splash_window.close()
+if have_splash_screen:
+    splash_layout = [
+        [sg.Text('Welcome to Foucault KnifeEdge Shadowgram Analyzer!', justification='center')],
+        [sg.Text('FKESA GUI Version 2.1', justification='center')],
+        [sg.Text('Author: Pratik M. Tambe <enthusiasticgeek@gmail.com>', justification='center')],
+        [sg.Image('fkesa.png')],  
+        [sg.Text('Launching...', justification='center',k='-LAUNCH-')],
+        [sg.ProgressBar(100, orientation='h', s=(60,20), k='-PBAR-')]
+    ]
+    # Create the splash screen window
+    splash_window = sg.Window('Splash Screen', splash_layout, no_titlebar=True, keep_on_top=True)
+    # Show splash screen for 3 seconds
+    start_time = time.time()
+    while time.time() - start_time < 3:
+        event, values = splash_window.read(timeout=100)
+        if (time.time() - start_time) < 1:
+            progress = 33
+            splash_window['-PBAR-'].update(progress)
+            splash_window['-LAUNCH-'].update('Launching.', text_color='white')
+        elif (time.time() - start_time) < 2:
+            progress = 66
+            splash_window['-PBAR-'].update(progress)
+            splash_window['-LAUNCH-'].update('Launching..', text_color='white')
+    splash_window['-LAUNCH-'].update('Searching Available Camera Devices...Please allow a few seconds...', text_color='white')
+    progress = 100
+    splash_window['-PBAR-'].update(progress)
+    time.sleep(1)
+    splash_window.close()
 
 # -------------------------------------------------------------------------
 # ------------ Scaling ------------
@@ -167,7 +183,44 @@ if scale_window:
    sg.set_options(scaling=scaling)
 # -------------------------------------------------------------------------
 
+#Ref: https://www.johndcook.com/blog/2023/06/18/circle-through-three-points/  
+def circle_thru_pts(x1, y1, x2, y2, x3, y3):
+    s1 = x1**2 + y1**2
+    s2 = x2**2 + y2**2
+    s3 = x3**2 + y3**2
+    M11 = x1*y2 + x2*y3 + x3*y1 - (x2*y1 + x3*y2 + x1*y3)
+    M12 = s1*y2 + s2*y3 + s3*y1 - (s2*y1 + s3*y2 + s1*y3)
+    M13 = s1*x2 + s2*x3 + s3*x1 - (s2*x1 + s3*x2 + s1*x3)
+    x0 =  0.5*M12/M11
+    y0 = -0.5*M13/M11
+    r0 = ((x1 - x0)**2 + (y1 - y0)**2)**0.5
+    return (x0, y0, r0)
 
+
+def draw_rectangle(canvas, start_point, end_point):
+    canvas.erase()
+    canvas.draw_rectangle(start_point, end_point, line_color='red')
+
+def draw_square(canvas, start_point, end_point):
+    #canvas.erase()
+    x1, y1 = start_point
+    x2, y2 = end_point
+    # Calculate the width and height of the rectangle
+    width = abs(x2 - x1)
+    height = abs(y2 - y1)
+    # Ensure that the width and height are equal
+    size = min(width, height)
+    # Adjust the end point to maintain the square shape
+    if x2 < x1:
+        x2 = x1 - size
+    else:
+        x2 = x1 + size
+    if y2 < y1:
+        y2 = y1 - size
+    else:
+        y2 = y1 + size
+    # Draw the square
+    canvas.draw_rectangle(start_point, (x2, y2), line_color='red')
 
 # Function to check if <another_file>.py is already running
 def is_another_file_instance_running(file_lock):
@@ -231,6 +284,13 @@ def check_step_size_validity(values):
             return False
             #sg.popup_error('Invalid input! Please enter a valid integer or floating-point number.')
 
+def draw_mesh_grid(graph, w, h, color):
+    #draw_graph(graph)
+    for y in range(0,48):
+        graph.DrawLine((0,y*h),(640,y*h), color=color, width=1)
+    #draw_graph(graph)
+    for x in range(0,64):
+        graph.DrawLine((x*w,0),(x*w,480), color=color, width=1)
 
 def author_window():
     layout = [
@@ -313,6 +373,33 @@ def process_frames():
     global current_time
     global fourcc
     global out
+    global output_folder
+    global measurement_run_counter
+    global mindist_val
+    global param_a_val 
+    global param_b_val
+    global radius_a_val
+    global radius_b_val
+    global brightness_tolerance_val
+    global zones_val
+    global angle_val
+    global diameter_val
+    global focal_length_val
+    global raw_video
+    global color_video
+    global gradient_intensity_val
+    global skip_zones_val
+    global fkesa_time_delay
+    global is_playing
+    global is_recording
+    global is_measuring
+    global is_auto
+    global step_size_val
+    global step_delay_val
+    global step_counter
+    global prev_step_counter
+    global use_circular_hough_transform
+
     # counter to ease CPU processing with modulo operator
     counter=0
     if cap is not None:
@@ -348,31 +435,6 @@ def process_frames():
                 # For example, convert frame to grayscale
                 #fkesa_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-                global output_folder
-                global measurement_run_counter
-                global mindist_val
-                global param_a_val 
-                global param_b_val
-                global radius_a_val
-                global radius_b_val
-                global brightness_tolerance_val
-                global zones_val
-                global angle_val
-                global diameter_val
-                global focal_length_val
-                global raw_video
-                global color_video
-                global gradient_intensity_val
-                global skip_zones_val
-                global fkesa_time_delay
-                global is_playing
-                global is_recording
-                global is_measuring
-                global is_auto
-                global step_size_val
-                global step_delay_val
-                global step_counter
-                global prev_step_counter
                 preprocess_frame = None
                 # color or grayscale?
                 if not color_video:
@@ -413,10 +475,20 @@ def process_frames():
                         builder.with_param('-STEP SIZE-', step_size_val)
                         builder.with_param('user_text', step_user_text)
                         builder.with_param('debug', is_debugging)
+                        builder.with_param('adaptive_find_mirror', False)
+                        if start_point and end_point:
+                            builder.with_param('start_point', start_point)
+                            builder.with_param('end_point', end_point)
+                        else:
+                            builder.with_param('start_point', (0,0))
+                            builder.with_param('end_point', (640,480))
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
-                        _,fkesa_frame = builder.build(frame)
+                        if use_circular_hough_transform:
+                            _,fkesa_frame = builder.build_auto(frame)
+                        else:
+                            _,fkesa_frame = builder.build_manual(frame)
                         time.sleep(fkesa_time_delay / 1000)
                         """
                         end_time = time.time()
@@ -445,7 +517,7 @@ def process_frames():
                    #Record if flag set
                    if is_recording:
                       if out is not None:
-                         print("Continuing Video Recording....")
+                         #print("Continuing Video Recording....")
                          if raw_video:
                             shared_frame = cv2.resize(shared_frame, (640, 480))
                          else:
@@ -897,7 +969,12 @@ try:
             [sg.Image(filename='fkesa.ico.png'), sg.VerticalSeparator(), sg.Text("Foucault Knife-Edge Shadogram Analyzer (FKESA) Version 2", size=(61, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'), sg.VerticalSeparator(),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), sg.VerticalSeparator()],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Image(filename="", key="-IMAGE-", size=(640,480)), sg.VerticalSeparator(), sg.Column(file_list_column), sg.VerticalSeparator(), sg.Column(image_viewer_column),],
+        #[sg.Image(filename="", key="-IMAGE-", size=(640,480), enable_events=True), 
+        [sg.Graph((640,480), (0, 0), (640,480), enable_events=True, key='-IMAGE-'),
+         sg.VerticalSeparator(), 
+         sg.Column(file_list_column), 
+         sg.VerticalSeparator(), 
+         sg.Column(image_viewer_column),],
         [
             [
              sg.Button('Start Recording', key='-RECORD VIDEO-',button_color = ('white','red')), 
@@ -921,6 +998,8 @@ try:
              sg.VerticalSeparator(),  # Separator 
              sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
+             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
+             sg.VerticalSeparator(),  # Separator 
             ],
             [sg.HorizontalSeparator()],  # Separator 
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
@@ -932,13 +1011,15 @@ try:
              sg.VerticalSeparator(), 
              sg.Checkbox('Colored Raw Video', default=True, enable_events=True, key='-COLOR VIDEO SELECT-', font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(),  # Separator 
+             sg.Checkbox('Grids', default=False, enable_events=True, key='-GRIDS-',font=('Verdana', 10, 'bold')), 
+             sg.VerticalSeparator(), 
+             sg.Button('Clear Box', key='-CLEAR BOX-',button_color = ('black','lightgreen'),disabled=False),
+             sg.VerticalSeparator(), 
              sg.Text("Diameter (Inches) [Default: 6]", size=(25, 1), justification="left", font=('Verdana', 10, 'bold'), key="-DIAMETER TEXT-"),
              sg.InputText('6.0', key='-DIA TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Text("Focal Length (Inches) [Default: 48]", size=(30, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
              sg.InputText('48.0', key='-FL TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
-             sg.VerticalSeparator(),  # Separator 
-             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
             ],
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
@@ -961,11 +1042,11 @@ try:
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("Processing Delay Milliseconds [Default: 200]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("Processing Delay Milliseconds [Default: 500]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                200,
+                500,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -1121,6 +1202,24 @@ try:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
+        elif event == "-IMAGE-":
+          #mouse_x, mouse_y = window.CurrentLocation()
+          #print(f"Clicked inside the Window at ({mouse_x}, {mouse_y})")
+          x, y = values['-IMAGE-']
+          with lock:
+            if start_point is None:
+                start_point = (x, y)
+            else:
+                end_point = (x, y)
+                #draw_square(window['-IMAGE-'], start_point, end_point)
+            print(start_point)
+            print(end_point)
+        elif event == '-CLEAR BOX-':
+          with lock:
+            start_point = None
+            end_point = None
+            window['-IMAGE-'].erase()
+            print('clear box')
         elif event == "-AUTOFOUCAULT-":
            window['-MESSAGE-'].update('[AUTOFOUCAULT COMMENCED...PLEASE WAIT A FEW SECONDS/MINUTES FOR THE OPERATION TO COMPLETE...]')
            confirm_proceed = sg.popup_yes_no("Is your Foucault setup ready? Are you sure you want to proceed with AutoFoucault?\n\nNote that this test may take a few minutes to complete. You will not be able to use other widgets on this GUI during this operation.")
@@ -1266,6 +1365,11 @@ try:
                 thread = threading.Thread(target=process_frames)
                 thread.daemon = True
                 thread.start()
+        elif event == "-GRIDS-":
+             if not values["-GRIDS-"]:
+                grids = False
+             elif values["-GRIDS-"]:
+                grids = True
         elif event == "-RAW VIDEO SELECT-":
              if not values["-RAW VIDEO SELECT-"]:
                 window['-MEASUREMENTS-'].update(disabled=False)
@@ -1301,8 +1405,20 @@ try:
               brightness_tolerance_val = int(values["-BRIGHTNESS SLIDER-"])
               zones_val = int(values["-ZONES SLIDER-"])
               angle_val = int(values["-ANGLE SLIDER-"])
-              diameter_val = float(values["-DIA TEXT-"])
-              focal_length_val = float(values["-FL TEXT-"])
+              #diameter_val = float(values["-DIA TEXT-"])
+              #focal_length_val = float(values["-FL TEXT-"])
+              diameter_val = values.get("-DIA TEXT-", "1.0")  # Default diameter value is 1.0 if input is empty
+              focal_length_val = values.get("-FL TEXT-", "1.0")  # Default focal length value is 1.0 if input is empty
+              try:
+                 diameter_val = float(diameter_val)
+                 focal_length_val = float(focal_length_val)
+                 if diameter_val < 1.0:
+                    diameter_val = 1.0
+                 if focal_length_val < 1.0:
+                    focal_length_val = 1.0
+              except ValueError:
+                 sg.popup_error("Invalid input! Please enter valid floating-point numbers.")
+       
               skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
         elif event == 'Save Image':
             with lock:
@@ -1409,7 +1525,15 @@ try:
           if 'shared_frame' in globals():
             if shared_frame is not None and window is not None:
                imgbytes = cv2.imencode('.png', shared_frame)[1].tobytes()
-               window['-IMAGE-'].update(data=imgbytes)
+               #window['-IMAGE-'].update(data=imgbytes)
+               window['-IMAGE-'].erase()
+               window['-IMAGE-'].draw_image(data=imgbytes, location=(0, 480))
+               # Help the user specify the grids for the mirror
+               if grids:
+                  draw_mesh_grid(window['-IMAGE-'],40,40,color='white')
+               # Let user specify the ROI for the mirror
+               if start_point and end_point:
+                  draw_square(window['-IMAGE-'], start_point, end_point)
             #else:
             #   # Generate "please wait" image
             #   please_wait_image = generate_please_wait_image()
