@@ -86,7 +86,7 @@ stepper_microsteps = 32
 stepper_steps_per_revolution = 200
 
 #To use or not use circular hough transform
-use_circular_hough_transform = True
+use_circular_hough_transform = False
 
 step_counter = 0
 prev_step_counter = 0
@@ -196,10 +196,36 @@ def circle_thru_pts(x1, y1, x2, y2, x3, y3):
     r0 = ((x1 - x0)**2 + (y1 - y0)**2)**0.5
     return (x0, y0, r0)
 
+def bounding_box_from_circle(center_x, center_y, radius):
+    start_x = center_x - radius
+    start_y = center_y - radius
+    end_x = center_x + radius
+    end_y = center_y + radius
+    return (int(start_x), int(start_y)), (int(end_x), int(end_y))
+ 
+
+points = []
+
+#Use this function with lock:
+def draw_circle_thru_3_pts(canvas, points):
+    global start_point
+    global end_point
+    #canvas.erase()
+    if len(points) == 3:
+        x1, y1 = points[0]
+        x2, y2 = points[1]
+        x3, y3 = points[2]
+        # Calculate circle parameters
+        x0, y0, r0 = circle_thru_pts(x1, y1, x2, y2, x3, y3)
+        # Draw the circle
+        canvas.draw_circle((x0, y0), r0, line_color='red', line_width=2)
+        start_point, end_point = bounding_box_from_circle(x0, y0, r0)
+        print(start_point)
+        print(end_point)
 
 def draw_rectangle(canvas, start_point, end_point):
     canvas.erase()
-    canvas.draw_rectangle(start_point, end_point, line_color='red')
+    canvas.draw_rectangle(start_point, end_point, line_color='red', line_width=2)
 
 def draw_square(canvas, start_point, end_point):
     #canvas.erase()
@@ -480,6 +506,7 @@ def process_frames():
                             builder.with_param('start_point', start_point)
                             builder.with_param('end_point', end_point)
                         else:
+                            print("start_point and end_point None")
                             builder.with_param('start_point', (0,0))
                             builder.with_param('end_point', (640,480))
                         # ... Include other parameters as needed
@@ -1025,7 +1052,10 @@ try:
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Text("Circular Hough Transform Parameters [Mirror Detection]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
+        [
+            sg.Text("Circular Hough Transform (CHT) Parameters [Mirror Detection]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred'),
+            sg.Checkbox('Use CHT', default=False, enable_events=True, key='-USE CHT-',font=('Verdana', 10, 'bold')), 
+        ],
         [sg.HorizontalSeparator()],  # Separator 
         [
             sg.Text("Minimum Distance (Pixels) [Default: 50]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST A-"),
@@ -1042,11 +1072,11 @@ try:
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("Processing Delay Milliseconds [Default: 500]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("Processing Delay Milliseconds [Default: 200]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0,1000),
-                500,
+                200,
                 100,
                 orientation="h",
                 enable_events=True,
@@ -1207,6 +1237,7 @@ try:
           #print(f"Clicked inside the Window at ({mouse_x}, {mouse_y})")
           x, y = values['-IMAGE-']
           with lock:
+            """
             if start_point is None:
                 start_point = (x, y)
             else:
@@ -1214,10 +1245,16 @@ try:
                 #draw_square(window['-IMAGE-'], start_point, end_point)
             print(start_point)
             print(end_point)
+            """
+            if len(points) < 3:
+               points.append((x, y))
+            #if len(points) == 3:
+            #   draw_circle_thru_3_pts(window['-IMAGE-'], points)
         elif event == '-CLEAR BOX-':
           with lock:
             start_point = None
             end_point = None
+            points = []
             window['-IMAGE-'].erase()
             print('clear box')
         elif event == "-AUTOFOUCAULT-":
@@ -1387,6 +1424,11 @@ try:
                 color_video = False
              elif values["-COLOR VIDEO SELECT-"]:
                 color_video = True
+        elif event == "-USE CHT-":
+             if not values["-USE CHT-"]:
+                use_circular_hough_transform = False
+             elif not values["-USE CHT-"]:
+                use_circular_hough_transform = True
         elif event == "-DELAY SLIDER-":
              fkesa_time_delay = int(values["-DELAY SLIDER-"])
         # Inside the main event loop where the sliders are handled
@@ -1532,8 +1574,11 @@ try:
                if grids:
                   draw_mesh_grid(window['-IMAGE-'],40,40,color='white')
                # Let user specify the ROI for the mirror
-               if start_point and end_point:
-                  draw_square(window['-IMAGE-'], start_point, end_point)
+               #if start_point and end_point:
+               #   draw_square(window['-IMAGE-'], start_point, end_point)
+               if len(points) == 3:
+                  draw_circle_thru_3_pts(window['-IMAGE-'], points)
+
             #else:
             #   # Generate "please wait" image
             #   please_wait_image = generate_please_wait_image()
