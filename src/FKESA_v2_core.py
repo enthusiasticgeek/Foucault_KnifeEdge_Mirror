@@ -523,9 +523,13 @@ class FKESABuilder:
                             self.draw_text(mask_ret, f"NULL Zones not found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 0, 255), thickness=1)
 
                         # Use the function to draw the symmetrical arc on the image
-                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
-                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
                         
+                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
+                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+ 
+
                         zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
                         zone_inches = float(float(zone_pixels/radius_orig)*self.args['mirrorDiameterInches'])/2
                         self.draw_text(mask_ret, f"Radius: {radius} pixels ", (center_x-20+top_left_x,center_y+radius-20+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(255, 255, 255), thickness=1)
@@ -958,8 +962,11 @@ class FKESABuilder:
                             self.draw_text(mask_ret, f"NULL Zones not found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 0, 255), thickness=1)
 
                         # Use the function to draw the symmetrical arc on the image
-                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
-                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
+
+                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
+                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
                         
                         zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
                         zone_inches = float(float(zone_pixels/radius_orig)*self.args['mirrorDiameterInches'])/2

@@ -183,6 +183,10 @@ if scale_window:
    sg.set_options(scaling=scaling)
 # -------------------------------------------------------------------------
 
+def convert_coordinates(x, y, canvas_height):
+    new_y = canvas_height - y
+    return x, new_y
+
 #Ref: https://www.johndcook.com/blog/2023/06/18/circle-through-three-points/  
 def circle_thru_pts(x1, y1, x2, y2, x3, y3):
     s1 = x1**2 + y1**2
@@ -201,7 +205,7 @@ def bounding_box_from_circle(center_x, center_y, radius):
     start_y = center_y - radius
     end_x = center_x + radius
     end_y = center_y + radius
-    return (int(start_x), int(start_y)), (int(end_x), int(end_y))
+    return (int(start_x), int(480-start_y)), (int(end_x), int(480-end_y))
  
 
 points = []
@@ -220,8 +224,8 @@ def draw_circle_thru_3_pts(canvas, points):
         # Draw the circle
         canvas.draw_circle((x0, y0), r0, line_color='red', line_width=2)
         start_point, end_point = bounding_box_from_circle(x0, y0, r0)
-        print(start_point)
-        print(end_point)
+        print("start ",start_point)
+        print("end ",end_point)
 
 def draw_rectangle(canvas, start_point, end_point):
     canvas.erase()
@@ -617,6 +621,18 @@ print(f"Steps needed: {steps_needed} steps")
 
 
 """
+
+#================ Enable/Disable circular Hough Transform ==================
+def enable_all_CHT_widgets(window):
+    widgets_to_enable = ['-MINDIST SLIDER-', '-PARAM SLIDER A-', '-PARAM SLIDER B-', '-RADIUS SLIDER A-', '-RADIUS SLIDER B-']
+    for widget_key in widgets_to_enable:
+        window[widget_key].update(disabled=False)
+
+def disable_all_CHT_widgets(window):
+    widgets_to_disable = ['-MINDIST SLIDER-', '-PARAM SLIDER A-', '-PARAM SLIDER B-', '-RADIUS SLIDER A-', '-RADIUS SLIDER B-']
+    for widget_key in widgets_to_disable:
+        window[widget_key].update(disabled=True)
+ 
 #================= Stepper motor distance conversion ================
 #Function to re-enable or disable measurement widgets
 
@@ -1426,8 +1442,12 @@ try:
                 color_video = True
         elif event == "-USE CHT-":
              if not values["-USE CHT-"]:
+                print('CHT dis')
+                disable_all_CHT_widgets(window)
                 use_circular_hough_transform = False
-             elif not values["-USE CHT-"]:
+             elif values["-USE CHT-"]:
+                print('CHT en')
+                enable_all_CHT_widgets(window)
                 use_circular_hough_transform = True
         elif event == "-DELAY SLIDER-":
              fkesa_time_delay = int(values["-DELAY SLIDER-"])
