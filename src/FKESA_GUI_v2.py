@@ -85,6 +85,8 @@ max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
 stepper_steps_per_revolution = 200
 
+autosave = False
+
 #To use or not use circular hough transform
 use_circular_hough_transform = False
 
@@ -429,6 +431,7 @@ def process_frames():
     global step_counter
     global prev_step_counter
     global use_circular_hough_transform
+    global autosave
 
     # counter to ease CPU processing with modulo operator
     counter=0
@@ -506,6 +509,7 @@ def process_frames():
                         builder.with_param('user_text', step_user_text)
                         builder.with_param('debug', is_debugging)
                         builder.with_param('adaptive_find_mirror', False)
+                        builder.with_param('enable_disk_rwx_operations', autosave)
                         if start_point and end_point:
                             builder.with_param('start_point', start_point)
                             builder.with_param('end_point', end_point)
@@ -1026,6 +1030,8 @@ try:
              sg.VerticalSeparator(), 
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
+             sg.Checkbox('Auto Save', default=False, enable_events=True, key='-AUTOSAVE SELECT-',font=('Verdana', 10, 'bold')), 
+             sg.VerticalSeparator(), 
              sg.Text("Step Size (Inches)", size=(15, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE INCHES-"),
              sg.InputText('0.10', key='-STEP SIZE-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
@@ -1056,7 +1062,7 @@ try:
              sg.VerticalSeparator(),  # Separator 
              sg.Checkbox('Grids', default=False, enable_events=True, key='-GRIDS-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(), 
-             sg.Button('Clear Box', key='-CLEAR BOX-',button_color = ('black','lightgreen'),disabled=False),
+             sg.Button('Clear Circle', key='-CLEAR CIRCLE-',button_color = ('black','lightgreen'),disabled=False),
              sg.VerticalSeparator(), 
              sg.Text("Diameter (Inches) [Default: 6]", size=(25, 1), justification="left", font=('Verdana', 10, 'bold'), key="-DIAMETER TEXT-"),
              sg.InputText('6.0', key='-DIA TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
@@ -1266,13 +1272,13 @@ try:
                points.append((x, y))
             #if len(points) == 3:
             #   draw_circle_thru_3_pts(window['-IMAGE-'], points)
-        elif event == '-CLEAR BOX-':
+        elif event == '-CLEAR CIRCLE-':
           with lock:
             start_point = None
             end_point = None
             points = []
             window['-IMAGE-'].erase()
-            print('clear box')
+            print('clear circle')
         elif event == "-AUTOFOUCAULT-":
            window['-MESSAGE-'].update('[AUTOFOUCAULT COMMENCED...PLEASE WAIT A FEW SECONDS/MINUTES FOR THE OPERATION TO COMPLETE...]')
            confirm_proceed = sg.popup_yes_no("Is your Foucault setup ready? Are you sure you want to proceed with AutoFoucault?\n\nNote that this test may take a few minutes to complete. You will not be able to use other widgets on this GUI during this operation.")
@@ -1372,7 +1378,11 @@ try:
                 finally:
                     remove_lock_file('optics')  # Remove lock file
                     window['-OPTICS-'].update(disabled=False, text='Optical Ray Diagram')
-
+        elif event == "-AUTOSAVE SELECT-":
+             if not values["-AUTOSAVE SELECT-"]:
+                autosave = False
+             elif values["-AUTOSAVE SELECT-"]:
+                autosave = True
         elif event == "-RECORD VIDEO-":
              if not is_recording:
                 print("Starting video recording.....") 

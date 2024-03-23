@@ -254,6 +254,13 @@ class FKESABuilder:
                     cv2.circle(image, (center_x, center_y), 3, (0, 255, 0), -1)
                     #cv2.circle(image, (int(center_x), int(center_y)), int(radius), (0, 255, 0), 2)
 
+                    """ 
+                    top_left_x = abs(int(self.args['start_point'][0]))
+                    top_left_y = abs(int(self.args['start_point'][1]))
+                    bottom_right_x = int(self.args['end_point'][0])
+                    bottom_right_y = int(self.args['end_point'][1])
+
+                    """ 
                     # Calculate the bounding box coordinates
                     top_left_x = abs(int(center_x) - int(radius))
                     top_left_y = abs(int(center_y) - int(radius))
@@ -265,6 +272,14 @@ class FKESABuilder:
                     top_left_y = max(0, top_left_y)
                     bottom_right_x = min(image.shape[1], bottom_right_x)
                     bottom_right_y = min(image.shape[0], bottom_right_y)
+
+                    """
+                    # Calculate the bounding box coordinates
+                    top_left_x = max(0, int(center_x - radius))
+                    top_left_y = max(0, int(center_y - radius))
+                    bottom_right_x = min(image.shape[1] - 1, int(center_x + radius))
+                    bottom_right_y = min(image.shape[0] - 1, int(center_y + radius))
+                    """
 
                     # Crop the image using the bounding box
                     cropped_image = image[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
@@ -523,11 +538,11 @@ class FKESABuilder:
                             self.draw_text(mask_ret, f"NULL Zones not found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 0, 255), thickness=1)
 
                         # Use the function to draw the symmetrical arc on the image
-                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle, end_angle, color)
-                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
+                        #self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle, end_angle, color)
+                        #self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
                         
-                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
-                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
  
 
                         zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
@@ -608,6 +623,8 @@ class FKESABuilder:
                            #image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
                            if not cv2.imwrite(image_path, result):
                               raise Exception("Could not write/save image")
+
+                    #cv2.imwrite("some_file.jpg", cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
                     return cropped_image, result
 
@@ -962,11 +979,11 @@ class FKESABuilder:
                             self.draw_text(mask_ret, f"NULL Zones not found", (center_x-20+top_left_x,center_y+radius-80+top_left_y), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, color=(0, 0, 255), thickness=1)
 
                         # Use the function to draw the symmetrical arc on the image
-                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle, end_angle, color)
-                        self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
+                        #self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle, end_angle, color)
+                        #self.draw_symmetrical_arc(mask_ret, center_x, center_y, line_mark1, start_angle+180, end_angle+180, color)
 
-                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
-                        #self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
                         
                         zone_pixels = int(pixels_per_zone * int(sorted_deltas[0][0]))
                         zone_inches = float(float(zone_pixels/radius_orig)*self.args['mirrorDiameterInches'])/2
@@ -1025,7 +1042,7 @@ class FKESABuilder:
                     self.draw_text(result, self.args['user_text'], color=(0, 255, 0), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, position=(result_center_x-20, result_center_y-20), thickness=1)
 
                     #Took measurement - Hence save the image
-                    if self.args['append_to_csv'] and self.stale_image == False:
+                    if self.args['append_to_csv'] and self.stale_image == False and self.args['enable_disk_rwx_operations']:
                        analyzed_jpg_filename = self.args['csv_filename']+self.current_timestamp()+'.jpg'
                        #analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
                        #cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100])
@@ -1046,6 +1063,8 @@ class FKESABuilder:
                            #image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
                            if not cv2.imwrite(image_path, result):
                               raise Exception("Could not write/save image")
+
+                    #cv2.imwrite("some_file.jpg", cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
 
                     return cropped_image, result
 
