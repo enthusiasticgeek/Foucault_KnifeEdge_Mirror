@@ -85,7 +85,8 @@ max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
 stepper_steps_per_revolution = 200
 
-autosave = False
+#Save images
+autosave = True
 
 #To use or not use circular hough transform
 use_circular_hough_transform = False
