@@ -1091,6 +1091,7 @@ try:
                 size=(50, 10),
                 key="-MINDIST SLIDER-",
                 font=('Verdana', 10, 'normal'),
+                disabled=True
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
@@ -1105,6 +1106,7 @@ try:
                 size=(50, 10),
                 key="-DELAY SLIDER-",
                 font=('Verdana', 10, 'normal'),
+                disabled=True
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -1120,6 +1122,7 @@ try:
                 size=(50, 10),
                 key="-PARAM SLIDER A-",
                 font=('Verdana', 10, 'normal'),
+                disabled=True
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("Parameter 2 (Pixels) [Default: 60]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PARAMS B-"),
@@ -1133,6 +1136,7 @@ try:
                 size=(50, 10),
                 key="-PARAM SLIDER B-",
                 font=('Verdana', 10, 'normal'),
+                disabled=True
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -1148,6 +1152,7 @@ try:
                 size=(50, 10),
                 key="-RADIUS SLIDER A-",
                 font=('Verdana', 10, 'normal'),
+                disabled=True
             ),
             sg.VerticalSeparator(),  # Separator 
             sg.Text("Maximum Radius (Pixels) [Default: 0]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX RADIUS-"),
@@ -1161,6 +1166,7 @@ try:
                 size=(50, 10),
                 key="-RADIUS SLIDER B-",
                 font=('Verdana', 10, 'normal'),
+                disabled=True
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
