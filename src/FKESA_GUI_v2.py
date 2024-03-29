@@ -84,6 +84,7 @@ step_delay_val = 50 #microsec
 max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
 stepper_steps_per_revolution = 200
+cancel_af=False
 
 #Save images
 autosave = True
@@ -299,8 +300,6 @@ def is_valid_mirror_params(value):
           return True
     return False
     
-
-
 def mm_to_inches(mm):
     return mm / 25.4
 
@@ -567,7 +566,6 @@ def process_frames():
                    #      out = None
         except Exception as e:
                print(f"An exception occurred {e}")
-      
 
     cap.release()
     cv2.destroyAllWindows()
@@ -802,13 +800,18 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
         global is_auto
         global step_counter
         global prev_step_counter
+        global cancel_af
         with lock:
              step_counter=0
              prev_step_counter=0
         found_end_x = False
         for num in range(0, max_attempts):
+                    if cancel_af:
+                       break
                     # CW X
-                    url_post = f"http://{device_ip}/button3"
+                    #url_post = f"http://{device_ip}/button3"
+                    # CCW X
+                    url_post = f"http://{device_ip}/button4"
                     data_post = None
                     # Call the post_data method on the instance
                     response_post = helper.post_data_to_url(url_post, data_post)
@@ -843,6 +846,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
         global auto_error
         global is_auto
         global process_fkesa
+        global cancel_af
         #with lock:
         #         is_auto=True
         #Default IP 192.168.4.1
@@ -1042,13 +1046,13 @@ try:
              sg.Text("Max Steps", size=(9, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX STEPS-"),
              sg.InputText('10', key='-MAX ATTEMPTS-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Button('Auto Foucault', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
+             sg.Button('Auto Foucault (AF)', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('Cancel AF', key='-CANCEL AUTOFOUCAULT-',button_color = ('black','red'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('View Measurements Data', key='-MEASUREMENTS CSV-',button_color = ('white','black'),disabled=False),
-             sg.VerticalSeparator(),  # Separator 
-             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
             ],
             [sg.HorizontalSeparator()],  # Separator 
@@ -1070,6 +1074,8 @@ try:
              sg.VerticalSeparator(),  # Separator 
              sg.Text("Focal Length (Inches) [Default: 48]", size=(30, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
              sg.InputText('48.0', key='-FL TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
             ],
             #[sg.Button('SELECT CAMERA'), sg.VerticalSeparator(), sg.Button('Cancel'), sg.VerticalSeparator()], 
@@ -1107,7 +1113,7 @@ try:
                 size=(50, 10),
                 key="-DELAY SLIDER-",
                 font=('Verdana', 10, 'normal'),
-                disabled=True
+                disabled=False
             ),
             sg.VerticalSeparator(),  # Separator 
         ],
@@ -1299,6 +1305,7 @@ try:
 
               #window['-MESSAGE-'].update('[Autofoucault ongoing....Please wait...]')
               with lock:
+                      cancel_af=False
                       #window['-MESSAGE-'].update('[Autofoucault ongoing....Please wait...]')
                       # First stop any ongoing measurements
                       if is_measuring:
@@ -1344,6 +1351,9 @@ try:
                window['-MESSAGE-'].update('[]')
                sg.popup_ok(f"FKESA AUTOFOUCAULT process cannot be started. Please check and enter valid values for step size, step delay, max steps, focal length and diameter. Click OK to continue.") 
            #sys.exit()
+        elif event == "-CANCEL AUTOFOUCAULT-":
+             with lock:
+                  cancel_af=True
         elif event == "-MEASUREMENTS-":
             with lock:
              if not is_measuring:
