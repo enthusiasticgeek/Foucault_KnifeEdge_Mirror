@@ -294,7 +294,7 @@ def is_valid_integer(input_str):
 def is_valid_mirror_params(value):
     output = is_valid_number(value)
     if output:
-       if float(value) < 1.0 or float(value) > 255.0:
+       if float(value) < 0.0 or float(value) > 255.0:
           return False
        else:
           return True
