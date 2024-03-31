@@ -55,6 +55,7 @@ class FKESABuilder:
             'adaptive_find_mirror': False,
             'start_point': None,
             'end_point': None,
+            'radius_of_points': None,
             'enable_disk_rwx_operations': False
             # Include default values for other parameters here
         }
@@ -182,28 +183,35 @@ class FKESABuilder:
             except Exception as e:
                 print(f"Error writing data: {e}")
 
-    def draw_circle(self, image, start_point, end_point):
+    def draw_circle(self, image, start_point, end_point, radius_of_points):
         center = ((start_point[0] + end_point[0]) // 2, (start_point[1] + end_point[1]) // 2)
-        radius = min(abs(start_point[0] - end_point[0]), abs(start_point[1] - end_point[1])) // 2
+        #radius = min(abs(start_point[0] - end_point[0]), abs(start_point[1] - end_point[1])) // 2
+        radius = radius_of_points
         cv2.circle(image, center, radius, (0, 0, 255), thickness=2)
 
-    def get_circle_from_bounding_box(self, start_point, end_point):
+    def get_circle_from_bounding_box(self, start_point, end_point , x_offset, y_offset, radius_of_points):
         # Extract coordinates of start and end points
         x1, y1 = start_point
         x2, y2 = end_point
+        x1 = abs(x_offset-x1)
+        x2 = abs(x_offset-x2)
+        y1 = abs(y_offset-y1)
+        y2 = abs(y_offset-y2)
         # Calculate center of bounding box
-        center_x = (x1 + x2) / 2
-        center_y = (y1 + y2) / 2
+        center_x = int((x1 + x2) / 2)
+        center_y = int((y1 + y2) / 2)
         # Calculate radius of the circle
-        radius = math.sqrt((x2 - x1)**2 + (y2 - y1)**2) / 2
+        #radius = math.sqrt(int(x2 - x1)**2 + int(y2 - y1)**2) / 2
+        radius = radius_of_points
         return int(center_x), int(center_y), int(radius)    
 
     def crop_circle_from_image(self, image):
         start_point = self.args['start_point']
         end_point = self.args['end_point']
+        radius_of_points = self.args['radius_of_points']
 
         if start_point and end_point:
-            center_x, center_y, radius = self.get_circle_from_bounding_box(start_point, end_point)
+            center_x, center_y, radius = self.get_circle_from_bounding_box(start_point, end_point,0,0,radius_of_points)
             # Calculate bounding box coordinates for the circular region
             x1 = int(center_x - radius)
             y1 = int(center_y - radius)
@@ -236,13 +244,17 @@ class FKESABuilder:
 
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                 blurred = cv2.GaussianBlur(gray_image, (5, 5), 0)
-                print(self.args['start_point'])
-                print(self.args['end_point'])
+                #print(self.args['start_point'])
+                #print(self.args['end_point'])
                 #return None, None
 
-                if self.args['start_point'] and self.args['end_point']:
+                if self.args['start_point'] and self.args['end_point'] and self.args['radius_of_points']:
                     # Get the center coordinates and radius of the largest circle
-                    center_x, center_y, radius = self.get_circle_from_bounding_box(self.args['start_point'],self.args['end_point'])
+                    center_x, center_y, radius = self.get_circle_from_bounding_box(self.args['start_point'],self.args['end_point'],0,480,self.args['radius_of_points'])
+                
+                    #print("=======================")
+                    #print(center_x, center_y, radius)
+                    #print("=======================")
 
                     #self.debug_print(f"LARGEST CIRCLE : {center_x},{center_y},{radius}")
                     # backup copies to be used in csv later
@@ -262,16 +274,17 @@ class FKESABuilder:
 
                     """ 
                     # Calculate the bounding box coordinates
-                    top_left_x = abs(int(center_x) - int(radius))
-                    top_left_y = abs(int(center_y) - int(radius))
-                    bottom_right_x = int(center_x) + int(radius)
-                    bottom_right_y = int(center_y) + int(radius)
+                    top_left_x = int(center_x - radius)
+                    top_left_y = int(center_y - radius)
+                    bottom_right_x = int(center_x + radius)
+                    bottom_right_y = int(center_y + radius)
 
                     # Ensure the coordinates are within the image boundaries
                     top_left_x = max(0, top_left_x)
                     top_left_y = max(0, top_left_y)
                     bottom_right_x = min(image.shape[1], bottom_right_x)
                     bottom_right_y = min(image.shape[0], bottom_right_y)
+
 
                     """
                     # Calculate the bounding box coordinates
@@ -601,6 +614,8 @@ class FKESABuilder:
                     # Draw the user text on the result image near center
                     self.draw_text(result, self.args['user_text'], color=(0, 255, 0), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, position=(result_center_x-20, result_center_y-20), thickness=1)
 
+                    cv2.rectangle(result, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y), color=(0, 255, 0), thickness=2)
+
                     #Took measurement - Hence save the image
                     if self.args['append_to_csv'] and self.stale_image == False and self.args['enable_disk_rwx_operations']:
                        analyzed_jpg_filename = self.args['csv_filename']+self.current_timestamp()+'.jpg'
@@ -711,10 +726,10 @@ class FKESABuilder:
                     cv2.circle(image, (center_x, center_y), 3, (0, 255, 0), -1)
 
                     # Calculate the bounding box coordinates
-                    top_left_x = abs(int(center_x) - int(radius))
-                    top_left_y = abs(int(center_y) - int(radius))
-                    bottom_right_x = int(center_x) + int(radius)
-                    bottom_right_y = int(center_y) + int(radius)
+                    top_left_x = int(center_x - radius)
+                    top_left_y = int(center_y - radius)
+                    bottom_right_x = int(center_x + radius)
+                    bottom_right_y = int(center_y + radius)
 
                     # Ensure the coordinates are within the image boundaries
                     top_left_x = max(0, top_left_x)
@@ -1040,6 +1055,8 @@ class FKESABuilder:
                     result_center_y = result.shape[0] // 2
                     # Draw the user text on the result image near center
                     self.draw_text(result, self.args['user_text'], color=(0, 255, 0), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, position=(result_center_x-20, result_center_y-20), thickness=1)
+
+                    #cv2.rectangle(result, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y), color=(0, 255, 0), thickness=2)
 
                     #Took measurement - Hence save the image
                     if self.args['append_to_csv'] and self.stale_image == False and self.args['enable_disk_rwx_operations']:

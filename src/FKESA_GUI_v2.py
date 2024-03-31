@@ -56,6 +56,7 @@ have_splash_screen=False
 #Draw box
 start_point = None
 end_point = None
+radius_of_points = None
 
 #3 point
 point1 = None
@@ -76,7 +77,7 @@ gradient_intensity_val = 3
 skip_zones_val = 10
 raw_video = True
 color_video = True
-fkesa_time_delay = 1000
+fkesa_time_delay = 10
 current_time = time.time()
 measurement_run_counter = 0
 step_size_val = 0.10
@@ -202,14 +203,14 @@ def circle_thru_pts(x1, y1, x2, y2, x3, y3):
     x0 =  0.5*M12/M11
     y0 = -0.5*M13/M11
     r0 = ((x1 - x0)**2 + (y1 - y0)**2)**0.5
-    return (x0, y0, r0)
+    return (int(x0), int(y0), int(r0))
 
 def bounding_box_from_circle(center_x, center_y, radius):
     start_x = center_x - radius
     start_y = center_y - radius
     end_x = center_x + radius
     end_y = center_y + radius
-    return (int(start_x), int(480-start_y)), (int(end_x), int(480-end_y))
+    return (int(start_x), int(start_y)), (int(end_x), int(end_y))
  
 
 points = []
@@ -218,6 +219,7 @@ points = []
 def draw_circle_thru_3_pts(canvas, points):
     global start_point
     global end_point
+    global radius_of_points
     #canvas.erase()
     if len(points) == 3:
         x1, y1 = points[0]
@@ -225,9 +227,12 @@ def draw_circle_thru_3_pts(canvas, points):
         x3, y3 = points[2]
         # Calculate circle parameters
         x0, y0, r0 = circle_thru_pts(x1, y1, x2, y2, x3, y3)
+        #print("x,y,r", x0, y0, r0)
         # Draw the circle
         canvas.draw_circle((x0, y0), r0, line_color='red', line_width=2)
         start_point, end_point = bounding_box_from_circle(x0, y0, r0)
+        radius_of_points = r0
+        canvas.DrawRectangle(start_point, end_point, line_color="red")
         print("start ",start_point)
         print("end ",end_point)
 
@@ -510,13 +515,15 @@ def process_frames():
                         builder.with_param('debug', is_debugging)
                         builder.with_param('adaptive_find_mirror', False)
                         builder.with_param('enable_disk_rwx_operations', autosave)
-                        if start_point and end_point:
-                            builder.with_param('start_point', start_point)
-                            builder.with_param('end_point', end_point)
+                        if start_point and end_point and radius_of_points:
+                            builder.with_param('start_point', (start_point[0],start_point[1]))
+                            builder.with_param('end_point', (end_point[0],end_point[1]))
+                            builder.with_param('radius_of_points', radius_of_points)
                         else:
                             print("start_point and end_point None")
                             builder.with_param('start_point', (0,0))
                             builder.with_param('end_point', (640,480))
+                            builder.with_param('radius_of_points', 240)
                         # ... Include other parameters as needed
 
                         # Build and execute the operation
@@ -1102,12 +1109,12 @@ try:
                 # text_color=('darkgreen') # experimental
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("Processing Delay Milliseconds [Default: 200]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
+            sg.Text("Processing Delay Milliseconds [Default: 10]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MINDIST B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (0,1000),
-                200,
-                100,
+                (0,100),
+                10,
+                10,
                 orientation="h",
                 enable_events=True,
                 size=(50, 10),
@@ -1289,6 +1296,7 @@ try:
           with lock:
             start_point = None
             end_point = None
+            radius_of_points = None
             points = []
             window['-IMAGE-'].erase()
             print('clear circle')
