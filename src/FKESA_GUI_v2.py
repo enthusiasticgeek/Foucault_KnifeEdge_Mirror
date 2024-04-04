@@ -1419,6 +1419,7 @@ try:
                     remove_lock_file('optics')  # Remove lock file
                     window['-OPTICS-'].update(disabled=False, text='Optical Ray Diagram')
         elif event == "-AUTOSAVE SELECT-":
+            with lock:
              if not values["-AUTOSAVE SELECT-"]:
                 autosave = False
              elif values["-AUTOSAVE SELECT-"]:
@@ -1469,11 +1470,13 @@ try:
                 thread.daemon = True
                 thread.start()
         elif event == "-GRIDS-":
+            with lock:
              if not values["-GRIDS-"]:
                 grids = False
              elif values["-GRIDS-"]:
                 grids = True
         elif event == "-RAW VIDEO SELECT-":
+            with lock:
              if not values["-RAW VIDEO SELECT-"]:
                 window['-MEASUREMENTS-'].update(disabled=False)
                 window['-AUTOFOUCAULT-'].update(disabled=False)
@@ -1486,16 +1489,19 @@ try:
                   enable_all_measurements_widgets(window)
                   is_measuring = False
         elif event == "-COLOR VIDEO SELECT-":
+            with lock:
              if not values["-COLOR VIDEO SELECT-"]:
                 color_video = False
              elif values["-COLOR VIDEO SELECT-"]:
                 color_video = True
         elif event == "-CARRIAGE DIR-":
+            with lock:
              if not values["-CARRIAGE DIR-"]:
                 auto_carriage_forward=False
              elif values["-CARRIAGE DIR-"]:
                 auto_carriage_forward=True
         elif event == "-USE CHT-":
+            with lock:
              if not values["-USE CHT-"]:
                 print('CHT dis')
                 disable_all_CHT_widgets(window)
