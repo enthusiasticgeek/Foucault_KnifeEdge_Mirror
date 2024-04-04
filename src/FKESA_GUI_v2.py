@@ -110,6 +110,9 @@ distance_mm = 10
 result_steps = 50
 result_delay_usec = 50
 
+#auto carriage direction forward
+auto_carriage_forward=False
+
 #thread
 auto_thread = None
 
@@ -814,13 +817,19 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
              step_counter=0
              prev_step_counter=0
         found_end_x = False
+        # default: move away from the mirror
+        url_post = f"http://{device_ip}/button4"
         for num in range(0, max_attempts):
                     if cancel_af:
                        break
-                    # CW X
-                    #url_post = f"http://{device_ip}/button3"
-                    # CCW X
-                    url_post = f"http://{device_ip}/button4"
+                    if auto_carriage_forward:
+                       # CW X
+                       # move towards the mirror
+                       url_post = f"http://{device_ip}/button3"
+                    else:
+                       # CCW X
+                       # move away from the mirror
+                       url_post = f"http://{device_ip}/button4"
                     data_post = None
                     # Call the post_data method on the instance
                     response_post = helper.post_data_to_url(url_post, data_post)
@@ -1085,6 +1094,8 @@ try:
              sg.InputText('48.0', key='-FL TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Checkbox('Delay 100x', default=False, enable_events=True, key='-SCALE 100X-',font=('Verdana', 10, 'bold')), 
+             sg.VerticalSeparator(),  # Separator 
+             sg.Checkbox('Auto FWD', default=False, enable_events=True, key='-CARRIAGE DIR-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
@@ -1479,6 +1490,11 @@ try:
                 color_video = False
              elif values["-COLOR VIDEO SELECT-"]:
                 color_video = True
+        elif event == "-CARRIAGE DIR-":
+             if not values["-CARRIAGE DIR-"]:
+                auto_carriage_forward=False
+             elif values["-CARRIAGE DIR-"]:
+                auto_carriage_forward=True
         elif event == "-USE CHT-":
              if not values["-USE CHT-"]:
                 print('CHT dis')
