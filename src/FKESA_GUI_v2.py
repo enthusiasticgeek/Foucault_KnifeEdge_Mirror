@@ -34,7 +34,8 @@ screen_height = root.winfo_screenheight()
 scale_window = False
 
 is_debugging = False
-autofoucault_simple_simulation = False
+#autofoucault_simple_simulation = False
+autofoucault_simple_simulation = True
 # Initialize a variable to store image data
 #image_data = None
 process_fkesa = False
@@ -86,6 +87,7 @@ max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
 stepper_steps_per_revolution = 200
 cancel_af=False
+scale_time_100x=False
 
 #Save images
 autosave = True
@@ -1042,7 +1044,7 @@ try:
              sg.VerticalSeparator(), 
              sg.Button("Save Image", size=(15, 1), button_color = ('white','blue')), 
              sg.VerticalSeparator(), 
-             sg.Checkbox('Auto Save', default=False, enable_events=True, key='-AUTOSAVE SELECT-',font=('Verdana', 10, 'bold')), 
+             sg.Checkbox('Auto Save', default=True, enable_events=True, key='-AUTOSAVE SELECT-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(), 
              sg.Text("Step Size (Inches)", size=(15, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE INCHES-"),
              sg.InputText('0.10', key='-STEP SIZE-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
@@ -1081,6 +1083,8 @@ try:
              sg.VerticalSeparator(),  # Separator 
              sg.Text("Focal Length (Inches) [Default: 48]", size=(30, 1), justification="left", font=('Verdana', 10, 'bold'), key="-FOCAL LENGTH TEXT-"),
              sg.InputText('48.0', key='-FL TEXT-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Checkbox('Delay 100x', default=False, enable_events=True, key='-SCALE 100X-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Optical Ray Diagram', key='-OPTICS-',button_color = ('white','brown'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
@@ -1485,7 +1489,11 @@ try:
                 enable_all_CHT_widgets(window)
                 use_circular_hough_transform = True
         elif event == "-DELAY SLIDER-":
-             fkesa_time_delay = int(values["-DELAY SLIDER-"])
+            with lock: 
+             if not scale_time_100x:
+                fkesa_time_delay = int(values["-DELAY SLIDER-"])
+             else:
+                fkesa_time_delay = int(values["-DELAY SLIDER-"])*100
         # Inside the main event loop where the sliders are handled
         elif event == "-MINDIST SLIDER-" \
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
@@ -1517,6 +1525,14 @@ try:
                  sg.popup_error("Invalid input! Please enter valid floating-point numbers.")
        
               skip_zones_val = int(values["-SKIP ZONES SLIDER-"])
+        elif event == "-SCALE 100X-":
+            with lock:
+             if not values["-SCALE 100X-"]:
+                scale_time_100x=False
+                fkesa_time_delay = int(values["-DELAY SLIDER-"])
+             elif values["-SCALE 100X-"]:
+                scale_time_100x=True
+                fkesa_time_delay = int(values["-DELAY SLIDER-"])*100
         elif event == 'Save Image':
             with lock:
               if shared_frame is not None:

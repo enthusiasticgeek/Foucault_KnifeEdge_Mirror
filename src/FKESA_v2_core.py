@@ -159,6 +159,7 @@ class FKESABuilder:
                 try:
                     with open(csv_file, mode='w', newline='') as file:
                         writer = csv.writer(file)
+                        """
                         writer.writerow([
                             '------ Timestamp ------',
                             'Mirror X PX',
@@ -172,6 +173,28 @@ class FKESABuilder:
                             'Mirror FL IN',
                             'Step Size'
                         ])  # Replace with your column names
+                        """
+                        writer.writerow([
+                                'Diameter Inches',
+                                'Focal Length Inches',
+                                'Step Size Inches'
+                        ])  # Repla
+                        writer.writerow([
+                                self.args['mirrorDiameterInches'],
+                                self.args['mirrorFocalLengthInches'],
+                                self.args['step_size']
+                        ])  # Replace with your column names
+
+                        writer.writerow([
+                            '------ Timestamp ------',
+                            'Mirror X Pixels',
+                            'Mirror Y Pixels',
+                            'Mirror Radius Pixels',
+                            'Match Zone number',
+                            'Match Zone Pixels',
+                            'Match Zone Inches'
+                        ])  # Replace with your column names
+
                 except Exception as e:
                     print(f"Error writing headers: {e}")
 
@@ -571,6 +594,7 @@ class FKESABuilder:
  
                         # Append to CSV if set
                         if self.args['append_to_csv']:
+                            """
                             csv_data=[
                                 self.current_timestamp(),
                                 center_x_orig,
@@ -583,6 +607,16 @@ class FKESABuilder:
                                 self.args['mirrorDiameterInches'],
                                 self.args['mirrorFocalLengthInches'],
                                 self.args['step_size']
+                            ]
+                            """
+                            csv_data=[
+                                self.current_timestamp(),
+                                center_x_orig,
+                                center_y_orig,
+                                radius_orig,
+                                int(sorted_deltas[0][0]),
+                                zone_pixels,
+                                round(zone_inches,3)
                             ]
                             self.write_csv(csv_data)
                             #self.write_csv(','.join(map(str,csv_data)))
@@ -1013,6 +1047,7 @@ class FKESABuilder:
  
                         # Append to CSV if set
                         if self.args['append_to_csv']:
+                            """
                             csv_data=[
                                 self.current_timestamp(),
                                 center_x_orig,
@@ -1026,6 +1061,17 @@ class FKESABuilder:
                                 self.args['mirrorFocalLengthInches'],
                                 self.args['step_size']
                             ]
+                            """
+                            csv_data=[
+                                self.current_timestamp(),
+                                center_x_orig,
+                                center_y_orig,
+                                radius_orig,
+                                int(sorted_deltas[0][0]),
+                                zone_pixels,
+                                round(zone_inches,3)
+                            ]
+
                             self.write_csv(csv_data)
                             #self.write_csv(','.join(map(str,csv_data)))
                             #csv_line = ','.join(str(item).replace('"', '') for item in csv_data)
