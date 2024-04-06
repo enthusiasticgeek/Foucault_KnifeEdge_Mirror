@@ -520,6 +520,7 @@ def process_frames():
                         builder.with_param('debug', is_debugging)
                         builder.with_param('adaptive_find_mirror', False)
                         builder.with_param('enable_disk_rwx_operations', autosave)
+                        builder.with_param('step', f"{step_counter}")
                         if start_point and end_point and radius_of_points:
                             builder.with_param('start_point', (start_point[0],start_point[1]))
                             builder.with_param('end_point', (end_point[0],end_point[1]))

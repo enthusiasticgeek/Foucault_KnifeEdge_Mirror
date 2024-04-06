@@ -56,7 +56,8 @@ class FKESABuilder:
             'start_point': None,
             'end_point': None,
             'radius_of_points': None,
-            'enable_disk_rwx_operations': False
+            'enable_disk_rwx_operations': False,
+            'step': 0
             # Include default values for other parameters here
         }
         stale_image=False
@@ -187,12 +188,13 @@ class FKESABuilder:
 
                         writer.writerow([
                             '------ Timestamp ------',
-                            'Mirror X Pixels',
-                            'Mirror Y Pixels',
+                            'Mirror X Pixels (Center X) ',
+                            'Mirror Y Pixels (Center Y)',
                             'Mirror Radius Pixels',
                             'Match Zone number',
                             'Match Zone Pixels',
-                            'Match Zone Inches'
+                            'Match Zone Inches',
+                            'Step'
                         ])  # Replace with your column names
 
                 except Exception as e:
@@ -616,7 +618,8 @@ class FKESABuilder:
                                 radius_orig,
                                 int(sorted_deltas[0][0]),
                                 zone_pixels,
-                                round(zone_inches,3)
+                                round(zone_inches,3),
+                                self.args['step']
                             ]
                             self.write_csv(csv_data)
                             #self.write_csv(','.join(map(str,csv_data)))
@@ -646,7 +649,7 @@ class FKESABuilder:
                     result_center_x = result.shape[1] // 2
                     result_center_y = result.shape[0] // 2
                     # Draw the user text on the result image near center
-                    self.draw_text(result, self.args['user_text'], color=(0, 255, 0), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, position=(result_center_x-20, result_center_y-20), thickness=1)
+                    self.draw_text(result, self.args['user_text'], color=(0, 0, 255), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, position=(result_center_x-radius+20, result_center_y-radius+20), thickness=2)
 
                     cv2.rectangle(result, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y), color=(0, 255, 0), thickness=2)
 
@@ -1069,7 +1072,8 @@ class FKESABuilder:
                                 radius_orig,
                                 int(sorted_deltas[0][0]),
                                 zone_pixels,
-                                round(zone_inches,3)
+                                round(zone_inches,3),
+                                self.args['step']
                             ]
 
                             self.write_csv(csv_data)
@@ -1100,7 +1104,7 @@ class FKESABuilder:
                     result_center_x = result.shape[1] // 2
                     result_center_y = result.shape[0] // 2
                     # Draw the user text on the result image near center
-                    self.draw_text(result, self.args['user_text'], color=(0, 255, 0), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.3, position=(result_center_x-20, result_center_y-20), thickness=1)
+                    self.draw_text(result, self.args['user_text'], color=(0, 0, 255), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, position=(result_center_x-radius+20, result_center_y-radius+20), thickness=2)
 
                     #cv2.rectangle(result, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y), color=(0, 255, 0), thickness=2)
 
