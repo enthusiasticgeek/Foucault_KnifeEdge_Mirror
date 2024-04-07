@@ -606,13 +606,13 @@ def inches_to_steps(distance_inches, steps_per_revolution, microsteps=1):
     steps = distance_inches * steps_per_revolution * microsteps / (1.8 * math.pi)  # 1.8 is the stepper motor's step angle in degrees
     return int(steps)  # Return the number of steps as an integer
 
-def distance_to_steps(distance_mm, steps_per_rev, microstepping_factor, ball_screw_pitch_mm):
+def distance_to_steps(distance_inches, steps_per_rev, microstepping_factor, ball_screw_pitch_inches):
     # Calculate the total number of steps per revolution, considering microstepping
     total_steps_per_rev = steps_per_rev * microstepping_factor
     # Calculate the distance traveled in one revolution of the ball screw
-    distance_per_rev = ball_screw_pitch_mm
+    distance_per_rev = ball_screw_pitch_inches
     # Calculate the total number of steps needed to move the specified distance
-    steps = int((distance_mm / distance_per_rev) * total_steps_per_rev)
+    steps = int((distance_inches / distance_per_rev) * total_steps_per_rev)
     return steps
 
 
@@ -1340,9 +1340,10 @@ try:
               disable_all_autofoucault_widgets(window)
               distance_inches=float(values['-STEP SIZE-'])
               #result_steps = inches_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps)
-              #ball_screw_pitch_mm = 5
-              distance_mm = inches_to_mm(distance_inches)
-              result_steps = distance_to_steps(distance_mm, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_mm)
+              ball_screw_pitch_inches = mm_to_inches(ball_screw_pitch_mm)
+              #distance_mm = inches_to_mm(distance_inches)
+              result_steps = distance_to_steps(distance_inches, stepper_steps_per_revolution, stepper_microsteps, ball_screw_pitch_inches)
+              print(f"*** Total steps to travel {result_steps} ***")
               #TODO - add exception
               result_delay_usec = int(values['-STEP DELAY-'])
               result_max_attempts = int(values['-MAX ATTEMPTS-'])
