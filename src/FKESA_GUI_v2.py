@@ -34,8 +34,8 @@ screen_height = root.winfo_screenheight()
 scale_window = False
 
 is_debugging = False
-autofoucault_simple_simulation = False
-#autofoucault_simple_simulation = True
+#autofoucault_simple_simulation = False
+autofoucault_simple_simulation = True
 # Initialize a variable to store image data
 #image_data = None
 process_fkesa = False
@@ -238,8 +238,8 @@ def draw_circle_thru_3_pts(canvas, points):
         start_point, end_point = bounding_box_from_circle(x0, y0, r0)
         radius_of_points = r0
         canvas.DrawRectangle(start_point, end_point, line_color="red")
-        print("start ",start_point)
-        print("end ",end_point)
+        #print("start ",start_point)
+        #print("end ",end_point)
 
 def draw_rectangle(canvas, start_point, end_point):
     canvas.erase()
@@ -526,7 +526,7 @@ def process_frames():
                             builder.with_param('end_point', (end_point[0],end_point[1]))
                             builder.with_param('radius_of_points', radius_of_points)
                         else:
-                            print("start_point and end_point None")
+                            #print("start_point and end_point None")
                             builder.with_param('start_point', (0,0))
                             builder.with_param('end_point', (640,480))
                             builder.with_param('radius_of_points', 240)
@@ -822,6 +822,10 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
         url_post = f"http://{device_ip}/button4"
         for num in range(0, max_attempts):
                     if cancel_af:
+                       is_auto=False
+                       auto_return = False
+                       auto_error = 8
+                       #return False, 8
                        break
                     if auto_carriage_forward:
                        # CW X
@@ -1037,7 +1041,16 @@ try:
 
     # Define the window layout
     layout = [
-            [sg.Image(filename='fkesa.ico.png'), sg.VerticalSeparator(), sg.Text("Foucault Knife-Edge Shadogram Analyzer (FKESA) Version 2", size=(61, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'), sg.VerticalSeparator(),sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), sg.VerticalSeparator()],
+              [ 
+                sg.Image(filename='fkesa.ico.png'), 
+                sg.VerticalSeparator(), 
+                sg.Text("Foucault Knife-Edge Shadogram Analyzer (FKESA) Version 2", size=(61, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='darkgreen'), 
+                sg.VerticalSeparator(),
+                sg.Text("[]", key="-WHICH STEP-", size=(10, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), 
+                sg.VerticalSeparator(),
+                sg.Text("[]", key="-MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), 
+                sg.VerticalSeparator()
+               ],
         [sg.Menu(menu_def, background_color='lightblue',text_color='navy', disabled_text_color='yellow', font='Verdana', pad=(10,10))],
         [sg.HorizontalSeparator()],  # Separator 
         #[sg.Image(filename="", key="-IMAGE-", size=(640,480), enable_events=True), 
@@ -1703,6 +1716,10 @@ try:
                 enable_all_autofoucault_widgets(window)
                 window['-MESSAGE-'].update('[]')
                 sg.popup_ok(f"FKESA AUTOFOUCAULT process Finished. Click OK to continue.") 
+           if process_fkesa:
+               window['-WHICH STEP-'].update(f'[Step: {step_counter}]')
+           else:
+               window['-WHICH STEP-'].update(f'[]')
 
 
     # Wait for the autofoucault processing thread to complete before closing the window

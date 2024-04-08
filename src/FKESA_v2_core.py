@@ -194,7 +194,8 @@ class FKESABuilder:
                             'Match Zone number',
                             'Match Zone Pixels',
                             'Match Zone Inches',
-                            'Step'
+                            'Step',
+                            'Step Distance Inches'
                         ])  # Replace with your column names
 
                 except Exception as e:
@@ -619,7 +620,8 @@ class FKESABuilder:
                                 int(sorted_deltas[0][0]),
                                 zone_pixels,
                                 round(zone_inches,3),
-                                self.args['step']
+                                self.args['step'],
+                                float(float(self.args['step_size'])*int(self.args['step']))
                             ]
                             self.write_csv(csv_data)
                             #self.write_csv(','.join(map(str,csv_data)))
@@ -1073,7 +1075,8 @@ class FKESABuilder:
                                 int(sorted_deltas[0][0]),
                                 zone_pixels,
                                 round(zone_inches,3),
-                                self.args['step']
+                                self.args['step'],
+                                float(float(self.args['step_size'])*int(self.args['step']))
                             ]
 
                             self.write_csv(csv_data)
