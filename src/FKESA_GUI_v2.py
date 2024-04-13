@@ -34,8 +34,8 @@ screen_height = root.winfo_screenheight()
 scale_window = False
 
 is_debugging = False
-#autofoucault_simple_simulation = False
-autofoucault_simple_simulation = True
+autofoucault_simple_simulation = False
+#autofoucault_simple_simulation = True
 # Initialize a variable to store image data
 #image_data = None
 process_fkesa = False
@@ -861,6 +861,48 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
 
    
 
+def autofoucault_reset( device_ip="192.168.4.1"):
+        global is_auto
+        global step_counter
+        global prev_step_counter
+        global cancel_af
+        #with lock:
+        found_end_x = False
+        helper = FKESAHelper()
+        # default: move away from the mirror
+        url_post = f"http://{device_ip}/button4"
+        for num in range(step_counter,0,-1):
+                    if cancel_af:
+                       is_auto=False
+                       auto_return = False
+                       auto_error = 8
+                       #return False, 8
+                       break
+                    if auto_carriage_forward:
+                       # CCW X
+                       # move towards the mirror
+                       url_post = f"http://{device_ip}/button4"
+                    else:
+                       # CW X
+                       # move away from the mirror
+                       url_post = f"http://{device_ip}/button3"
+                    data_post = None
+                    # Call the post_data method on the instance
+                    response_post = helper.post_data_to_url(url_post, data_post)
+                    if response_post is not None:
+                        print("POST Request Response:")
+                        print(response_post.text)
+                        print("Headers:")
+                        print(response_post.headers)
+                    else:
+                        print("no response!")
+                        return False, 8
+                    #Allow some time for carriage to move along the stepper motor rail
+                    #time.sleep(1)
+                    #is_auto = False
+        return True, 0
+   
+
 def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps=500, max_attempts=50):
         global exit_event
         global thread
@@ -1078,9 +1120,11 @@ try:
              sg.Text("Max Steps", size=(9, 1), justification="left", font=('Verdana', 10, 'bold'), key="-MAX STEPS-"),
              sg.InputText('10', key='-MAX ATTEMPTS-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
              sg.VerticalSeparator(),  # Separator 
-             sg.Button('Auto Foucault (AF)', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
+             sg.Button('Start AF', key='-AUTOFOUCAULT-',button_color = ('black','violet'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Cancel AF', key='-CANCEL AUTOFOUCAULT-',button_color = ('black','red'),disabled=False),
+             sg.VerticalSeparator(),  # Separator 
+             sg.Button('Reset AF', key='-RESET AUTOFOUCAULT-',button_color = ('white','blue'),disabled=False),
              sg.VerticalSeparator(),  # Separator 
              sg.Button('Start Measurements', key='-MEASUREMENTS-',button_color = ('black','orange'),disabled=True),
              sg.VerticalSeparator(),  # Separator 
@@ -1273,7 +1317,14 @@ try:
             sg.VerticalSeparator(),  # Separator 
         ],
         [sg.HorizontalSeparator()],  # Separator 
-        [sg.Button("Exit", size=(10, 1), button_color=('white','darkred')), sg.VerticalSeparator(), sg.Button("About", size=(10, 1)), sg.VerticalSeparator(), ],
+        [
+                sg.Button("Exit", size=(10, 1), button_color=('white','darkred')), 
+                sg.VerticalSeparator(), 
+                sg.Button("About", size=(10, 1)), 
+                sg.VerticalSeparator(), 
+                sg.Text("[]", key="-PATH MESSAGE-", size=(120, 1), justification="left", font=('Verdana', 10, 'bold'),text_color='red'), 
+                sg.VerticalSeparator(), 
+                ],
     ]
 
 
@@ -1367,6 +1418,13 @@ try:
               #success, error = process_fkesa_v2_test(device_ip="192.168.4.1", result_delay_usec=result_delay_usec, result_steps=result_steps, max_attempts=5)
               #print(success,error)
               # Start the thread function when the "Start Thread" button is pressed
+              save_directory=""
+              if platform.system() == "Windows":
+                   save_directory = os.path.join(home_dir, 'FKESAv2Images')
+              elif platform.system() == "Linux":
+                   save_directory = os.path.dirname(os.path.realpath(__file__))
+              window['-PATH MESSAGE-'].update(f'Saving AF images to directory: {save_directory}')
+
 
               if not autofoucault_simple_simulation:
                  auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
@@ -1387,11 +1445,17 @@ try:
               """
            else:
                window['-MESSAGE-'].update('[]')
+               window['-PATH MESSAGE-'].update('[]')
                sg.popup_ok(f"FKESA AUTOFOUCAULT process cannot be started. Please check and enter valid values for step size, step delay, max steps, focal length and diameter. Click OK to continue.") 
            #sys.exit()
         elif event == "-CANCEL AUTOFOUCAULT-":
              with lock:
                   cancel_af=True
+        elif event == "-RESET AUTOFOUCAULT-":
+             #TODO(Pratik) -> check if AF in progress already.
+                 reset_auto_thread = threading.Thread(target=autofoucault_reset, args=("192.168.4.1",),)
+                 reset_auto_thread.daemon = True
+                 reset_auto_thread.start()
         elif event == "-MEASUREMENTS-":
             with lock:
              if not is_measuring:
