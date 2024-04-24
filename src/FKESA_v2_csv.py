@@ -15,6 +15,17 @@ def read_csv(filename):
             data.append(row)
     return data
 
+def read_csv_v1(filename):
+    data = []
+    with open(filename, 'r') as file:
+        csv_reader = csv.reader(file, delimiter=',')
+        #Skip first 2 rows that are header
+        next(csv_reader)  # Skip the first row
+        next(csv_reader)  # Skip the second row
+        for row in csv_reader:
+            data.append(row)  # Read all columns
+    return data
+
 # Function to truncate text in columns
 def truncate_columns(data, max_width):
     truncated_data = []
@@ -26,7 +37,7 @@ def truncate_columns(data, max_width):
 sg.theme("LightBlue")
 # Define layout
 layout = [
-    [sg.Text('Select a CSV file')],
+    [sg.Text('Select a FKESA CSV file')],
     [sg.Input(key='-FILE-'), sg.FileBrowse(file_types=(("CSV Files", "*.csv"),))],
     [sg.Button('Open'), sg.Button('Exit')]
 ]
@@ -41,7 +52,8 @@ while True:
     elif event == 'Open':
         filename = values['-FILE-']
         if filename:
-            data = read_csv(filename)
+            #data = read_csv(filename)
+            data = read_csv_v1(filename)
             headers = data[0]  # Assuming the first row contains headers
             table_data = data[1:]  # Data excluding headers
             # Truncate each cell to a maximum width of 30 characters

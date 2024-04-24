@@ -188,9 +188,9 @@ class FKESABuilder:
 
                         writer.writerow([
                             '------ Timestamp ------',
-                            'Mirror X Pixels (Center X) ',
-                            'Mirror Y Pixels (Center Y)',
-                            'Mirror Radius Pixels',
+                            #'Mirror X Pixels (Center X) ',
+                            #'Mirror Y Pixels (Center Y)',
+                            #'Mirror Radius Pixels',
                             'Match Zone number',
                             'Match Zone Pixels',
                             'Match Zone Inches',
@@ -614,9 +614,9 @@ class FKESABuilder:
                             """
                             csv_data=[
                                 self.current_timestamp(),
-                                center_x_orig,
-                                center_y_orig,
-                                radius_orig,
+                                #center_x_orig,
+                                #center_y_orig,
+                                #radius_orig,
                                 int(sorted_deltas[0][0]),
                                 zone_pixels,
                                 round(zone_inches,3),
@@ -1069,9 +1069,9 @@ class FKESABuilder:
                             """
                             csv_data=[
                                 self.current_timestamp(),
-                                center_x_orig,
-                                center_y_orig,
-                                radius_orig,
+                                #center_x_orig,
+                                #center_y_orig,
+                                #radius_orig,
                                 int(sorted_deltas[0][0]),
                                 zone_pixels,
                                 round(zone_inches,3),

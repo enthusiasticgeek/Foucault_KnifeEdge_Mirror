@@ -81,7 +81,7 @@ color_video = True
 fkesa_time_delay = 10
 current_time = time.time()
 measurement_run_counter = 0
-step_size_val = 0.10
+step_size_val = 0.020
 step_delay_val = 50 #microsec
 max_attempts_val = 10 #steps to traverse in autofoucault
 stepper_microsteps = 32
@@ -515,7 +515,7 @@ def process_frames():
                         builder.with_param('skipZonesFromCenter', skip_zones_val)
                         builder.with_param('csv_filename', csv_filename)
                         builder.with_param('append_to_csv', is_measuring or is_auto)
-                        builder.with_param('-STEP SIZE-', step_size_val)
+                        builder.with_param('step_size', step_size_val)
                         builder.with_param('user_text', step_user_text)
                         builder.with_param('debug', is_debugging)
                         builder.with_param('adaptive_find_mirror', False)
@@ -1112,7 +1112,7 @@ try:
              sg.Checkbox('Auto Save', default=True, enable_events=True, key='-AUTOSAVE SELECT-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(), 
              sg.Text("Step Size (Inches)", size=(15, 1), justification="left", font=('Verdana', 10, 'bold'), key="-STEP SIZE INCHES-"),
-             sg.InputText('0.10', key='-STEP SIZE-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
+             sg.InputText('0.020', key='-STEP SIZE-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer or floating-point number'),
              sg.VerticalSeparator(),  # Separator 
              sg.Text("Step Delay (μsecs)", size=(16, 1), justification="left", font=('Verdana', 10, 'bold'), key="-PULSE DELAY-"),
              sg.InputText('50', key='-STEP DELAY-', size=(8, 1), enable_events=True, justification='center', tooltip='Enter an integer number'),
@@ -1425,6 +1425,13 @@ try:
                    save_directory = os.path.dirname(os.path.realpath(__file__))
               window['-PATH MESSAGE-'].update(f'Saving AF images to directory: {save_directory}')
 
+              if check_step_size_validity(values):
+                   print("Starting AutoFoucault measurements.....") 
+                   step_size_val = float(values['-STEP SIZE-'])
+                   step_delay_val = float(values['-STEP DELAY-'])
+                   max_attempts_val = int(values['-MAX ATTEMPTS-'])
+              else:
+                   print("not getting step_size_val")
 
               if not autofoucault_simple_simulation:
                  auto_thread = threading.Thread(target=process_fkesa_v2, args=("192.168.4.1",), kwargs={"result_delay_usec": result_delay_usec, "result_steps": result_steps, "max_attempts": result_max_attempts})
