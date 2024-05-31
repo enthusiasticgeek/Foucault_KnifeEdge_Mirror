@@ -70,7 +70,7 @@ param_b_val = 60
 radius_a_val = 10
 radius_b_val = 0
 brightness_tolerance_val = 10
-zones_val = 50
+zones_val = 150
 angle_val = 10
 diameter_val = 6.0
 focal_length_val = 48.0
@@ -855,7 +855,7 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
                         print("no response!")
                         return False, 8
                     #Allow some time for carriage to move along the stepper motor rail
-                    time.sleep(1)
+                    time.sleep(0.1)
                     #is_auto = False
         return True, 0
 
@@ -1274,11 +1274,11 @@ try:
                 font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("Number Of Zones [Default: 50]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
+            sg.Text("Number Of Zones [Default: 150]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
-                (30, 50),
-                60,
+                (30, 150),
+                150,
                 1,
                 orientation="h",
                 enable_events=True,

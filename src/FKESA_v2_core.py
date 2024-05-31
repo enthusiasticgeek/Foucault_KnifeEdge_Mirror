@@ -42,7 +42,7 @@ class FKESABuilder:
             'maxRadius': 0,
             'brightnessTolerance': 10,
             'roiAngleDegrees': 10,
-            'zones': 50,
+            'zones': 150,
             'mirrorDiameterInches': 6,
             'mirrorFocalLengthInches': 48,
             'gradientIntensityChange': 3,
@@ -366,9 +366,9 @@ class FKESABuilder:
                     # Define the number of zones
                     num_zones = self.args['zones']
 
-                    if num_zones > 50:
-                        self.debug_print("WARNING!!! - Number of zones exceed 50. Limiting to 50.")
-                        num_zones = 50
+                    if num_zones > 150:
+                        self.debug_print("WARNING!!! - Number of zones exceed 150. Limiting to 150.")
+                        num_zones = 150
                     elif num_zones < 30:
                         self.debug_print("WARNING!!! - Number of zones are less than 30. Limiting to 30.")
                         num_zones = 30
@@ -822,9 +822,9 @@ class FKESABuilder:
                     # Define the number of zones
                     num_zones = self.args['zones']
 
-                    if num_zones > 50:
-                        self.debug_print("WARNING!!! - Number of zones exceed 50. Limiting to 50.")
-                        num_zones = 50
+                    if num_zones > 150:
+                        self.debug_print("WARNING!!! - Number of zones exceed 150. Limiting to 150.")
+                        num_zones = 150
                     elif num_zones < 30:
                         self.debug_print("WARNING!!! - Number of zones are less than 30. Limiting to 30.")
                         num_zones = 30
