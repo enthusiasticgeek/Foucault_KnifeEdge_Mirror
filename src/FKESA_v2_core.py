@@ -249,6 +249,363 @@ class FKESABuilder:
         else:
             return None
 
+
+
+
+
+
+
+
+
+
+
+    def build_manual_test(self, image):
+        try:
+            cropped_image=None
+            mask_ret=None
+            # Your existing logic, but using class methods with self.
+            if image is not None:
+                if self.args['gammaCorrection'] > 0.0:
+                    image = self.adjust_gamma(image, gamma=self.args['gammaCorrection'])
+
+                image = self.resize_image(image)
+
+                # Define the dimensions of the mask
+                mask_width = image.shape[1]
+                mask_height = image.shape[0]
+
+                # Create a transparent mask with an alpha channel
+                mask_ret = np.zeros((mask_height, mask_width, 4), dtype=np.uint8)
+                mask_ret[:, :, 3] = 0  # Full transparency initially
+
+                gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                blurred = cv2.GaussianBlur(gray_image, (5, 5), 0)
+                #print(self.args['start_point'])
+                #print(self.args['end_point'])
+                #return None, None
+
+                if self.args['start_point'] and self.args['end_point'] and self.args['radius_of_points']:
+                    # Get the center coordinates and radius of the largest circle
+                    center_x, center_y, radius = self.get_circle_from_bounding_box(self.args['start_point'],self.args['end_point'],0,480,self.args['radius_of_points'])
+                
+                    #print("=======================")
+                    #print(center_x, center_y, radius)
+                    #print("=======================")
+
+                    #self.debug_print(f"LARGEST CIRCLE : {center_x},{center_y},{radius}")
+                    # backup copies to be used in csv later
+                    center_x_orig = center_x
+                    center_y_orig = center_y
+                    radius_orig = radius
+
+                    # Mark the center of the largest circle on the image
+                    cv2.circle(image, (center_x, center_y), 3, (0, 255, 0), -1)
+                    #cv2.circle(image, (int(center_x), int(center_y)), int(radius), (0, 255, 0), 2)
+
+                    """ 
+                    top_left_x = abs(int(self.args['start_point'][0]))
+                    top_left_y = abs(int(self.args['start_point'][1]))
+                    bottom_right_x = int(self.args['end_point'][0])
+                    bottom_right_y = int(self.args['end_point'][1])
+
+                    """ 
+                    # Calculate the bounding box coordinates
+                    top_left_x = int(center_x - radius)
+                    top_left_y = int(center_y - radius)
+                    bottom_right_x = int(center_x + radius)
+                    bottom_right_y = int(center_y + radius)
+
+                    # Ensure the coordinates are within the image boundaries
+                    top_left_x = max(0, top_left_x)
+                    top_left_y = max(0, top_left_y)
+                    bottom_right_x = min(image.shape[1], bottom_right_x)
+                    bottom_right_y = min(image.shape[0], bottom_right_y)
+
+
+                    """
+                    # Calculate the bounding box coordinates
+                    top_left_x = max(0, int(center_x - radius))
+                    top_left_y = max(0, int(center_y - radius))
+                    bottom_right_x = min(image.shape[1] - 1, int(center_x + radius))
+                    bottom_right_y = min(image.shape[0] - 1, int(center_y + radius))
+                    """
+
+                    # Crop the image using the bounding box
+                    cropped_image = image[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
+
+                    cropped_gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+                    cropped_zones_image = cropped_gray_image.copy()
+
+                    # Apply Gaussian blur to reduce noise
+                    cropped_gray_image = cv2.GaussianBlur(cropped_gray_image, (5, 5), 0)
+                    #cv2.imshow('Cropped Image', cropped_gray_image)
+                    #cv2.waitKey(1000)
+
+                    # Flip the cropped image horizontally
+                    flipped_cropped_gray_image = cv2.flip(cropped_gray_image, 1)
+
+                    # image like phi
+                    phi_image = cv2.absdiff(cropped_gray_image, flipped_cropped_gray_image)
+
+                    # Apply a filter (e.g., GaussianBlur) to phi_image
+                    filtered_image = cv2.GaussianBlur(phi_image, (5, 5), 0)  # You can choose different filter types and kernel sizes
+
+                    # Increase the contrast of the filtered image
+                    alpha = 2.0  # Contrast control (1.0-3.0, 1.0 is normal)
+                    beta = 0    # Brightness control (0-100, 0 is normal)
+                    phi_final_image = cv2.convertScaleAbs(filtered_image, alpha=alpha, beta=beta)
+
+                    # Define a kernel for dilation
+                    #kernel = np.ones((3, 3), np.uint8)  # Adjust the size and shape as needed
+
+                    # Apply sharpening
+                    kernel = np.array([[-1,-1,-1],
+                                   [-1,9,-1],
+                                   [-1,-1,-1]])  # Sharpening kernel
+
+                    # Perform dilation on the image
+                    phi_final_image = cv2.dilate(phi_final_image, kernel, iterations=1)  # Adjust the number of iterations as needed
+
+                    # Get image dimensions
+                    height, width = cropped_image.shape[:2]
+
+                    # Define the center of the image
+                    center_x = width // 2
+                    center_y = height // 2
+
+                    # Define the number of zones
+                    num_zones = self.args['zones']
+
+                    if num_zones > 150:
+                        self.debug_print("WARNING!!! - Number of zones exceed 150. Limiting to 150.")
+                        num_zones = 150
+                    elif num_zones < 30:
+                        self.debug_print("WARNING!!! - Number of zones are less than 30. Limiting to 30.")
+                        num_zones = 30
+
+                    # Create a blank mask
+                    mask = np.zeros((height, width), dtype=np.uint8)
+
+                    #pixels per zone
+                    pixels_per_zone = float(radius / num_zones)
+                    #print("pixels per zone are ", pixels_per_zone)
+
+                    # List to store average intensities in each zone
+                    average_intensities_rhs = []
+                    average_intensities_lhs = []
+                    self.debug_print("----RHS of mirror center zones and intensities----")
+                    # Iterate through each zone - R.H.S of the center of the mirror
+                    for zone in range(num_zones):
+                        # Reset the mask for each zone
+                        mask = np.zeros_like(cropped_gray_image, dtype=np.uint8)
+
+                        # Define radii for the current zone
+                        inner_radius = 0 + (zone * radius // num_zones)
+                        outer_radius = 0 + ((zone + 1) * radius // num_zones)
+
+                        # Define angles for the curves (+45 and -45 degrees)
+                        angle_45 = self.args['roiAngleDegrees']
+                        shift_angle = 0
+
+                        # Create circles at specified radii and angles
+                        start_angle_positive = shift_angle - angle_45
+                        end_angle_positive = shift_angle + angle_45
+                        start_angle_negative = shift_angle - angle_45
+                        end_angle_negative = shift_angle + angle_45
+
+                        cv2.ellipse(mask, (center_x, center_y), (outer_radius, outer_radius), 0, start_angle_positive, end_angle_negative, 255, -1)
+                        cv2.ellipse(mask, (center_x, center_y), (inner_radius, inner_radius), 0, start_angle_positive, end_angle_negative, 0, -1)
+
+                        # Apply the mask to the grayscale image to get the custom ROI
+                        roi = cv2.bitwise_and(cropped_gray_image, cropped_gray_image, mask=mask)
+                        # Calculate the average intensity in the ROI
+                        average_intensity_rhs = (cv2.mean(roi)[0]*255)
+
+                        # Apply the mask to the grayscale image to get the custom ROI
+                        #roi = cropped_gray_image[mask > 0]  # Extract pixels within the mask
+                        # Calculate the average intensity in the ROI
+                        #average_intensity_rhs = np.mean(roi)
+
+                        average_intensities_rhs.append(average_intensity_rhs)
+                        self.debug_print(f"Zone {zone + 1}: Average Intensity RHS = {average_intensity_rhs}")
+
+                        # Display the result (optional)
+                        #cv2.imshow('Image with Custom ROI', roi)
+                        #cv2.waitKey(args.displayWindowPeriodZones)
+
+
+                    self.debug_print("----LHS of mirror center zones and intensities----")
+                    # Iterate through each zone - L.H.S of the center of the mirror
+                    for zone in range(num_zones):
+
+                        # Reset the mask for each zone
+                        mask = np.zeros_like(cropped_gray_image, dtype=np.uint8)
+
+                        # Define radii for the current zone
+                        inner_radius = 0 + (zone * radius // num_zones)
+                        outer_radius = 0 + ((zone + 1) * radius // num_zones)
+
+                        # Define angles for the curves (+45 and -45 degrees)
+                        angle_45 = self.args['roiAngleDegrees']
+                        shift_angle = 180
+
+                        # Create circles at specified radii and angles
+                        start_angle_positive = shift_angle - angle_45
+                        end_angle_positive = shift_angle + angle_45
+                        start_angle_negative = shift_angle - angle_45
+                        end_angle_negative = shift_angle + angle_45
+
+                        cv2.ellipse(mask, (center_x, center_y), (outer_radius, outer_radius), 0, start_angle_positive, end_angle_negative, 255, -1)
+                        cv2.ellipse(mask, (center_x, center_y), (inner_radius, inner_radius), 0, start_angle_positive, end_angle_negative, 0, -1)
+
+                        # Apply the mask to the grayscale image to get the custom ROI
+                        roi = cv2.bitwise_and(cropped_gray_image, cropped_gray_image, mask=mask)
+                        # Calculate the average intensity in the ROI
+                        average_intensity_lhs = (cv2.mean(roi)[0]*255)
+
+                        # Apply the mask to the grayscale image to get the custom ROI
+                        #roi = cropped_gray_image[mask > 0]  # Extract pixels within the mask
+                        # Calculate the average intensity in the ROI
+                        #average_intensity_lhs = np.mean(roi)
+
+                        average_intensities_lhs.append(average_intensity_lhs)
+                        self.debug_print(f"Zone {zone + 1}: Average Intensity LHS = {average_intensity_lhs}")
+
+                        # Display the result (optional)
+                        #cv2.imshow('Image with Custom ROI', roi)
+                        #cv2.waitKey(args.displayWindowPeriodZones)
+
+
+                    deltas=[]
+                    #Check if the intensities match
+                    for zone in range(num_zones):
+                      if abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]) <= self.args['brightnessTolerance'] and zone > self.args['skipZonesFromCenter']:
+                        self.debug_print(f"{zone} intensity matches with difference {abs(average_intensities_rhs[zone] - average_intensities_lhs[zone]):.4f}" )
+                        difference = abs(average_intensities_rhs[zone] - average_intensities_lhs[zone])
+                        deltas.append((zone,difference))
+                        #print(f"Zone is {zone}")
+
+                    # Define parameters for the arc
+                    start_angle = -20
+                    end_angle = 20
+                    color = (255, 255, 255)  # White color in BGR
+
+                    if deltas:
+                       for zone_index, _ in deltas:
+                        line_mark1 = 0 + (int(zone_index) * radius // num_zones)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
+
+                        # Append to CSV if set
+                        if self.args['append_to_csv']:
+                            """
+                            csv_data=[
+                                self.current_timestamp(),
+                                center_x_orig,
+                                center_y_orig,
+                                radius_orig,
+                                num_zones,
+                                int(deltas[0][0]),
+                                zone_pixels,
+                                round(zone_inches,3),
+                                self.args['mirrorDiameterInches'],
+                                self.args['mirrorFocalLengthInches'],
+                                self.args['step_size']
+                            ]
+                            """
+                            csv_data=[
+                                self.current_timestamp(),
+                                #center_x_orig,
+                                #center_y_orig,
+                                #radius_orig,
+                                int(deltas[0][0]),
+                                zone_pixels,
+                                round(zone_inches,3),
+                                self.args['step'],
+                                float(float(self.args['step_size'])*int(self.args['step']))
+                            ]
+                            self.write_csv(csv_data)
+                            #self.write_csv(','.join(map(str,csv_data)))
+                            #csv_line = ','.join(str(item).replace('"', '') for item in csv_data)
+                            #self.write_csv(csv_line)
+
+                    else:
+                         self.debug_print("No zones have matching intensities!")
+                         self.stale_image = True
+                    # Check if the image size is smaller than 640x480
+                    
+                    """
+                    if cropped_image.shape[0] < 480 or cropped_image.shape[1] < 640:
+                        # Fill the boundary
+                        cropped_image = self.fill_image_boundary(cropped_image)
+                    """
+                    # Return the cropped image
+                    # Overlay the mask on the image
+                    result = np.copy(image)
+                    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)  # Convert image to 4 channels (BGR + Alpha)
+
+                    # Blend the mask with the image
+                    alpha = 1.0  # Adjust the alpha blending factor (0.0 - fully transparent, 1.0 - fully opaque)
+                    cv2.addWeighted(mask_ret, alpha, result, 1.0, 0, result)
+
+                    # Calculate the position to place the text at the center of the image
+                    result_center_x = result.shape[1] // 2
+                    result_center_y = result.shape[0] // 2
+                    # Draw the user text on the result image near center
+                    self.draw_text(result, self.args['user_text'], color=(0, 0, 255), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, position=(result_center_x-radius+20, result_center_y-radius+20), thickness=2)
+
+                    cv2.rectangle(result, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y), color=(0, 255, 0), thickness=2)
+
+                    #Took measurement - Hence save the image
+                    if self.args['append_to_csv'] and self.stale_image == False and self.args['enable_disk_rwx_operations']:
+                       analyzed_jpg_filename = self.args['csv_filename']+self.current_timestamp()+'.jpg'
+                       #analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                       #cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                       if platform.system() == "Linux":
+                           analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                           if not cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100]):
+                              raise Exception("Could not write/save image")
+                       elif platform.system() == "Windows":
+                           save_directory = os.path.join(home_dir, 'FKESAv2Images')
+                           os.makedirs(save_directory, exist_ok=True)
+                           timestamp = int(time.time())  # Get the current timestamp
+                           filename = f"FKESA_v2_{timestamp}.jpg"  # Generate a filename with the timestamp
+                           image_path = os.path.join(save_directory,filename)
+                           self.debug_print("********************************************************************")
+                           self.debug_print(image_path)                           
+                           self.debug_print("********************************************************************")
+                           #sys.exit(1)
+                           #image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
+                           if not cv2.imwrite(image_path, result):
+                              raise Exception("Could not write/save image")
+
+                    #cv2.imwrite("some_file.jpg", cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
+                    return cropped_image, result
+
+            else:
+                raise Exception("Image is not valid!")
+
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def build_manual(self, image):
         try:
             cropped_image=None

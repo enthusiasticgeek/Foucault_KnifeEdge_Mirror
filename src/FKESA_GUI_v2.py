@@ -205,10 +205,13 @@ def circle_thru_pts(x1, y1, x2, y2, x3, y3):
     M11 = x1*y2 + x2*y3 + x3*y1 - (x2*y1 + x3*y2 + x1*y3)
     M12 = s1*y2 + s2*y3 + s3*y1 - (s2*y1 + s3*y2 + s1*y3)
     M13 = s1*x2 + s2*x3 + s3*x1 - (s2*x1 + s3*x2 + s1*x3)
+    if M11 == 0:
+       M11  = 1
     x0 =  0.5*M12/M11
     y0 = -0.5*M13/M11
     r0 = ((x1 - x0)**2 + (y1 - y0)**2)**0.5
     return (int(x0), int(y0), int(r0))
+
 
 def bounding_box_from_circle(center_x, center_y, radius):
     start_x = center_x - radius
@@ -536,7 +539,8 @@ def process_frames():
                         if use_circular_hough_transform:
                             _,fkesa_frame = builder.build_auto(frame)
                         else:
-                            _,fkesa_frame = builder.build_manual(frame)
+                            #_,fkesa_frame = builder.build_manual(frame)
+                            _,fkesa_frame = builder.build_manual_test(frame)
                         time.sleep(fkesa_time_delay / 1000)
                         """
                         end_time = time.time()
@@ -1261,11 +1265,11 @@ try:
         [sg.Text("Intensity Parameters [Null Zones Identification]", size=(80, 1), justification="left", font=('Verdana', 10, 'bold'), text_color='darkred')],
         [sg.HorizontalSeparator()],  # Separator 
         [
-            sg.Text("Brightness Tolerance [Default: 10]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS A-"),
+            sg.Text("Brightness Tolerance [Default: 1]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS A-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (0, 50),
-                10,
+                1,
                 1,
                 orientation="h",
                 enable_events=True,
@@ -1274,11 +1278,11 @@ try:
                 font=('Verdana', 10, 'normal'),
             ),
             sg.VerticalSeparator(),  # Separator 
-            sg.Text("Number Of Zones [Default: 150]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
+            sg.Text("Number Of Zones [Default: 75]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-INTENSITY PARAMS B-"),
             sg.VerticalSeparator(),  # Separator 
             sg.Slider(
                 (30, 150),
-                150,
+                75,
                 1,
                 orientation="h",
                 enable_events=True,
@@ -1702,7 +1706,8 @@ try:
         elif event == 'About':
             #window.hide()  # Hide the main window
             author_window()  # Open the author information window
-        elif event == 'SELECT CAMERA':
+        #elif event == 'SELECT CAMERA':
+        elif event == '-CAMERA SELECT-':
             if is_measuring:
                     sg.popup_ok("Please stop all measurements before switching cameras. Click OK to continue.") 
             elif not is_measuring:
