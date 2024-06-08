@@ -859,7 +859,8 @@ def autofoucault_start(helper, device_ip="192.168.4.1", max_attempts=50):
                         print("no response!")
                         return False, 8
                     #Allow some time for carriage to move along the stepper motor rail
-                    time.sleep(0.1)
+                    #time.sleep(0.1)
+                    time.sleep(1)
                     #is_auto = False
         return True, 0
 
