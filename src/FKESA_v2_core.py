@@ -60,7 +60,7 @@ class FKESABuilder:
             'step': 0
             # Include default values for other parameters here
         }
-        stale_image=False
+        self.stale_image=False
 
     def debug_print(self, *args):
         if self.args['debug']:
@@ -496,29 +496,17 @@ class FKESABuilder:
                         self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle, end_angle, color)
                         self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, line_mark1, start_angle+180, end_angle+180, color)
 
+                        zone_pixels = int(pixels_per_zone * zone_index)
+                        zone_inches = float(float(zone_pixels/radius_orig)*self.args['mirrorDiameterInches'])/2
+                        #"""
                         # Append to CSV if set
                         if self.args['append_to_csv']:
-                            """
-                            csv_data=[
-                                self.current_timestamp(),
-                                center_x_orig,
-                                center_y_orig,
-                                radius_orig,
-                                num_zones,
-                                int(deltas[0][0]),
-                                zone_pixels,
-                                round(zone_inches,3),
-                                self.args['mirrorDiameterInches'],
-                                self.args['mirrorFocalLengthInches'],
-                                self.args['step_size']
-                            ]
-                            """
                             csv_data=[
                                 self.current_timestamp(),
                                 #center_x_orig,
                                 #center_y_orig,
                                 #radius_orig,
-                                int(deltas[0][0]),
+                                int(zone_index),
                                 zone_pixels,
                                 round(zone_inches,3),
                                 self.args['step'],
@@ -528,6 +516,7 @@ class FKESABuilder:
                             #self.write_csv(','.join(map(str,csv_data)))
                             #csv_line = ','.join(str(item).replace('"', '') for item in csv_data)
                             #self.write_csv(csv_line)
+                        #"""
 
                     else:
                          self.debug_print("No zones have matching intensities!")
