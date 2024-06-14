@@ -366,6 +366,29 @@ class FKESABuilder:
                     # Perform dilation on the image
                     phi_final_image = cv2.dilate(phi_final_image, kernel, iterations=1)  # Adjust the number of iterations as needed
 
+                    #Took measurement - Hence save the image
+                    if self.args['append_to_csv'] and self.stale_image == False and self.args['enable_disk_rwx_operations']:
+                       phi_final_image_filename = 'PHI_'+self.args['csv_filename']+self.current_timestamp()+'.jpg'
+                       #phi_final_image_file = os.path.join(self.args['folder'], phi_final_image_filename)
+                       #cv2.imwrite(phi_final_image_file, phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                       if platform.system() == "Linux":
+                           phi_final_image_file = os.path.join(self.args['folder'], phi_final_image_filename)
+                           if not cv2.imwrite(phi_final_image_file, phi_final_image, [cv2.IMWRITE_JPEG_QUALITY, 100]):
+                              raise Exception("Could not write/save image")
+                       elif platform.system() == "Windows":
+                           save_directory = os.path.join(home_dir, 'FKESAv2Images')
+                           os.makedirs(save_directory, exist_ok=True)
+                           timestamp = int(time.time())  # Get the current timestamp
+                           filename = f"PHI_FKESA_v2_{timestamp}.jpg"  # Generate a filename with the timestamp
+                           image_path = os.path.join(save_directory,filename)
+                           self.debug_print("********************************************************************")
+                           self.debug_print(image_path)
+                           self.debug_print("********************************************************************")
+                           #sys.exit(1)
+                           #image_path = os.path.join(home_dir, 'Desktop', phi_final_image_filename)
+                           if not cv2.imwrite(image_path, phi_final_image):
+                              raise Exception("Could not write/save phi image")
+
                     # Get image dimensions
                     height, width = cropped_image.shape[:2]
 
