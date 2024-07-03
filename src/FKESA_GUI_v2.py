@@ -88,6 +88,7 @@ stepper_microsteps = 32
 stepper_steps_per_revolution = 200
 cancel_af=False
 scale_time_100x=False
+gamma_val=1.0
 
 #Save images
 autosave = True
@@ -168,6 +169,15 @@ if have_splash_screen:
     splash_window['-PBAR-'].update(progress)
     time.sleep(1)
     splash_window.close()
+
+# Define a gamma correction function
+def gamma_correction(image, gamma=1.0):
+    # Build a lookup table mapping the pixel values [0, 255] to their adjusted gamma values
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    # Apply gamma correction using the lookup table
+    return cv2.LUT(image, table)
+
 
 # -------------------------------------------------------------------------
 # ------------ Scaling ------------
@@ -445,6 +455,7 @@ def process_frames():
     global prev_step_counter
     global use_circular_hough_transform
     global autosave
+    global gamma_val
 
     # counter to ease CPU processing with modulo operator
     counter=0
@@ -487,6 +498,8 @@ def process_frames():
                         preprocess_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 else:
                         preprocess_frame = frame
+
+                frame = gamma_correction(frame, gamma=gamma_val)
 
                 # color or grayscale?
                 if raw_video:
@@ -1073,9 +1086,26 @@ try:
         ],
         [
             sg.Listbox(
-                values=[], enable_events=True, size=(40, 30), key="-FILE LIST-"
+                values=[], enable_events=True, size=(40, 20), key="-FILE LIST-"
             )
         ],
+	[
+            sg.Text("Gamma Correction [Default: 1.0]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-GAMMA CORRECTION-"),
+        ],
+	[
+            sg.Slider(
+                range=(0.1, 2.2),
+                default_value=1.1,
+                orientation="h",
+                enable_events=True,
+                size=(40, 10),
+                resolution=0.1,
+                key="-GAMMA SLIDER-",
+                font=('Verdana', 10, 'normal'),
+                disabled=False,
+                text_color=('darkgreen') # experimental
+            ),
+         ],
     ]
 
     # For now will only show the name of the file that was chosen
@@ -1607,6 +1637,9 @@ try:
                 fkesa_time_delay = int(values["-DELAY SLIDER-"])
              else:
                 fkesa_time_delay = int(values["-DELAY SLIDER-"])*100
+        elif event == "-GAMMA SLIDER-":
+            with lock: 
+                gamma_val = float(values["-GAMMA SLIDER-"])
         # Inside the main event loop where the sliders are handled
         elif event == "-MINDIST SLIDER-" \
              or event == "-PARAM SLIDER A-" or event == "-PARAM SLIDER B-" \
