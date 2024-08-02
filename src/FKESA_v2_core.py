@@ -209,6 +209,49 @@ class FKESABuilder:
             except Exception as e:
                 print(f"Error writing data: {e}")
 
+    # data is of format - writer.writerow(['X [pixels], Y [pixels], INTENSITY [0-255]'])
+    def write_csv_bottom_flipped_method(self, data):
+            csv_filename = self.args['csv_filename']
+            csv_file = os.path.join(self.args['folder'], csv_filename)
+            is_empty = not os.path.exists(csv_file) or os.path.getsize(csv_file) == 0
+
+            # If the file is empty or doesn't exist, write the header
+            if is_empty:
+                try:
+                    with open(csv_file, mode='w', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow([
+                                'Diameter Inches',
+                                'Focal Length Inches',
+                                'Step Size Inches'
+                        ])  # Repla
+                        writer.writerow([
+                                self.args['mirrorDiameterInches'],
+                                self.args['mirrorFocalLengthInches'],
+                                self.args['step_size']
+                        ])  # Replace with your column names
+
+                        writer.writerow([
+                            '------ Timestamp ------',
+                            'Match Left Null Zone Distance',
+                            'Match Right Null Zone Distance',
+                            'Step',
+                            'Step Distance Inches'
+                        ])  # Replace with your column names
+
+                except Exception as e:
+                    print(f"Error writing headers: {e}")
+
+            # Mode is append
+            try:
+                with open(csv_file, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(data)
+            except Exception as e:
+                print(f"Error writing data: {e}")
+
+
+
     def draw_circle(self, image, start_point, end_point, radius_of_points):
         center = ((start_point[0] + end_point[0]) // 2, (start_point[1] + end_point[1]) // 2)
         #radius = min(abs(start_point[0] - end_point[0]), abs(start_point[1] - end_point[1])) // 2
@@ -251,9 +294,310 @@ class FKESABuilder:
 
 
 
+    def savitzky_golay_coefficients(self, window_size, poly_order):
+            """
+            Calculate the Savitzky-Golay filter coefficients.
+            Parameters:
+            window_size (int): The length of the filter window (i.e., the number of coefficients).
+                               window_size must be a positive odd integer.
+            poly_order (int): The order of the polynomial used to fit the samples.
+                              poly_order must be less than window_size.
+            Returns:
+            numpy.ndarray: The filter coefficients.
+            """
+            half_window = (window_size - 1) // 2
+            # Construct the Vandermonde matrix
+            A = np.mat([[k**i for i in range(poly_order + 1)] for k in range(-half_window, half_window + 1)])
+            # Compute the inverse of the Gram matrix
+            ATA_inv = np.linalg.pinv(A.T * A)
+            # Compute the smoothing coefficients
+            return np.array(np.dot(ATA_inv, A.T)[0]).flatten()
+
+    def savitzky_golay_smoothing(self, signal, window_size, poly_order):
+            """
+            Apply Savitzky-Golay polynomial smoothing to a 1D signal.
+            Parameters:
+            signal (numpy.ndarray): The input signal to smooth.
+            window_size (int): The length of the filter window (i.e., the number of coefficients).
+                               window_size must be a positive odd integer.
+            poly_order (int): The order of the polynomial used to fit the samples.
+                              poly_order must be less than window_size.
+            Returns:
+            numpy.ndarray: The smoothed signal.
+            """
+            if window_size % 2 == 0:
+                raise ValueError("Window size must be an odd integer.")
+            if poly_order >= window_size:
+                raise ValueError("Polynomial order must be less than window_size.")
+            # Get the filter coefficients
+            coeffs = self.savitzky_golay_coefficients(window_size, poly_order)
+            # Pad the signal at the ends to minimize boundary effects
+            half_window = (window_size - 1) // 2
+            firstvals = signal[0] - np.abs(signal[1:half_window+1][::-1] - signal[0])
+            lastvals = signal[-1] + np.abs(signal[-half_window-1:-1][::-1] - signal[-1])
+            padded_signal = np.concatenate((firstvals, signal, lastvals))
+            # Apply the convolution
+            smoothed_signal = np.convolve(padded_signal, coeffs, mode='valid')
+            return smoothed_signal
+
+    def apply_savitzky_golay_to_image(self, image, window_size, poly_order):
+            """
+            Apply Savitzky-Golay polynomial smoothing to each row of an image.
+            Parameters:
+            image (numpy.ndarray): The input image to smooth.
+            window_size (int): The length of the filter window (i.e., the number of coefficients).
+                               window_size must be a positive odd integer.
+            poly_order (int): The order of the polynomial used to fit the samples.
+                              poly_order must be less than window_size.
+            Returns:
+            numpy.ndarray: The smoothed image.
+            """
+            smoothed_image = np.zeros_like(image)
+            # Apply the filter to each row
+            for i in range(image.shape[0]):
+                self.debug_print(f"Smoothing row {i+1}/{image.shape[0]}")
+                smoothed_image[i, :] = self.savitzky_golay_smoothing(image[i, :], window_size, poly_order)
+            return smoothed_image
 
 
+    def build_savitzky_golan_flip_test(self, image):
+        try:
+            cropped_image=None
+            mask_ret=None
+            # Your existing logic, but using class methods with self.
+            if image is not None:
+                if self.args['gammaCorrection'] > 0.0:
+                    image = self.adjust_gamma(image, gamma=self.args['gammaCorrection'])
 
+                image = self.resize_image(image)
+
+                # Define the dimensions of the mask
+                mask_width = image.shape[1]
+                mask_height = image.shape[0]
+
+                # Create a transparent mask with an alpha channel
+                mask_ret = np.zeros((mask_height, mask_width, 4), dtype=np.uint8)
+                mask_ret[:, :, 3] = 0  # Full transparency initially
+
+                #print(self.args['start_point'])
+                #print(self.args['end_point'])
+                #return None, None
+
+                if self.args['start_point'] and self.args['end_point'] and self.args['radius_of_points']:
+                    # Get the center coordinates and radius of the largest circle
+                    center_x, center_y, radius = self.get_circle_from_bounding_box(self.args['start_point'],self.args['end_point'],0,480,self.args['radius_of_points'])
+                
+                    #print("=======================")
+                    #print(center_x, center_y, radius)
+                    #print("=======================")
+
+                    #self.debug_print(f"LARGEST CIRCLE : {center_x},{center_y},{radius}")
+                    # backup copies to be used in csv later
+                    center_x_orig = center_x
+                    center_y_orig = center_y
+                    radius_orig = radius
+
+                    # Mark the center of the largest circle on the image
+                    cv2.circle(image, (center_x, center_y), 3, (0, 255, 0), -1)
+                    #cv2.circle(image, (int(center_x), int(center_y)), int(radius), (0, 255, 0), 2)
+
+                    # Calculate the bounding box coordinates
+                    top_left_x = int(center_x - radius)
+                    top_left_y = int(center_y - radius)
+                    bottom_right_x = int(center_x + radius)
+                    bottom_right_y = int(center_y + radius)
+
+                    # Ensure the coordinates are within the image boundaries
+                    top_left_x = max(0, top_left_x)
+                    top_left_y = max(0, top_left_y)
+                    bottom_right_x = min(image.shape[1], bottom_right_x)
+                    bottom_right_y = min(image.shape[0], bottom_right_y)
+
+                    # Crop the image using the bounding box
+                    cropped_image = image[top_left_y:bottom_right_y, top_left_x:bottom_right_x]
+                    height, width, channels = cropped_image.shape
+
+
+                    # Split the image into two halves
+                    top_half = cropped_image[:height//2, :]
+                    bottom_half = cropped_image[height//2:, :]
+
+                    # Flip the bottom half
+                    flipped_bottom_half = cv2.flip(bottom_half, 1)
+
+                    # Combine the top half and flipped bottom half
+                    flipped_image = np.concatenate([top_half, flipped_bottom_half], axis=0)
+
+                    # Convert the flipped image to grayscale
+                    flipped_image_gray = cv2.cvtColor(flipped_image, cv2.COLOR_BGR2GRAY)
+
+                    #cv2.imwrite('flipped_gray.jpg', flipped_image_gray, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
+
+                    flipped_image_gray = self.apply_savitzky_golay_to_image(flipped_image_gray, 11,2)
+
+                    # Get the image shape
+                    flipped_height, flipped_width = flipped_image_gray.shape
+
+                    # Extract the rows of interest
+                    row_above = flipped_image_gray[flipped_height//2-1, :]
+                    row_below = flipped_image_gray[flipped_height//2+1, :]
+
+                    # Calculate the pixel intensity for each column in the rows of interest
+                    pixel_intensity_above = row_above
+                    pixel_intensity_below = row_below
+
+                    # Find intersection points
+                    intersection_points = []
+                    for x in range(flipped_width):
+                            if pixel_intensity_above[x] == pixel_intensity_below[x]:
+                                intersection_points.append(x)
+                            else:
+                                # Check if the pixel intensities cross between adjacent columns
+                                if x > 0:
+                                    if (pixel_intensity_above[x-1] < pixel_intensity_below[x-1] and pixel_intensity_above[x] > pixel_intensity_below[x]) or \
+                                       (pixel_intensity_above[x-1] > pixel_intensity_below[x-1] and pixel_intensity_above[x] < pixel_intensity_below[x]):
+                                        intersection_points.append(x)
+
+                    # Print intersection points
+                    print(f'Intersection points: {intersection_points}')
+                    print("=========")
+
+                    # Get image dimensions
+                    height, width = cropped_image.shape[:2]
+
+                    # Define the center of the image
+                    center_x = width // 2
+                    center_y = height // 2
+
+                    # Create a blank mask
+                    mask = np.zeros((height, width), dtype=np.uint8)
+
+                    # Mark the intersection points with white lines on the original image
+                    marked_image = image.copy()
+                    line_length = 40  # length of the line
+                    half_line_length = line_length // 2
+
+
+                    # TODO (Pratik) make a slider or input text box to adjust this value.
+                    skip_range = 40
+
+                    # Filter out points within the skipped range
+                    filtered_points = [point for point in intersection_points if abs(point - center_x) > skip_range]
+
+                    # Separate points to the left and right of the center
+                    left_points = [point for point in filtered_points if point < center_x]
+                    right_points = [point for point in filtered_points if point > center_x]
+
+                    # Calculate the closest points
+                    closest_left_point = min(left_points, default=None, key=lambda x: abs(x - center_x))
+                    closest_right_point = min(right_points, default=None, key=lambda x: abs(x - center_x))
+
+                    # Calculate distances
+                    closest_left_distance = abs(closest_left_point - center_x) if closest_left_point is not None else None
+                    closest_right_distance = abs(closest_right_point - center_x) if closest_right_point is not None else None
+
+                    print(f'Closest left point: {closest_left_point}, Distance: {closest_left_distance}')
+                    print(f'Closest right point: {closest_right_point}, Distance: {closest_right_distance}')
+
+                    for point in filtered_points:
+                        start_point = (point + top_left_x, height // 2 + top_left_y - half_line_length)
+                        end_point = (point + top_left_x, height // 2 + top_left_y + half_line_length)
+                        cv2.line(marked_image, start_point, end_point, (255, 255, 255), 1)
+
+
+                    # Append to CSV if set
+                    if self.args['append_to_csv']:
+                            csv_data=[
+                                self.current_timestamp(),
+                                closest_left_distance,
+                                closest_right_distance,
+                                self.args['step'],
+                                float(float(self.args['step_size'])*int(self.args['step']))
+                            ]
+                            self.write_csv_bottom_flipped_method(csv_data)
+            
+                    """
+                    # Define parameters for the arc
+                    start_angle = -20
+                    end_angle = 20
+                    color = (255, 255, 255)  # White color in BGR
+
+                    for point in intersection_points:
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, point, start_angle, end_angle, color)
+                        self.draw_symmetrical_arc(mask_ret, center_x+top_left_x, center_y+top_left_y, point, start_angle+180, end_angle+180, color)
+
+                        point_inches = float(float(point/radius_orig)*self.args['mirrorDiameterInches'])/2
+                        # Append to CSV if set
+                        if self.args['append_to_csv']:
+                            csv_data=[
+                                self.current_timestamp(),
+                                #center_x_orig,
+                                #center_y_orig,
+                                #radius_orig,
+                                int(point),
+                                point,
+                                round(point_inches,3),
+                                self.args['step'],
+                                float(float(self.args['step_size'])*int(self.args['step']))
+                            ]
+                            self.write_csv(csv_data)
+                            #self.write_csv(','.join(map(str,csv_data)))
+                            #csv_line = ','.join(str(item).replace('"', '') for item in csv_data)
+                            #self.write_csv(csv_line)
+
+                    """                   
+                    # Return the cropped image
+                    # Overlay the mask on the image
+                    result = np.copy(marked_image)
+                    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)  # Convert image to 4 channels (BGR + Alpha)
+
+                    # Blend the mask with the image
+                    alpha = 1.0  # Adjust the alpha blending factor (0.0 - fully transparent, 1.0 - fully opaque)
+                    cv2.addWeighted(mask_ret, alpha, result, 1.0, 0, result)
+
+                    # Calculate the position to place the text at the center of the image
+                    result_center_x = result.shape[1] // 2
+                    result_center_y = result.shape[0] // 2
+                    # Draw the user text on the result image near center
+                    self.draw_text(result, self.args['user_text'], color=(0, 0, 255), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, position=(result_center_x-radius+20, result_center_y-radius+20), thickness=2)
+
+                    cv2.rectangle(result, (top_left_x, top_left_y), (bottom_right_x, bottom_right_y), color=(0, 255, 0), thickness=2)
+
+                    #Took measurement - Hence save the image
+                    if self.args['append_to_csv'] and self.stale_image == False and self.args['enable_disk_rwx_operations']:
+                       analyzed_jpg_filename = self.args['csv_filename']+self.current_timestamp()+'.jpg'
+                       #analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                       #cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                       if platform.system() == "Linux":
+                           analyzed_jpg_file = os.path.join(self.args['folder'], analyzed_jpg_filename)
+                           if not cv2.imwrite(analyzed_jpg_file, result, [cv2.IMWRITE_JPEG_QUALITY, 100]):
+                              raise Exception("Could not write/save image")
+                       elif platform.system() == "Windows":
+                           save_directory = os.path.join(home_dir, 'FKESAv2Images')
+                           os.makedirs(save_directory, exist_ok=True)
+                           timestamp = int(time.time())  # Get the current timestamp
+                           filename = f"FKESA_v2_{timestamp}.jpg"  # Generate a filename with the timestamp
+                           image_path = os.path.join(save_directory,filename)
+                           self.debug_print("********************************************************************")
+                           self.debug_print(image_path)                           
+                           self.debug_print("********************************************************************")
+                           #sys.exit(1)
+                           #image_path = os.path.join(home_dir, 'Desktop', analyzed_jpg_filename)
+                           if not cv2.imwrite(image_path, result):
+                              raise Exception("Could not write/save image")
+
+                    #cv2.imwrite("some_file.jpg", cropped_image, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
+                    return cropped_image, result
+
+            else:
+                raise Exception("Image is not valid!")
+
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 
 

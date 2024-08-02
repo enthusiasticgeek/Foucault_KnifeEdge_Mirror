@@ -463,6 +463,7 @@ def process_frames():
         cap.release()
     if platform.system() == "Linux":
        cap = cv2.VideoCapture(selected_camera)
+       #cap = cv2.VideoCapture('video.avi')
     elif platform.system() == "Windows":
        cap = cv2.VideoCapture(selected_camera, cv2.CAP_DSHOW)
     #cap = cv2.VideoCapture(selected_camera)  # Open the default camera
@@ -484,6 +485,7 @@ def process_frames():
             #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
             if frame is None:
+                print("***no frame found!***")
                 continue
             
             # Acquire the lock before updating the shared resource
@@ -553,7 +555,8 @@ def process_frames():
                             _,fkesa_frame = builder.build_auto(frame)
                         else:
                             #_,fkesa_frame = builder.build_manual(frame)
-                            _,fkesa_frame = builder.build_manual_test(frame)
+                            #_,fkesa_frame = builder.build_manual_test(frame)
+                            _,fkesa_frame = builder.build_savitzky_golan_flip_test(frame)
                         time.sleep(fkesa_time_delay / 1000)
                         """
                         end_time = time.time()
@@ -1089,10 +1092,10 @@ try:
                 values=[], enable_events=True, size=(40, 20), key="-FILE LIST-"
             )
         ],
-	[
+        [
             sg.Text("Gamma Correction [Default: 1.0]", size=(40, 1), justification="left", font=('Verdana', 10, 'bold'), key="-GAMMA CORRECTION-"),
         ],
-	[
+        [
             sg.Slider(
                 range=(0.1, 2.2),
                 default_value=1.1,
