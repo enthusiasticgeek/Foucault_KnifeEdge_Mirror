@@ -500,22 +500,31 @@ class FKESABuilder:
                     print(f'Closest left point: {closest_left_point}, Distance: {closest_left_distance}')
                     print(f'Closest right point: {closest_right_point}, Distance: {closest_right_distance}')
 
+                    if closest_left_distance is not None and closest_right_distance is not None:
+                       left_null_zone = round(float(float(closest_left_distance / radius_orig) * self.args['mirrorDiameterInches']) / 2, 2)
+                       right_null_zone = round(float(float(closest_right_distance / radius_orig) * self.args['mirrorDiameterInches']) / 2, 2)
+
+                       print(f'null zone left point: {left_null_zone}')
+                       print(f'null zone right point: {right_null_zone}')
+
                     for point in filtered_points:
                         start_point = (point + top_left_x, height // 2 + top_left_y - half_line_length)
                         end_point = (point + top_left_x, height // 2 + top_left_y + half_line_length)
                         cv2.line(marked_image, start_point, end_point, (255, 255, 255), 1)
 
-
                     # Append to CSV if set
-                    if self.args['append_to_csv']:
-                            csv_data=[
-                                self.current_timestamp(),
-                                closest_left_distance,
-                                closest_right_distance,
-                                self.args['step'],
-                                float(float(self.args['step_size'])*int(self.args['step']))
-                            ]
-                            self.write_csv_bottom_flipped_method(csv_data)
+                    if self.args['append_to_csv'] and closest_left_distance is not None and closest_right_distance is not None:
+                       csv_data = [
+                          self.current_timestamp(),
+                          left_null_zone,
+                          right_null_zone,
+                          self.args['step'],
+                          float(float(self.args['step_size']) * int(self.args['step']))
+                       ]
+                       self.write_csv_bottom_flipped_method(csv_data)
+
+
+
             
                     """
                     # Define parameters for the arc

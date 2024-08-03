@@ -462,8 +462,8 @@ def process_frames():
     if cap is not None:
         cap.release()
     if platform.system() == "Linux":
-       cap = cv2.VideoCapture(selected_camera)
-       #cap = cv2.VideoCapture('video.avi')
+       #cap = cv2.VideoCapture(selected_camera)
+       cap = cv2.VideoCapture('video.avi')
     elif platform.system() == "Windows":
        cap = cv2.VideoCapture(selected_camera, cv2.CAP_DSHOW)
     #cap = cv2.VideoCapture(selected_camera)  # Open the default camera
