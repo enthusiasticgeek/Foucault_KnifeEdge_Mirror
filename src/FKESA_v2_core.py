@@ -235,6 +235,7 @@ class FKESABuilder:
                             '------ Timestamp ------',
                             'Match Left Null Zone Distance',
                             'Match Right Null Zone Distance',
+                            'Average Match Left/Right Null Zone Distance',
                             'Step',
                             'Step Distance Inches'
                         ])  # Replace with your column names
@@ -506,6 +507,9 @@ class FKESABuilder:
 
                        print(f'null zone left point: {left_null_zone}')
                        print(f'null zone right point: {right_null_zone}')
+                       # Calculate the average of left and right null zones
+                       average_null_zone = round((left_null_zone + right_null_zone) / 2, 2)
+                       print(f'Average null zone: {average_null_zone}')
 
                     for point in filtered_points:
                         start_point = (point + top_left_x, height // 2 + top_left_y - half_line_length)
@@ -518,13 +522,11 @@ class FKESABuilder:
                           self.current_timestamp(),
                           left_null_zone,
                           right_null_zone,
+                          average_null_zone,  # Add the average null zone to the CSV data
                           self.args['step'],
                           float(float(self.args['step_size']) * int(self.args['step']))
                        ]
                        self.write_csv_bottom_flipped_method(csv_data)
-
-
-
             
                     """
                     # Define parameters for the arc
