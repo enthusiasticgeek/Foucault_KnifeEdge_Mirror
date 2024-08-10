@@ -35,6 +35,7 @@ scale_window = False
 
 is_debugging = False
 autofoucault_simple_simulation = False
+autofoucault_videofile_simulation = False
 #autofoucault_simple_simulation = True
 # Initialize a variable to store image data
 #image_data = None
@@ -458,16 +459,23 @@ def process_frames():
     global use_circular_hough_transform
     global autosave
     global gamma_val
+    global autofoucault_videofile_simulation
 
     # counter to ease CPU processing with modulo operator
     counter=0
     if cap is not None:
         cap.release()
     if platform.system() == "Linux":
-       cap = cv2.VideoCapture(selected_camera)
-       #cap = cv2.VideoCapture('video.avi')
+       if not autofoucault_videofile_simulation:
+          cap = cv2.VideoCapture(selected_camera)
+       else:
+          cap = cv2.VideoCapture('video.avi')
     elif platform.system() == "Windows":
-       cap = cv2.VideoCapture(selected_camera, cv2.CAP_DSHOW)
+       if not autofoucault_videofile_simulation:
+          cap = cv2.VideoCapture(selected_camera, cv2.CAP_DSHOW)
+       else:
+          cap = cv2.VideoCapture('video.avi', cv2.CAP_DSHOW)
+
     #cap = cv2.VideoCapture(selected_camera)  # Open the default camera
     # Setting the desired resolution (640x480)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
