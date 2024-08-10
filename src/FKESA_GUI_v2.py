@@ -81,6 +81,7 @@ color_video = True
 fkesa_time_delay = 10
 current_time = time.time()
 measurement_run_counter = 0
+autofoucault_click_counter = 0
 step_size_val = 0.020
 step_delay_val = 50 #microsec
 max_attempts_val = 10 #steps to traverse in autofoucault
@@ -430,6 +431,7 @@ def process_frames():
     global out
     global output_folder
     global measurement_run_counter
+    global autofoucault_click_counter 
     global mindist_val
     global param_a_val 
     global param_b_val
@@ -518,7 +520,8 @@ def process_frames():
                         start_time = time.time()
                         """
                         builder = FKESABuilder()
-                        builder.with_folder(output_folder+'_run_'+str(measurement_run_counter))
+                        #builder.with_folder(output_folder+'_run_'+str(autofoucault_click_counter)+str(measurement_run_counter))
+                        builder.with_folder(output_folder+'_run_'+str(autofoucault_click_counter))
                         builder.with_param('minDist', mindist_val)
                         builder.with_param('param1', param_a_val)
                         builder.with_param('param2', param_b_val)
@@ -933,6 +936,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
         global is_auto
         global process_fkesa
         global cancel_af
+        global autofoucault_click_counter 
         #with lock:
         #         is_auto=True
         #Default IP 192.168.4.1
@@ -941,6 +945,7 @@ def process_fkesa_v2(device_ip="192.168.4.1", result_delay_usec=50, result_steps
         try:
                 with lock:
                      process_fkesa = True
+                     autofoucault_click_counter += 1
                 # Steps
                 ret,_ = autofoucault_set_steps(helper,device_ip, result_steps)
                 if not ret:
@@ -1173,7 +1178,7 @@ try:
             #[sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-')],
             [
              sg.DropDown(working_ports, default_value='0', enable_events=True, key='-CAMERA SELECT-', background_color='green', text_color='white'), 
-             sg.Button('Select Camera'), 
+             #sg.Button('Select Camera'), 
              sg.VerticalSeparator(), 
              sg.Checkbox('Raw Video', default=True, enable_events=True, key='-RAW VIDEO SELECT-',font=('Verdana', 10, 'bold')), 
              sg.VerticalSeparator(), 

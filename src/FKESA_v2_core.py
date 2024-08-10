@@ -483,8 +483,16 @@ class FKESABuilder:
                     # TODO (Pratik) make a slider or input text box to adjust this value.
                     skip_range = 40
 
-                    # Filter out points within the skipped range
-                    filtered_points = [point for point in intersection_points if abs(point - center_x) > skip_range]
+                    # Skip pixels towards the edge too.(Alan's observation)
+                    edge_margin = 10
+
+                    filtered_points = [
+                       point for point in intersection_points
+                       if abs(point - center_x) > skip_range and point > edge_margin and point < (width - edge_margin)
+                    ]
+
+                    # Filter out points within the skipped range from center (old logic)
+                    #filtered_points = [point for point in intersection_points if abs(point - center_x) > skip_range]
 
                     # Separate points to the left and right of the center
                     left_points = [point for point in filtered_points if point < center_x]
@@ -514,7 +522,7 @@ class FKESABuilder:
                     for point in filtered_points:
                         start_point = (point + top_left_x, height // 2 + top_left_y - half_line_length)
                         end_point = (point + top_left_x, height // 2 + top_left_y + half_line_length)
-                        cv2.line(marked_image, start_point, end_point, (255, 255, 255), 1)
+                        cv2.line(marked_image, start_point, end_point, (255, 0, 0), 1)
 
                     # Append to CSV if set
                     if self.args['append_to_csv'] and closest_left_distance is not None and closest_right_distance is not None:
