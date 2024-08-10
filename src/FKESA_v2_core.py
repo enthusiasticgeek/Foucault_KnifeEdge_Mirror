@@ -19,6 +19,7 @@ import platform
 import sys
 import time
 import math
+from io import BytesIO
 
 # Get the user's home directory
 home_dir = os.path.expanduser("~")
@@ -360,6 +361,49 @@ class FKESABuilder:
                 smoothed_image[i, :] = self.savitzky_golay_smoothing(image[i, :], window_size, poly_order)
             return smoothed_image
 
+    def generate_plot_savitzkly_golay_test(self, plt, pixel_intensity_above, pixel_intensity_below, intersection_points):
+
+        # Plot the pixel intensity vs distance from left to right
+        plt.plot(pixel_intensity_above, label='Row above center')
+        plt.plot(pixel_intensity_below, label='Row below center')
+        plt.xlabel('Distance from left')
+        plt.ylabel('Pixel intensity')
+        plt.legend()
+            
+        # Mark intersection points on the plot
+        for point in intersection_points:
+            plt.axvline(x=point, color='r', linestyle='--')
+                       
+        # Save the plot to a buffer
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+
+        # Convert the buffer to a NumPy array
+        img_array = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+
+        # Decode the array to an image using OpenCV
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+
+        # Convert the image to RGB (OpenCV uses BGR by default)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        return img
+
+        ## Usage:
+        ## Convert the image to a format suitable for PySimpleGUI
+        #img_bytes = cv2.imencode('.png', img)[1].tobytes()
+        #
+        # Create a PySimpleGUI window to display the image
+        #layout = [[sg.Image(data=img_bytes, key='-IMAGE-')]]
+        #window = sg.Window('Plot', layout, finalize=True)
+        ## Display the window
+        #while True:
+        #    event, values = window.read()
+        #    if event == sg.WINDOW_CLOSED:
+        #        break 
+        #
+        #window.close()
 
     def build_savitzky_golan_flip_test(self, image):
         try:
@@ -535,6 +579,9 @@ class FKESABuilder:
                           float(float(self.args['step_size']) * int(self.args['step']))
                        ]
                        self.write_csv_bottom_flipped_method(csv_data)
+
+                    # One may uncomment to save plot image but it does have a significant impact on the processing speed
+                    #plot_image = self.generate_plot_savitzkly_golay_test(plt, pixel_intensity_above, pixel_intensity_below, filtered_points)
             
                     """
                     # Define parameters for the arc
