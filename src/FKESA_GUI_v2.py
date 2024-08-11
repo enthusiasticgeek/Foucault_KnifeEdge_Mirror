@@ -37,6 +37,7 @@ is_debugging = False
 autofoucault_simple_simulation = False
 autofoucault_videofile_simulation = False
 #autofoucault_simple_simulation = True
+#autofoucault_videofile_simulation = True
 # Initialize a variable to store image data
 #image_data = None
 process_fkesa = False

@@ -523,12 +523,25 @@ class FKESABuilder:
                     line_length = 40  # length of the line
                     half_line_length = line_length // 2
 
+                    # Flag to select closest or farthest points
+                    #select_farthest = True  # Set this to False to select closest points
+                    select_farthest = False  # Set this to False to select closest points
 
                     # TODO (Pratik) make a slider or input text box to adjust this value.
-                    skip_range = 40
+                    #skip_range = 20
+
+                    # Calculate skip_range based on the ratio of mirrorDiameterInches to mirrorFocalLengthInches
+                    f_ratio = float(float(self.args['mirrorDiameterInches'])/float(self.args['mirrorFocalLengthInches']))
+                    print(f"f_ratio is {f_ratio}")
+                    print(f"width is {width}")
+                    #Some placeholder
+                    #skip_range = int(float(float(self.args['mirrorDiameterInches']) * float(f_ratio) * float(width//2)))
+                    skip_range = int(float(float(f_ratio) * float(width//2)))
+                    print(f"skip_range is {skip_range}")
+             
 
                     # Skip pixels towards the edge too.(Alan's observation)
-                    edge_margin = 10
+                    edge_margin = 1
 
                     filtered_points = [
                        point for point in intersection_points
@@ -542,20 +555,33 @@ class FKESABuilder:
                     left_points = [point for point in filtered_points if point < center_x]
                     right_points = [point for point in filtered_points if point > center_x]
 
-                    # Calculate the closest points
-                    closest_left_point = min(left_points, default=None, key=lambda x: abs(x - center_x))
-                    closest_right_point = min(right_points, default=None, key=lambda x: abs(x - center_x))
+                    # Calculate the closest or farthest points based on the flag
+                    if select_farthest:
+                            farthest_left_point = max(left_points, default=None, key=lambda x: abs(x - center_x))
+                            farthest_right_point = max(right_points, default=None, key=lambda x: abs(x - center_x))
+                            farthest_left_distance = abs(farthest_left_point - center_x) if farthest_left_point is not None else None
+                            farthest_right_distance = abs(farthest_right_point - center_x) if farthest_right_point is not None else None
+                            print(f'Farthest left point: {farthest_left_point}, Distance: {farthest_left_distance}')
+                            print(f'Farthest right point: {farthest_right_point}, Distance: {farthest_right_distance}')
+                    else:
+                            closest_left_point = min(left_points, default=None, key=lambda x: abs(x - center_x))
+                            closest_right_point = min(right_points, default=None, key=lambda x: abs(x - center_x))
+                            closest_left_distance = abs(closest_left_point - center_x) if closest_left_point is not None else None
+                            closest_right_distance = abs(closest_right_point - center_x) if closest_right_point is not None else None
+                            print(f'Closest left point: {closest_left_point}, Distance: {closest_left_distance}')
+                            print(f'Closest right point: {closest_right_point}, Distance: {closest_right_distance}')
 
-                    # Calculate distances
-                    closest_left_distance = abs(closest_left_point - center_x) if closest_left_point is not None else None
-                    closest_right_distance = abs(closest_right_point - center_x) if closest_right_point is not None else None
+                    # Use the selected distances for further calculations
+                    if select_farthest:
+                       left_distance = farthest_left_distance
+                       right_distance = farthest_right_distance
+                    else:
+                       left_distance = closest_left_distance
+                       right_distance = closest_right_distance
 
-                    print(f'Closest left point: {closest_left_point}, Distance: {closest_left_distance}')
-                    print(f'Closest right point: {closest_right_point}, Distance: {closest_right_distance}')
-
-                    if closest_left_distance is not None and closest_right_distance is not None:
-                       left_null_zone = round(float(float(closest_left_distance / radius_orig) * self.args['mirrorDiameterInches']) / 2, 2)
-                       right_null_zone = round(float(float(closest_right_distance / radius_orig) * self.args['mirrorDiameterInches']) / 2, 2)
+                    if left_distance is not None and right_distance is not None:
+                       left_null_zone = round(float(float(left_distance / radius_orig) * self.args['mirrorDiameterInches']) / 2, 2)
+                       right_null_zone = round(float(float(right_distance / radius_orig) * self.args['mirrorDiameterInches']) / 2, 2)
 
                        print(f'null zone left point: {left_null_zone}')
                        print(f'null zone right point: {right_null_zone}')
@@ -569,16 +595,17 @@ class FKESABuilder:
                         cv2.line(marked_image, start_point, end_point, (255, 0, 0), 1)
 
                     # Append to CSV if set
-                    if self.args['append_to_csv'] and closest_left_distance is not None and closest_right_distance is not None:
-                       csv_data = [
-                          self.current_timestamp(),
-                          left_null_zone,
-                          right_null_zone,
-                          average_null_zone,  # Add the average null zone to the CSV data
-                          self.args['step'],
-                          float(float(self.args['step_size']) * int(self.args['step']))
-                       ]
-                       self.write_csv_bottom_flipped_method(csv_data)
+                    if self.args['append_to_csv'] and left_distance is not None and right_distance is not None:
+                            csv_data = [
+                                self.current_timestamp(),
+                                left_null_zone,
+                                right_null_zone,
+                                average_null_zone,  # Add the average null zone to the CSV data
+                                self.args['step'],
+                                float(float(self.args['step_size']) * int(self.args['step']))
+                            ]
+                            self.write_csv_bottom_flipped_method(csv_data)
+
 
                     # One may uncomment to save plot image but it does have a significant impact on the processing speed
                     #plot_image = self.generate_plot_savitzkly_golay_test(plt, pixel_intensity_above, pixel_intensity_below, filtered_points)
