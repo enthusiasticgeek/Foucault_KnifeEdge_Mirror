@@ -173,6 +173,9 @@ if have_splash_screen:
     time.sleep(1)
     splash_window.close()
 
+#Define a flag variable
+process_function = 'savitzky_golan_flip_test'  # Options: 'manual', 'manual_test', 'savitzky_golan_flip_test'
+
 # Define a gamma correction function
 def gamma_correction(image, gamma=1.0):
     # Build a lookup table mapping the pixel values [0, 255] to their adjusted gamma values
@@ -568,7 +571,17 @@ def process_frames():
                         else:
                             #_,fkesa_frame = builder.build_manual(frame)
                             #_,fkesa_frame = builder.build_manual_test(frame)
-                            _,fkesa_frame = builder.build_savitzky_golan_flip_test(frame)
+                            #_,fkesa_frame = builder.build_savitzky_golan_flip_test(frame)
+
+                            if process_function == 'manual':
+                               _, fkesa_frame = builder.build_manual(frame)
+                            elif process_function == 'manual_test':
+                               _, fkesa_frame = builder.build_manual_test(frame)
+                            elif process_function == 'savitzky_golan_flip_test':
+                               _, fkesa_frame = builder.build_savitzky_golan_flip_test(frame)
+                            else:
+                              raise ValueError("Invalid flag value")
+
                         time.sleep(fkesa_time_delay / 1000)
                         """
                         end_time = time.time()
