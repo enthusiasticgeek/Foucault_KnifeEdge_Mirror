@@ -464,6 +464,7 @@ def process_frames():
     global autosave
     global gamma_val
     global autofoucault_videofile_simulation
+    global process_function
 
     # counter to ease CPU processing with modulo operator
     counter=0
@@ -574,10 +575,13 @@ def process_frames():
                             #_,fkesa_frame = builder.build_savitzky_golan_flip_test(frame)
 
                             if process_function == 'manual':
+                               print('manual')
                                _, fkesa_frame = builder.build_manual(frame)
                             elif process_function == 'manual_test':
+                               print('manual_test')
                                _, fkesa_frame = builder.build_manual_test(frame)
                             elif process_function == 'savitzky_golan_flip_test':
+                               print('savitzky')
                                _, fkesa_frame = builder.build_savitzky_golan_flip_test(frame)
                             else:
                               raise ValueError("Invalid flag value")
@@ -1136,6 +1140,14 @@ try:
                 text_color=('darkgreen') # experimental
             ),
          ],
+
+         [sg.VerticalSeparator()],
+         [sg.Text("Select Images Processing Function Type",font=('Verdana', 10, 'bold'), text_color="darkred"),], 
+         [sg.Radio("Savitzky Golay Flip Test", "RADIO_FUNCTION_SELECTION", default=True, font=('Verdana', 10, 'bold'),key='savitzky_golan_flip_test')],
+         [sg.Radio("Manual Test", "RADIO_FUNCTION_SELECTION",font=('Verdana', 10, 'bold'), key='manual_test')],
+         [sg.Radio("Manual", "RADIO_FUNCTION_SELECTION",font=('Verdana', 10, 'bold'), key='manual')],
+         [sg.Button('Update Function', key='-UPDATE FUNCTION-',button_color = ('white','blue'))], 
+
     ]
 
     # For now will only show the name of the file that was chosen
@@ -1419,6 +1431,17 @@ try:
               processing_frames_running = False  # Signal the processing_frames thread to exit
               exit_event.set()  # Signal the processing_frames thread to exit
               break
+        elif event == "-UPDATE FUNCTION-":
+          with lock:
+            if values['manual']:
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                process_function = 'manual'
+            elif values['manual_test']:
+                process_function = 'manual_test'
+            elif values['savitzky_golan_flip_test']:
+                process_function = 'savitzky_golan_flip_test'
+            else:
+                process_function = 'savitzky_golan_flip_test' #default
         elif event == "-IMAGE-":
           #mouse_x, mouse_y = window.CurrentLocation()
           #print(f"Clicked inside the Window at ({mouse_x}, {mouse_y})")
