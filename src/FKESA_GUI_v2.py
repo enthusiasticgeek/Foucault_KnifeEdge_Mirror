@@ -1434,7 +1434,6 @@ try:
         elif event == "-UPDATE FUNCTION-":
           with lock:
             if values['manual']:
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 process_function = 'manual'
             elif values['manual_test']:
                 process_function = 'manual_test'
